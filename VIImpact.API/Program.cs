@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using VIImpact.API.BackgroundServices;
+using VIImpact.API.Configuration;
 using VIImpact.Application.Interfaces;
 using VIImpact.Infrastructure.Configuration;
 using VIImpact.Infrastructure.Integrations.TwelveData;
@@ -7,9 +9,17 @@ using VIImpact.Infrastructure.Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Controllers
 
 builder.Services.AddControllers();
+
+// Automatic stock quote collection
+
+builder.Services.Configure<StockCollectionOptions>(
+    builder.Configuration.GetSection(
+        StockCollectionOptions.SectionName));
+
+builder.Services.AddHostedService<StockQuoteCollectionWorker>();
 
 // Database configuration
 
@@ -40,6 +50,8 @@ builder.Services.AddHttpClient<IStockMarketService, TwelveDataStockMarketService
     });
 
 var app = builder.Build();
+
+// HTTP request pipeline
 
 app.UseHttpsRedirection();
 
