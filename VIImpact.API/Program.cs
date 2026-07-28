@@ -1,10 +1,28 @@
+using VIImpact.Application.Interfaces;
+using VIImpact.Infrastructure.Configuration;
+using VIImpact.Infrastructure.Integrations.TwelveData;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
+
+var twelveDataOptions = new TwelveDataOptions();
+
+builder.Configuration
+    .GetSection(TwelveDataOptions.SectionName)
+    .Bind(twelveDataOptions);
+
+builder.Services.AddSingleton(twelveDataOptions);
+
+builder.Services.AddHttpClient<IStockMarketService, TwelveDataStockMarketService>(
+    client =>
+    {
+        client.BaseAddress = new Uri(twelveDataOptions.BaseUrl);
+    });
 
 var app = builder.Build();
 
