@@ -3,6 +3,7 @@ using VIImpact.Application.Interfaces;
 using VIImpact.Infrastructure.Configuration;
 using VIImpact.Infrastructure.Integrations.TwelveData;
 using VIImpact.Infrastructure.Persistence;
+using VIImpact.Infrastructure.Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,8 @@ string connectionString =
 
 builder.Services.AddDbContext<VIImpactDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+builder.Services.AddScoped<IStockQuoteRepository, StockQuoteRepository>();
 
 // Twelve Data configuration
 
@@ -37,7 +40,6 @@ builder.Services.AddHttpClient<IStockMarketService, TwelveDataStockMarketService
     });
 
 var app = builder.Build();
-
 
 app.UseHttpsRedirection();
 
