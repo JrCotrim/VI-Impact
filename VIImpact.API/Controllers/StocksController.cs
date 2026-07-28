@@ -23,8 +23,7 @@ public sealed class StocksController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves the latest quote for a stock symbol and stores it
-    /// in the database.
+    /// Retrieves the latest quote directly from the market-data provider.
     /// </summary>
     [HttpGet("{symbol}")]
     public async Task<ActionResult<StockQuote>> GetLatestQuote(
@@ -35,10 +34,6 @@ public sealed class StocksController : ControllerBase
             await _stockMarketService.GetLatestQuoteAsync(
                 symbol,
                 cancellationToken);
-
-        await _stockQuoteRepository.AddAsync(
-            quote,
-            cancellationToken);
 
         return Ok(quote);
     }

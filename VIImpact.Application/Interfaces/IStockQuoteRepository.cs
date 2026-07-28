@@ -8,9 +8,13 @@ namespace VIImpact.Application.Interfaces;
 public interface IStockQuoteRepository
 {
     /// <summary>
-    /// Adds a stock quote to the database.
+    /// Adds a stock quote only when an identical quote
+    /// does not already exist.
     /// </summary>
-    Task AddAsync(
+    /// <returns>
+    /// True when the quote was stored; otherwise, false.
+    /// </returns>
+    Task<bool> AddIfNewAsync(
         StockQuote stockQuote,
         CancellationToken cancellationToken = default);
 

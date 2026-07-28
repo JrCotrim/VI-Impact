@@ -32,7 +32,8 @@ public sealed class StockQuoteCollectionWorker : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            StockCollectionOptions settings = _options.CurrentValue;
+            StockCollectionOptions settings =
+                _options.CurrentValue;
 
             if (!settings.Enabled)
             {
@@ -64,14 +65,24 @@ public sealed class StockQuoteCollectionWorker : BackgroundService
                         settings.Symbol,
                         stoppingToken);
 
-                await stockQuoteRepository.AddAsync(
-                    quote,
-                    stoppingToken);
+                bool stored =
+                    await stockQuoteRepository.AddIfNewAsync(
+                        quote,
+                        stoppingToken);
 
-                _logger.LogInformation(
-                    "Quote for {Symbol} stored successfully at {RecordedAtUtc}.",
-                    quote.Symbol,
-                    quote.RecordedAtUtc);
+                if (stored)
+                {
+                    _logger.LogInformation(
+                        "Quote for {Symbol} stored successfully at {RecordedAtUtc}.",
+                        quote.Symbol,
+                        quote.RecordedAtUtc);
+                }
+                else
+                {
+                    _logger.LogInformation(
+                        "An identical quote for {Symbol} already exists and was not stored.",
+                        quote.Symbol);
+                }
             }
             catch (OperationCanceledException)
                 when (stoppingToken.IsCancellationRequested)

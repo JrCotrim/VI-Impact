@@ -17,17 +17,44 @@ public sealed class StockQuoteRepository : IStockQuoteRepository
     }
 
     /// <summary>
-    /// Adds a stock quote and saves the changes to the database.
+    /// Adds a stock quote only when an identical quote
+    /// does not already exist.
     /// </summary>
-    public async Task AddAsync(
+    public async Task<bool> AddIfNewAsync(
         StockQuote stockQuote,
         CancellationToken cancellationToken = default)
     {
+        string normalizedSymbol =
+            stockQuote.Symbol.Trim().ToUpperInvariant();
+
+        bool identicalQuoteExists =
+            await _dbContext.StockQuotes
+                .AsNoTracking()
+                .AnyAsync(
+                    existingQuote =>
+                        existingQuote.Symbol == normalizedSymbol &&
+                        existingQuote.Price == stockQuote.Price &&
+                        existingQuote.ChangePercent ==
+                            stockQuote.ChangePercent &&
+                        existingQuote.Volume == stockQuote.Volume &&
+                        existingQuote.MarketTimestampUtc ==
+                            stockQuote.MarketTimestampUtc,
+                    cancellationToken);
+
+        if (identicalQuoteExists)
+        {
+            return false;
+        }
+
+        stockQuote.Symbol = normalizedSymbol;
+
         await _dbContext.StockQuotes.AddAsync(
             stockQuote,
             cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return true;
     }
 
     /// <summary>
@@ -38,7 +65,8 @@ public sealed class StockQuoteRepository : IStockQuoteRepository
         int limit,
         CancellationToken cancellationToken = default)
     {
-        string normalizedSymbol = symbol.Trim().ToUpperInvariant();
+        string normalizedSymbol =
+            symbol.Trim().ToUpperInvariant();
 
         return await _dbContext.StockQuotes
             .AsNoTracking()
@@ -58,7 +86,8 @@ public sealed class StockQuoteRepository : IStockQuoteRepository
         DateTime dateUtc,
         CancellationToken cancellationToken = default)
     {
-        string normalizedSymbol = symbol.Trim().ToUpperInvariant();
+        string normalizedSymbol =
+            symbol.Trim().ToUpperInvariant();
 
         return await _dbContext.StockQuotes
             .AsNoTracking()
@@ -78,7 +107,8 @@ public sealed class StockQuoteRepository : IStockQuoteRepository
         DateTime dateUtc,
         CancellationToken cancellationToken = default)
     {
-        string normalizedSymbol = symbol.Trim().ToUpperInvariant();
+        string normalizedSymbol =
+            symbol.Trim().ToUpperInvariant();
 
         return await _dbContext.StockQuotes
             .AsNoTracking()
