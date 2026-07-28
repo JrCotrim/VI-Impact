@@ -1,6 +1,18 @@
-@VIImpact.API_HostAddress = http://localhost:5170
+@VIImpact_API_HostAddress = https://localhost:7196
 
-GET {{VIImpact.API_HostAddress}}/weatherforecast/
+### Cadastrar um evento de teste
+
+POST {{VIImpact_API_HostAddress}}/api/gtaevents
+Content-Type: application/json
+
+{
+  "title": "GTA VI event test",
+  "description": "Temporary event used to validate the GTA VI events module.",
+  "sourceUrl": "https://example.com/gta-vi-test",
+  "occurredAtUtc": "2026-07-28T14:00:00Z"
+}
+
+### Listar todos os eventos
+
+GET {{VIImpact_API_HostAddress}}/api/gtaevents
 Accept: application/json
-
-###

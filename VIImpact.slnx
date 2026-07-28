@@ -1,4 +1,7 @@
 <Solution>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
   <Project Path="VIImpact.API/VIImpact.API.csproj" />
   <Project Path="VIImpact.Application/VIImpact.Application.csproj" />
   <Project Path="VIImpact.Domain/VIImpact.Domain.csproj" />

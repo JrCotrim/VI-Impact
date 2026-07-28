@@ -31,7 +31,10 @@ string connectionString =
 builder.Services.AddDbContext<VIImpactDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+// Repositories
+
 builder.Services.AddScoped<IStockQuoteRepository, StockQuoteRepository>();
+builder.Services.AddScoped<IGtaEventRepository, GtaEventRepository>();
 
 // Twelve Data configuration
 

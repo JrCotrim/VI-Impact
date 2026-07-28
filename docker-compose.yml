@@ -1,0 +1,6 @@
+services:
+  viimpact.api:
+    image: ${DOCKER_REGISTRY-}viimpactapi
+    build:
+      context: .
+      dockerfile: VIImpact.API/Dockerfile
