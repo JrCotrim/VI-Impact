@@ -19,4 +19,11 @@ public interface IGtaEventRepository
     /// </summary>
     Task<IReadOnlyList<GtaEvent>> GetAllAsync(
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves a GTA VI event by its identifier.
+    /// </summary>
+    Task<GtaEvent?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
 }

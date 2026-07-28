@@ -42,4 +42,18 @@ public sealed class GtaEventRepository : IGtaEventRepository
                 gtaEvent.OccurredAtUtc)
             .ToListAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// Retrieves a GTA VI event by its identifier.
+    /// </summary>
+    public async Task<GtaEvent?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.GtaEvents
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                gtaEvent => gtaEvent.Id == id,
+                cancellationToken);
+    }
 }

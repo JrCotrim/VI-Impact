@@ -49,4 +49,44 @@ public sealed class StockQuoteRepository : IStockQuoteRepository
             .Take(limit)
             .ToListAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// Retrieves the most recent quote recorded before a specific date.
+    /// </summary>
+    public async Task<StockQuote?> GetNearestBeforeAsync(
+        string symbol,
+        DateTime dateUtc,
+        CancellationToken cancellationToken = default)
+    {
+        string normalizedSymbol = symbol.Trim().ToUpperInvariant();
+
+        return await _dbContext.StockQuotes
+            .AsNoTracking()
+            .Where(stockQuote =>
+                stockQuote.Symbol == normalizedSymbol &&
+                stockQuote.RecordedAtUtc <= dateUtc)
+            .OrderByDescending(stockQuote =>
+                stockQuote.RecordedAtUtc)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves the first quote recorded after a specific date.
+    /// </summary>
+    public async Task<StockQuote?> GetNearestAfterAsync(
+        string symbol,
+        DateTime dateUtc,
+        CancellationToken cancellationToken = default)
+    {
+        string normalizedSymbol = symbol.Trim().ToUpperInvariant();
+
+        return await _dbContext.StockQuotes
+            .AsNoTracking()
+            .Where(stockQuote =>
+                stockQuote.Symbol == normalizedSymbol &&
+                stockQuote.RecordedAtUtc >= dateUtc)
+            .OrderBy(stockQuote =>
+                stockQuote.RecordedAtUtc)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }

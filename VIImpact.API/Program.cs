@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using VIImpact.API.BackgroundServices;
 using VIImpact.API.Configuration;
 using VIImpact.Application.Interfaces;
+using VIImpact.Application.Services;
 using VIImpact.Infrastructure.Configuration;
 using VIImpact.Infrastructure.Integrations.TwelveData;
 using VIImpact.Infrastructure.Persistence;
@@ -36,6 +37,12 @@ builder.Services.AddDbContext<VIImpactDbContext>(options =>
 builder.Services.AddScoped<IStockQuoteRepository, StockQuoteRepository>();
 builder.Services.AddScoped<IGtaEventRepository, GtaEventRepository>();
 
+// Application services
+
+builder.Services.AddScoped<
+    IGtaEventImpactService,
+    GtaEventImpactService>();
+
 // Twelve Data configuration
 
 var twelveDataOptions = new TwelveDataOptions();
@@ -46,11 +53,14 @@ builder.Configuration
 
 builder.Services.AddSingleton(twelveDataOptions);
 
-builder.Services.AddHttpClient<IStockMarketService, TwelveDataStockMarketService>(
-    client =>
-    {
-        client.BaseAddress = new Uri(twelveDataOptions.BaseUrl);
-    });
+builder.Services.AddHttpClient<
+    IStockMarketService,
+    TwelveDataStockMarketService>(
+        client =>
+        {
+            client.BaseAddress =
+                new Uri(twelveDataOptions.BaseUrl);
+        });
 
 var app = builder.Build();
 

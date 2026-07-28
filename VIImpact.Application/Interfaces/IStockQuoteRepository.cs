@@ -21,4 +21,20 @@ public interface IStockQuoteRepository
         string symbol,
         int limit,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves the nearest quote recorded before a specific date.
+    /// </summary>
+    Task<StockQuote?> GetNearestBeforeAsync(
+        string symbol,
+        DateTime dateUtc,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves the nearest quote recorded after a specific date.
+    /// </summary>
+    Task<StockQuote?> GetNearestAfterAsync(
+        string symbol,
+        DateTime dateUtc,
+        CancellationToken cancellationToken = default);
 }

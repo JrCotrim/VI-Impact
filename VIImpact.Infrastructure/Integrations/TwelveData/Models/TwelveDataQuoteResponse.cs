@@ -2,6 +2,9 @@
 
 namespace VIImpact.Infrastructure.Integrations.TwelveData.Models;
 
+/// <summary>
+/// Represents the quote response returned by Twelve Data.
+/// </summary>
 internal sealed class TwelveDataQuoteResponse
 {
     [JsonPropertyName("symbol")]
@@ -21,4 +24,7 @@ internal sealed class TwelveDataQuoteResponse
 
     [JsonPropertyName("timestamp")]
     public long Timestamp { get; set; }
+
+    [JsonPropertyName("last_quote_at")]
+    public long LastQuoteAt { get; set; }
 }

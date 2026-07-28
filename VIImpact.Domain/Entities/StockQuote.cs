@@ -1,5 +1,8 @@
 ﻿namespace VIImpact.Domain.Entities;
 
+/// <summary>
+/// Represents a stock quote collected by VI Impact.
+/// </summary>
 public class StockQuote
 {
     public Guid Id { get; set; }
@@ -13,4 +16,6 @@ public class StockQuote
     public long Volume { get; set; }
 
     public DateTime RecordedAtUtc { get; set; }
+
+    public DateTime? MarketTimestampUtc { get; set; }
 }

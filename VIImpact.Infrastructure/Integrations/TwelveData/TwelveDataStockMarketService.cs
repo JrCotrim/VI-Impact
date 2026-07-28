@@ -8,6 +8,9 @@ using VIImpact.Infrastructure.Integrations.TwelveData.Models;
 
 namespace VIImpact.Infrastructure.Integrations.TwelveData;
 
+/// <summary>
+/// Retrieves stock quotes from the Twelve Data API.
+/// </summary>
 public sealed class TwelveDataStockMarketService : IStockMarketService
 {
     private readonly HttpClient _httpClient;
@@ -21,6 +24,9 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
         _options = options;
     }
 
+    /// <summary>
+    /// Retrieves the latest quote for a stock symbol.
+    /// </summary>
     public async Task<StockQuote> GetLatestQuoteAsync(
         string symbol,
         CancellationToken cancellationToken = default)
@@ -38,21 +44,31 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
                 "The Twelve Data API key was not configured.");
         }
 
-        string endpoint = $"/quote?symbol={Uri.EscapeDataString(symbol)}";
+        string normalizedSymbol =
+            symbol.Trim().ToUpperInvariant();
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+        string endpoint =
+            $"/quote?symbol={Uri.EscapeDataString(normalizedSymbol)}";
+
+        using var request =
+            new HttpRequestMessage(HttpMethod.Get, endpoint);
 
         request.Headers.Authorization =
-            new AuthenticationHeaderValue("apikey", _options.ApiKey);
+            new AuthenticationHeaderValue(
+                "apikey",
+                _options.ApiKey);
 
         using HttpResponseMessage response =
-            await _httpClient.SendAsync(request, cancellationToken);
+            await _httpClient.SendAsync(
+                request,
+                cancellationToken);
 
         response.EnsureSuccessStatusCode();
 
         TwelveDataQuoteResponse quote =
-            await response.Content.ReadFromJsonAsync<TwelveDataQuoteResponse>(
-                cancellationToken: cancellationToken)
+            await response.Content
+                .ReadFromJsonAsync<TwelveDataQuoteResponse>(
+                    cancellationToken: cancellationToken)
             ?? throw new InvalidOperationException(
                 "Twelve Data returned an empty response.");
 
@@ -78,18 +94,33 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
             CultureInfo.InvariantCulture,
             out long volume);
 
-        DateTime recordedAtUtc = quote.Timestamp > 0
-            ? DateTimeOffset.FromUnixTimeSeconds(quote.Timestamp).UtcDateTime
-            : DateTime.UtcNow;
+        long marketTimestamp =
+            quote.LastQuoteAt > 0
+                ? quote.LastQuoteAt
+                : quote.Timestamp;
+
+        DateTime? marketTimestampUtc =
+            marketTimestamp > 0
+                ? DateTimeOffset
+                    .FromUnixTimeSeconds(marketTimestamp)
+                    .UtcDateTime
+                : null;
 
         return new StockQuote
         {
             Id = Guid.NewGuid(),
-            Symbol = quote.Symbol,
+            Symbol = string.IsNullOrWhiteSpace(quote.Symbol)
+                ? normalizedSymbol
+                : quote.Symbol.Trim().ToUpperInvariant(),
             Price = price,
             ChangePercent = changePercent,
             Volume = volume,
-            RecordedAtUtc = recordedAtUtc
+
+            // Horário em que o VI Impact coletou o dado.
+            RecordedAtUtc = DateTime.UtcNow,
+
+            // Horário informado pela fonte de mercado.
+            MarketTimestampUtc = marketTimestampUtc
         };
     }
 }

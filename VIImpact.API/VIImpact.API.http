@@ -1,6 +1,7 @@
 @VIImpact_API_HostAddress = https://localhost:7196
+@ImpactEventId = 8bea6ace-1e23-4c44-8818-8718c016420c
 
-### Cadastrar um evento de teste
+### Cadastrar evento inicial de teste
 
 POST {{VIImpact_API_HostAddress}}/api/gtaevents
 Content-Type: application/json
@@ -12,7 +13,24 @@ Content-Type: application/json
   "occurredAtUtc": "2026-07-28T14:00:00Z"
 }
 
+### Cadastrar evento entre duas cotações
+
+POST {{VIImpact_API_HostAddress}}/api/gtaevents
+Content-Type: application/json
+
+{
+  "title": "GTA VI impact calculation test",
+  "description": "Temporary event created between two collected stock quotes.",
+  "sourceUrl": "https://example.com/gta-vi-impact-test",
+  "occurredAtUtc": "2026-07-28T19:46:36Z"
+}
+
 ### Listar todos os eventos
 
 GET {{VIImpact_API_HostAddress}}/api/gtaevents
+Accept: application/json
+
+### Consultar impacto do evento sobre a TTWO
+
+GET {{VIImpact_API_HostAddress}}/api/gtaevents/{{ImpactEventId}}/impact?symbol=TTWO
 Accept: application/json
