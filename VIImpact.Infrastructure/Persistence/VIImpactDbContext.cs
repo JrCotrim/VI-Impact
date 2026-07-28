@@ -3,6 +3,9 @@ using VIImpact.Domain.Entities;
 
 namespace VIImpact.Infrastructure.Persistence;
 
+/// <summary>
+/// Represents the VI Impact database context.
+/// </summary>
 public sealed class VIImpactDbContext : DbContext
 {
     public VIImpactDbContext(
@@ -15,7 +18,8 @@ public sealed class VIImpactDbContext : DbContext
 
     public DbSet<GtaEvent> GtaEvents { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(
+        ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
@@ -24,8 +28,33 @@ public sealed class VIImpactDbContext : DbContext
             entity.Property(stockQuote => stockQuote.Price)
                 .HasPrecision(18, 6);
 
-            entity.Property(stockQuote => stockQuote.ChangePercent)
+            entity.Property(stockQuote =>
+                    stockQuote.ChangePercent)
                 .HasPrecision(18, 6);
+
+            entity.HasIndex(stockQuote => new
+            {
+                stockQuote.Symbol,
+                stockQuote.RecordedAtUtc
+            })
+                .HasDatabaseName(
+                    "IX_StockQuotes_Symbol_RecordedAtUtc");
+
+            entity.HasIndex(stockQuote => new
+            {
+                stockQuote.Symbol,
+                stockQuote.MarketTimestampUtc
+            })
+                .HasDatabaseName(
+                    "IX_StockQuotes_Symbol_MarketTimestampUtc");
+        });
+
+        modelBuilder.Entity<GtaEvent>(entity =>
+        {
+            entity.HasIndex(gtaEvent =>
+                    gtaEvent.OccurredAtUtc)
+                .HasDatabaseName(
+                    "IX_GtaEvents_OccurredAtUtc");
         });
     }
 }
