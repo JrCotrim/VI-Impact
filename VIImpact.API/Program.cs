@@ -11,11 +11,19 @@ using VIImpact.Infrastructure.Persistence.Repositories;
 var builder = WebApplication.CreateBuilder(args);
 
 // Controllers
-
 builder.Services.AddControllers();
 
-// Automatic stock quote collection
+// Standardized API error responses
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        context.ProblemDetails.Extensions["traceId"] =
+            context.HttpContext.TraceIdentifier;
+    };
+});
 
+// Automatic stock quote collection
 builder.Services.Configure<StockCollectionOptions>(
     builder.Configuration.GetSection(
         StockCollectionOptions.SectionName));
@@ -23,7 +31,6 @@ builder.Services.Configure<StockCollectionOptions>(
 builder.Services.AddHostedService<StockQuoteCollectionWorker>();
 
 // Database configuration
-
 string connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
@@ -33,18 +40,20 @@ builder.Services.AddDbContext<VIImpactDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Repositories
+builder.Services.AddScoped<
+    IStockQuoteRepository,
+    StockQuoteRepository>();
 
-builder.Services.AddScoped<IStockQuoteRepository, StockQuoteRepository>();
-builder.Services.AddScoped<IGtaEventRepository, GtaEventRepository>();
+builder.Services.AddScoped<
+    IGtaEventRepository,
+    GtaEventRepository>();
 
 // Application services
-
 builder.Services.AddScoped<
     IGtaEventImpactService,
     GtaEventImpactService>();
 
 // Twelve Data configuration
-
 var twelveDataOptions = new TwelveDataOptions();
 
 builder.Configuration
@@ -64,12 +73,12 @@ builder.Services.AddHttpClient<
 
 var app = builder.Build();
 
-// HTTP request pipeline
+// Global error handling
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
