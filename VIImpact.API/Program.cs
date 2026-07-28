@@ -1,6 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using VIImpact.Application.Interfaces;
 using VIImpact.Infrastructure.Configuration;
 using VIImpact.Infrastructure.Integrations.TwelveData;
+using VIImpact.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,7 +10,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddOpenApi();
+// Database configuration
+
+string connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException(
+        "The database connection string was not configured.");
+
+builder.Services.AddDbContext<VIImpactDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+// Twelve Data configuration
 
 var twelveDataOptions = new TwelveDataOptions();
 
@@ -26,11 +38,6 @@ builder.Services.AddHttpClient<IStockMarketService, TwelveDataStockMarketService
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
 
 app.UseHttpsRedirection();
 
