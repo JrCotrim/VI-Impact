@@ -3,7 +3,7 @@
 namespace VIImpact.Application.Interfaces;
 
 /// <summary>
-/// Defines operations for storing stock quotes.
+/// Defines operations for storing and retrieving stock quotes.
 /// </summary>
 public interface IStockQuoteRepository
 {
@@ -12,5 +12,13 @@ public interface IStockQuoteRepository
     /// </summary>
     Task AddAsync(
         StockQuote stockQuote,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves the latest stored quotes for a stock symbol.
+    /// </summary>
+    Task<IReadOnlyList<StockQuote>> GetHistoryAsync(
+        string symbol,
+        int limit,
         CancellationToken cancellationToken = default);
 }

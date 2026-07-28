@@ -1,10 +1,11 @@
-﻿using VIImpact.Application.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using VIImpact.Application.Interfaces;
 using VIImpact.Domain.Entities;
 
 namespace VIImpact.Infrastructure.Persistence.Repositories;
 
 /// <summary>
-/// Persists stock quotes in the database using Entity Framework Core.
+/// Persists and retrieves stock quotes using Entity Framework Core.
 /// </summary>
 public sealed class StockQuoteRepository : IStockQuoteRepository
 {
@@ -27,5 +28,25 @@ public sealed class StockQuoteRepository : IStockQuoteRepository
             cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves stored quotes ordered from newest to oldest.
+    /// </summary>
+    public async Task<IReadOnlyList<StockQuote>> GetHistoryAsync(
+        string symbol,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        string normalizedSymbol = symbol.Trim().ToUpperInvariant();
+
+        return await _dbContext.StockQuotes
+            .AsNoTracking()
+            .Where(stockQuote =>
+                stockQuote.Symbol == normalizedSymbol)
+            .OrderByDescending(stockQuote =>
+                stockQuote.RecordedAtUtc)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
     }
 }
