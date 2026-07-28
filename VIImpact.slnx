@@ -6,4 +6,5 @@
   <Project Path="VIImpact.Application/VIImpact.Application.csproj" />
   <Project Path="VIImpact.Domain/VIImpact.Domain.csproj" />
   <Project Path="VIImpact.Infrastructure/VIImpact.Infrastructure.csproj" />
+  <Project Path="VIImpact.Tests/VIImpact.Tests.csproj" />
 </Solution>
