@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import { StockChart } from './components/StockChart'
 import { getDashboardData } from './services/dashboardService'
+import { getStockTimeSeries } from './services/stockTimeSeriesService'
 import type {
   DashboardData,
   StockQuote,
+  StockTimeSeries,
 } from './types/dashboard'
 
 type Theme = 'day' | 'night'
@@ -56,7 +58,11 @@ function App() {
   const [dashboard, setDashboard] =
     useState<DashboardData | null>(null)
 
-  const [isLoading, setIsLoading] = useState(true)
+  const [timeSeries, setTimeSeries] =
+    useState<StockTimeSeries | null>(null)
+
+  const [isLoading, setIsLoading] =
+    useState(true)
 
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null)
@@ -78,15 +84,30 @@ function App() {
         setIsLoading(true)
         setErrorMessage(null)
 
-        const data = await getDashboardData(
-          true,
-          100,
-          controller.signal,
-        )
+        const [
+          dashboardData,
+          timeSeriesData,
+        ] = await Promise.all([
+          getDashboardData(
+            true,
+            100,
+            controller.signal,
+          ),
 
-        if (isActive) {
-          setDashboard(data)
+          getStockTimeSeries(
+            'TTWO',
+            '1day',
+            365,
+            controller.signal,
+          ),
+        ])
+
+        if (!isActive) {
+          return
         }
+
+        setDashboard(dashboardData)
+        setTimeSeries(timeSeriesData)
       } catch (error) {
         if (
           error instanceof DOMException &&
@@ -139,7 +160,12 @@ function App() {
     )
   }
 
-  if (!dashboard || dashboard.quotes.length === 0) {
+  if (
+    !dashboard ||
+    !timeSeries ||
+    dashboard.quotes.length === 0 ||
+    timeSeries.values.length === 0
+  ) {
     return (
       <main className="status-screen">
         <p>Nenhuma cotação disponível.</p>
@@ -169,26 +195,40 @@ function App() {
             Dashboard
           </a>
 
-          <a className="navigation-link" href="#chart">
+          <a
+            className="navigation-link"
+            href="#chart"
+          >
             Gráfico
           </a>
 
-          <a className="navigation-link" href="#events">
+          <a
+            className="navigation-link"
+            href="#events"
+          >
             Eventos
           </a>
 
-          <a className="navigation-link" href="#impact">
+          <a
+            className="navigation-link"
+            href="#impact"
+          >
             Impacto
           </a>
 
-          <a className="navigation-link" href="#history">
+          <a
+            className="navigation-link"
+            href="#history"
+          >
             Histórico
           </a>
         </nav>
 
         <div className="market-status">
           <span>Mercado</span>
-          <strong>NASDAQ · Aberto</strong>
+          <strong>
+            {timeSeries.exchange} · {timeSeries.currency}
+          </strong>
         </div>
       </aside>
 
@@ -271,11 +311,14 @@ function App() {
         </section>
 
         <section className="dashboard-content">
-          <article className="chart-panel" id="chart">
+          <article
+            className="chart-panel"
+            id="chart"
+          >
             <div className="panel-header">
               <div>
                 <p className="panel-eyebrow">
-                  {dashboard.symbol}
+                  {timeSeries.symbol} · {timeSeries.exchange}
                 </p>
 
                 <h2>
@@ -285,12 +328,15 @@ function App() {
             </div>
 
             <StockChart
-              quotes={dashboard.quotes}
+              values={timeSeries.values}
               events={dashboard.gtaEvents}
             />
           </article>
 
-          <aside className="events-panel" id="events">
+          <aside
+            className="events-panel"
+            id="events"
+          >
             <div className="panel-header">
               <div>
                 <p className="panel-eyebrow">

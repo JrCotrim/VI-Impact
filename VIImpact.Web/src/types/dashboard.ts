@@ -19,3 +19,21 @@ export interface DashboardData {
   quotes: StockQuote[]
   gtaEvents: GtaEvent[]
 }
+
+export interface StockTimeSeriesPoint {
+  dateTimeUtc: string
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+}
+
+export interface StockTimeSeries {
+  symbol: string
+  interval: string
+  currency: string
+  exchange: string
+  exchangeTimezone: string
+  values: StockTimeSeriesPoint[]
+}

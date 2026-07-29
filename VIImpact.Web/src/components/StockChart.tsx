@@ -1,7 +1,7 @@
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
@@ -11,16 +11,17 @@ import {
 } from 'recharts'
 import type {
   GtaEvent,
-  StockQuote,
+  StockTimeSeriesPoint,
 } from '../types/dashboard'
 
 interface StockChartProps {
-  quotes: StockQuote[]
+  values: StockTimeSeriesPoint[]
   events: GtaEvent[]
 }
 
 interface ChartPoint {
   price: number
+  volume: number
   timestamp: number
 }
 
@@ -31,51 +32,26 @@ interface EventMarker {
   price: number
 }
 
-interface AxisTickProps {
-  x?: number
-  y?: number
-  payload?: {
-    value: number
-  }
-}
-
 function normalizeDate(dateText: string): Date {
   const hasTimezone =
     dateText.endsWith('Z') ||
     /[+-]\d{2}:\d{2}$/.test(dateText)
 
-  const normalizedDate = hasTimezone
-    ? dateText
-    : `${dateText}Z`
-
-  return new Date(normalizedDate)
+  return new Date(
+    hasTimezone ? dateText : `${dateText}Z`,
+  )
 }
 
-function formatAxisDate(
-  timestamp: number,
-): {
-  date: string
-  time: string
-} {
-  const date = new Date(timestamp)
-
-  return {
-    date: new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-    }).format(date),
-
-    time: new Intl.DateTimeFormat('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date),
-  }
+function formatAxisDate(timestamp: number): string {
+  return new Intl.DateTimeFormat('pt-BR', {
+    month: 'short',
+    year: '2-digit',
+  }).format(new Date(timestamp))
 }
 
 function formatTooltipDate(timestamp: number): string {
   return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'medium',
+    dateStyle: 'long',
   }).format(new Date(timestamp))
 }
 
@@ -90,35 +66,29 @@ function shortenTitle(title: string): string {
 }
 
 function createChartData(
-  quotes: StockQuote[],
+  values: StockTimeSeriesPoint[],
 ): ChartPoint[] {
-  const pointsByTimestamp =
-    new Map<number, ChartPoint>()
-
-  for (const quote of quotes) {
-    const timestamp = normalizeDate(
-      quote.recordedAtUtc,
-    ).getTime()
-
-    if (!Number.isFinite(timestamp)) {
-      continue
-    }
-
-    pointsByTimestamp.set(timestamp, {
-      timestamp,
-      price: quote.price,
-    })
-  }
-
-  return Array.from(pointsByTimestamp.values()).sort(
-    (firstPoint, secondPoint) =>
-      firstPoint.timestamp - secondPoint.timestamp,
-  )
+  return values
+    .map((value) => ({
+      price: value.close,
+      volume: value.volume,
+      timestamp: normalizeDate(
+        value.dateTimeUtc,
+      ).getTime(),
+    }))
+    .filter((point) =>
+      Number.isFinite(point.timestamp),
+    )
+    .sort(
+      (firstPoint, secondPoint) =>
+        firstPoint.timestamp -
+        secondPoint.timestamp,
+    )
 }
 
 function createAxisTicks(
   points: ChartPoint[],
-  numberOfTicks = 5,
+  numberOfTicks = 7,
 ): number[] {
   if (points.length === 0) {
     return []
@@ -139,44 +109,13 @@ function createAxisTicks(
     { length: numberOfTicks },
     (_, index) => {
       const position =
-        (index + 1) / (numberOfTicks + 1)
+        index / (numberOfTicks - 1)
 
       return Math.round(
         minimumTimestamp + range * position,
       )
     },
   )
-}
-
-function createAxisDomain(
-  points: ChartPoint[],
-): [number, number] {
-  if (points.length === 0) {
-    return [0, 1]
-  }
-
-  const minimumTimestamp = points[0].timestamp
-  const maximumTimestamp =
-    points[points.length - 1].timestamp
-
-  if (minimumTimestamp === maximumTimestamp) {
-    const oneHour = 60 * 60 * 1000
-
-    return [
-      minimumTimestamp - oneHour,
-      maximumTimestamp + oneHour,
-    ]
-  }
-
-  const range =
-    maximumTimestamp - minimumTimestamp
-
-  const padding = range * 0.04
-
-  return [
-    minimumTimestamp - padding,
-    maximumTimestamp + padding,
-  ]
 }
 
 function calculateEventPrice(
@@ -187,56 +126,50 @@ function calculateEventPrice(
     return null
   }
 
-  const firstPoint = points[0]
-  const lastPoint = points[points.length - 1]
+  const nearestPoint = points.reduce(
+    (currentNearestPoint, currentPoint) => {
+      const currentDistance = Math.abs(
+        currentPoint.timestamp - timestamp,
+      )
 
-  if (
-    timestamp < firstPoint.timestamp ||
-    timestamp > lastPoint.timestamp
-  ) {
-    return null
-  }
+      const nearestDistance = Math.abs(
+        currentNearestPoint.timestamp - timestamp,
+      )
 
-  const rightPointIndex = points.findIndex(
-    (point) => point.timestamp >= timestamp,
+      return currentDistance < nearestDistance
+        ? currentPoint
+        : currentNearestPoint
+    },
   )
 
-  if (rightPointIndex === 0) {
-    return firstPoint.price
-  }
-
-  if (rightPointIndex === -1) {
-    return lastPoint.price
-  }
-
-  const rightPoint = points[rightPointIndex]
-  const leftPoint = points[rightPointIndex - 1]
-
-  if (rightPoint.timestamp === leftPoint.timestamp) {
-    return rightPoint.price
-  }
-
-  const progress =
-    (timestamp - leftPoint.timestamp) /
-    (rightPoint.timestamp - leftPoint.timestamp)
-
-  return (
-    leftPoint.price +
-    (rightPoint.price - leftPoint.price) * progress
-  )
+  return nearestPoint.price
 }
 
 function createEventMarkers(
   events: GtaEvent[],
   chartData: ChartPoint[],
 ): EventMarker[] {
+  if (chartData.length === 0) {
+    return []
+  }
+
+  const minimumTimestamp =
+    chartData[0].timestamp
+
+  const maximumTimestamp =
+    chartData[chartData.length - 1].timestamp
+
   return events
     .map((gtaEvent) => {
       const timestamp = normalizeDate(
         gtaEvent.occurredAtUtc,
       ).getTime()
 
-      if (!Number.isFinite(timestamp)) {
+      if (
+        !Number.isFinite(timestamp) ||
+        timestamp < minimumTimestamp ||
+        timestamp > maximumTimestamp
+      ) {
         return null
       }
 
@@ -264,59 +197,15 @@ function createEventMarkers(
     )
 }
 
-function CustomXAxisTick({
-  x = 0,
-  y = 0,
-  payload,
-}: AxisTickProps) {
-  if (!payload) {
-    return null
-  }
-
-  const formattedDate =
-    formatAxisDate(payload.value)
-
-  return (
-    <g transform={`translate(${x}, ${y})`}>
-      <text
-        x={0}
-        y={0}
-        dy={18}
-        textAnchor="middle"
-        fill="var(--secondary-text)"
-        fontSize={12}
-        fontWeight={700}
-      >
-        {formattedDate.date}
-      </text>
-
-      <text
-        x={0}
-        y={0}
-        dy={35}
-        textAnchor="middle"
-        fill="var(--muted-text)"
-        fontSize={11}
-      >
-        {formattedDate.time}
-      </text>
-    </g>
-  )
-}
-
 export function StockChart({
-  quotes,
+  values,
   events,
 }: StockChartProps) {
-  const chartData = createChartData(quotes)
+  const chartData = createChartData(values)
 
   const axisTicks = createAxisTicks(
     chartData,
-    5,
-  )
-
-  const axisDomain = createAxisDomain(
-    chartData,
+    7,
   )
 
   const eventMarkers = createEventMarkers(
@@ -327,18 +216,40 @@ export function StockChart({
   return (
     <div
       className="stock-chart-container"
-      style={{ width: '100%', height: 430 }}
+      style={{ width: '100%', height: 450 }}
     >
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart
+        <AreaChart
           data={chartData}
           margin={{
             top: 72,
-            right: 32,
-            bottom: 42,
-            left: 22,
+            right: 34,
+            bottom: 26,
+            left: 18,
           }}
         >
+          <defs>
+            <linearGradient
+              id="stockPriceGradient"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
+              <stop
+                offset="0%"
+                stopColor="var(--accent-blue)"
+                stopOpacity={0.42}
+              />
+
+              <stop
+                offset="100%"
+                stopColor="var(--accent-blue)"
+                stopOpacity={0.02}
+              />
+            </linearGradient>
+          </defs>
+
           <CartesianGrid
             stroke="var(--border-color)"
             strokeDasharray="4 4"
@@ -349,15 +260,22 @@ export function StockChart({
             dataKey="timestamp"
             type="number"
             scale="time"
-            domain={axisDomain}
+            domain={['dataMin', 'dataMax']}
             ticks={axisTicks}
             interval={0}
-            height={62}
-            tick={<CustomXAxisTick />}
+            tickFormatter={(timestamp) =>
+              formatAxisDate(Number(timestamp))
+            }
+            tick={{
+              fill: 'var(--secondary-text)',
+              fontSize: 12,
+              fontWeight: 600,
+            }}
             axisLine={{
               stroke: 'var(--border-color)',
             }}
             tickLine={false}
+            tickMargin={14}
           />
 
           <YAxis
@@ -382,7 +300,7 @@ export function StockChart({
             }
             formatter={(value) => [
               `US$ ${Number(value).toFixed(2)}`,
-              'Preço',
+              'Fechamento',
             ]}
             contentStyle={{
               color: 'var(--primary-text)',
@@ -411,12 +329,13 @@ export function StockChart({
             />
           ))}
 
-          <Line
+          <Area
             type="monotone"
             dataKey="price"
-            name="Preço"
+            name="Fechamento"
             stroke="var(--accent-blue)"
             strokeWidth={3}
+            fill="url(#stockPriceGradient)"
             dot={false}
             activeDot={{
               r: 5,
@@ -436,7 +355,7 @@ export function StockChart({
               strokeWidth={3}
             />
           ))}
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   )
