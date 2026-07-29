@@ -1,12 +1,48 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+import { StockChart } from './components/StockChart'
 import { getDashboardData } from './services/dashboardService'
 import type { DashboardData } from './types/dashboard'
 
+type Theme = 'day' | 'night'
+
+function getInitialTheme(): Theme {
+  const savedTheme = localStorage.getItem('vi-impact-theme')
+
+  return savedTheme === 'night' ? 'night' : 'day'
+}
+
+function formatDate(dateText: string): string {
+  const hasTimezone =
+    dateText.endsWith('Z') ||
+    /[+-]\d{2}:\d{2}$/.test(dateText)
+
+  const normalizedDate = hasTimezone
+    ? dateText
+    : `${dateText}Z`
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(new Date(normalizedDate))
+}
+
 function App() {
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null)
+  const [dashboard, setDashboard] =
+    useState<DashboardData | null>(null)
+
   const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const [errorMessage, setErrorMessage] =
+    useState<string | null>(null)
+
+  const [theme, setTheme] =
+    useState<Theme>(getInitialTheme)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('vi-impact-theme', theme)
+  }, [theme])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -48,9 +84,15 @@ function App() {
     }
   }, [])
 
+  function toggleTheme() {
+    setTheme((currentTheme) =>
+      currentTheme === 'day' ? 'night' : 'day',
+    )
+  }
+
   if (isLoading) {
     return (
-      <main>
+      <main className="status-screen">
         <p>Carregando dados do VI Impact...</p>
       </main>
     )
@@ -58,7 +100,7 @@ function App() {
 
   if (errorMessage) {
     return (
-      <main>
+      <main className="status-screen">
         <p>Erro: {errorMessage}</p>
       </main>
     )
@@ -66,7 +108,7 @@ function App() {
 
   if (!dashboard || dashboard.quotes.length === 0) {
     return (
-      <main>
+      <main className="status-screen">
         <p>Nenhuma cotação disponível.</p>
       </main>
     )
@@ -75,39 +117,180 @@ function App() {
   const latestQuote =
     dashboard.quotes[dashboard.quotes.length - 1]
 
+  const isPositive =
+    latestQuote.changePercent >= 0
+
   return (
-    <main>
-      <h1>VI Impact</h1>
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <span className="brand-symbol">VI</span>
+          <span className="brand-name">Impact</span>
+        </div>
 
-      <p>
-        Análise da relação entre eventos do GTA VI e as ações da
-        Take-Two Interactive.
-      </p>
+        <nav className="sidebar-navigation">
+          <a className="navigation-link active" href="#dashboard">
+            Dashboard
+          </a>
 
-      <section>
-        <h2>{dashboard.symbol}</h2>
+          <a className="navigation-link" href="#chart">
+            Gráfico
+          </a>
 
-        <p>
-          Preço atual: US$ {latestQuote.price.toFixed(2)}
-        </p>
+          <a className="navigation-link" href="#events">
+            Eventos
+          </a>
 
-        <p>
-          Variação: {latestQuote.changePercent.toFixed(2)}%
-        </p>
+          <a className="navigation-link" href="#impact">
+            Impacto
+          </a>
 
-        <p>
-          Volume: {latestQuote.volume.toLocaleString('pt-BR')}
-        </p>
+          <a className="navigation-link" href="#history">
+            Histórico
+          </a>
+        </nav>
 
-        <p>
-          Cotações carregadas: {dashboard.quotes.length}
-        </p>
+        <div className="market-status">
+          <span>Mercado</span>
+          <strong>NASDAQ · Aberto</strong>
+        </div>
+      </aside>
 
-        <p>
-          Eventos do GTA VI: {dashboard.gtaEvents.length}
-        </p>
-      </section>
-    </main>
+      <main className="dashboard" id="dashboard">
+        <header className="dashboard-header">
+          <div>
+            <p className="eyebrow">VI Impact Dashboard</p>
+
+            <h1>
+              Eventos do GTA VI e o desempenho da TTWO
+            </h1>
+
+            <p className="dashboard-description">
+              Acompanhe possíveis relações entre notícias do
+              GTA VI e as ações da Take-Two Interactive.
+            </p>
+          </div>
+
+          <button
+            className="theme-button"
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Alternator team"
+          >
+            {theme === 'day'
+              ? '🌙 Vice City Night'
+              : '☀️ Vice City Day'}
+          </button>
+        </header>
+
+        <section className="summary-grid">
+          <article className="summary-card">
+            <span>Preço atual</span>
+
+            <strong>
+              US$ {latestQuote.price.toFixed(2)}
+            </strong>
+
+            <small>{dashboard.symbol}</small>
+          </article>
+
+          <article className="summary-card">
+            <span>Variação</span>
+
+            <strong
+              className={
+                isPositive
+                  ? 'positive-value'
+                  : 'negative-value'
+              }
+            >
+              {isPositive ? '+' : ''}
+              {latestQuote.changePercent.toFixed(2)}%
+            </strong>
+
+            <small>Última cotação</small>
+          </article>
+
+          <article className="summary-card">
+            <span>Volume</span>
+
+            <strong>
+              {latestQuote.volume.toLocaleString('pt-BR')}
+            </strong>
+
+            <small>Ações negociadas</small>
+          </article>
+
+          <article className="summary-card">
+            <span>Última atualização</span>
+
+            <strong className="date-value">
+              {formatDate(latestQuote.recordedAtUtc)}
+            </strong>
+
+            <small>Horário local</small>
+          </article>
+        </section>
+
+        <section className="dashboard-content">
+          <article className="chart-panel" id="chart">
+            <div className="panel-header">
+              <div>
+                <p className="panel-eyebrow">
+                  {dashboard.symbol}
+                </p>
+
+                <h2>Histórico da ação</h2>
+              </div>
+
+              <label className="event-toggle">
+                <span>Mostrar eventos do GTA VI</span>
+                <input type="checkbox" defaultChecked />
+              </label>
+            </div>
+
+            <StockChart quotes={dashboard.quotes} />
+          </article>
+
+          <aside className="events-panel" id="events">
+            <div className="panel-header">
+              <div>
+                <p className="panel-eyebrow">
+                  Linha do tempo
+                </p>
+
+                <h2>Eventos recentes</h2>
+              </div>
+            </div>
+
+            <div className="events-list">
+              {dashboard.gtaEvents.map((gtaEvent) => (
+                <article
+                  className="event-card"
+                  key={gtaEvent.id}
+                >
+                  <span className="event-date">
+                    {formatDate(gtaEvent.occurredAtUtc)}
+                  </span>
+
+                  <h3>{gtaEvent.title}</h3>
+
+                  <p>{gtaEvent.description}</p>
+
+                  <a
+                    href={gtaEvent.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Ver fonte
+                  </a>
+                </article>
+              ))}
+            </div>
+          </aside>
+        </section>
+      </main>
+    </div>
   )
 }
 
