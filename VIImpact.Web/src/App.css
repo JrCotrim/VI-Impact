@@ -586,4 +586,14 @@ a {
     align-items: flex-start;
     flex-direction: column;
   }
+  
+.stock-chart-container,
+.stock-chart-container .recharts-wrapper,
+.stock-chart-container .recharts-surface {
+  outline: none;
+}
+
+.stock-chart-container .recharts-text {
+  user-select: none;
+}
 }

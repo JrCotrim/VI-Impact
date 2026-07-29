@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import { StockChart } from './components/StockChart'
 import { getDashboardData } from './services/dashboardService'
-import type { DashboardData } from './types/dashboard'
+import type {
+  DashboardData,
+  StockQuote,
+} from './types/dashboard'
 
 type Theme = 'day' | 'night'
 
@@ -12,7 +15,7 @@ function getInitialTheme(): Theme {
   return savedTheme === 'night' ? 'night' : 'day'
 }
 
-function formatDate(dateText: string): string {
+function parseUtcDate(dateText: string): Date {
   const hasTimezone =
     dateText.endsWith('Z') ||
     /[+-]\d{2}:\d{2}$/.test(dateText)
@@ -21,10 +24,32 @@ function formatDate(dateText: string): string {
     ? dateText
     : `${dateText}Z`
 
+  return new Date(normalizedDate)
+}
+
+function formatDate(dateText: string): string {
   return new Intl.DateTimeFormat('pt-BR', {
     dateStyle: 'short',
     timeStyle: 'short',
-  }).format(new Date(normalizedDate))
+  }).format(parseUtcDate(dateText))
+}
+
+function getLatestQuote(
+  quotes: StockQuote[],
+): StockQuote {
+  return quotes.reduce((latestQuote, currentQuote) => {
+    const latestTimestamp = parseUtcDate(
+      latestQuote.recordedAtUtc,
+    ).getTime()
+
+    const currentTimestamp = parseUtcDate(
+      currentQuote.recordedAtUtc,
+    ).getTime()
+
+    return currentTimestamp > latestTimestamp
+      ? currentQuote
+      : latestQuote
+  })
 }
 
 function App() {
@@ -46,6 +71,7 @@ function App() {
 
   useEffect(() => {
     const controller = new AbortController()
+    let isActive = true
 
     async function loadDashboard() {
       try {
@@ -58,7 +84,9 @@ function App() {
           controller.signal,
         )
 
-        setDashboard(data)
+        if (isActive) {
+          setDashboard(data)
+        }
       } catch (error) {
         if (
           error instanceof DOMException &&
@@ -67,19 +95,24 @@ function App() {
           return
         }
 
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : 'Ocorreu um erro inesperado.',
-        )
+        if (isActive) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : 'Ocorreu um erro inesperado.',
+          )
+        }
       } finally {
-        setIsLoading(false)
+        if (isActive) {
+          setIsLoading(false)
+        }
       }
     }
 
     void loadDashboard()
 
     return () => {
+      isActive = false
       controller.abort()
     }
   }, [])
@@ -115,7 +148,7 @@ function App() {
   }
 
   const latestQuote =
-    dashboard.quotes[dashboard.quotes.length - 1]
+    getLatestQuote(dashboard.quotes)
 
   const isPositive =
     latestQuote.changePercent >= 0
@@ -129,7 +162,10 @@ function App() {
         </div>
 
         <nav className="sidebar-navigation">
-          <a className="navigation-link active" href="#dashboard">
+          <a
+            className="navigation-link active"
+            href="#dashboard"
+          >
             Dashboard
           </a>
 
@@ -159,7 +195,9 @@ function App() {
       <main className="dashboard" id="dashboard">
         <header className="dashboard-header">
           <div>
-            <p className="eyebrow">VI Impact Dashboard</p>
+            <p className="eyebrow">
+              VI Impact Dashboard
+            </p>
 
             <h1>
               Eventos do GTA VI e o desempenho da TTWO
@@ -175,7 +213,7 @@ function App() {
             className="theme-button"
             type="button"
             onClick={toggleTheme}
-            aria-label="Alternator team"
+            aria-label="Alternar tema"
           >
             {theme === 'day'
               ? '🌙 Vice City Night'
@@ -240,16 +278,16 @@ function App() {
                   {dashboard.symbol}
                 </p>
 
-                <h2>Histórico da ação</h2>
+                <h2>
+                  Histórico da ação e eventos do GTA VI
+                </h2>
               </div>
-
-              <label className="event-toggle">
-                <span>Mostrar eventos do GTA VI</span>
-                <input type="checkbox" defaultChecked />
-              </label>
             </div>
 
-            <StockChart quotes={dashboard.quotes} />
+            <StockChart
+              quotes={dashboard.quotes}
+              events={dashboard.gtaEvents}
+            />
           </article>
 
           <aside className="events-panel" id="events">
@@ -264,28 +302,41 @@ function App() {
             </div>
 
             <div className="events-list">
-              {dashboard.gtaEvents.map((gtaEvent) => (
-                <article
-                  className="event-card"
-                  key={gtaEvent.id}
-                >
-                  <span className="event-date">
-                    {formatDate(gtaEvent.occurredAtUtc)}
-                  </span>
-
-                  <h3>{gtaEvent.title}</h3>
-
-                  <p>{gtaEvent.description}</p>
-
-                  <a
-                    href={gtaEvent.sourceUrl}
-                    target="_blank"
-                    rel="noreferrer"
+              {dashboard.gtaEvents.length > 0 ? (
+                dashboard.gtaEvents.map((gtaEvent) => (
+                  <article
+                    className="event-card"
+                    key={gtaEvent.id}
                   >
-                    Ver fonte
-                  </a>
+                    <span className="event-date">
+                      {formatDate(
+                        gtaEvent.occurredAtUtc,
+                      )}
+                    </span>
+
+                    <h3>{gtaEvent.title}</h3>
+
+                    <p>{gtaEvent.description}</p>
+
+                    <a
+                      href={gtaEvent.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Ver fonte
+                    </a>
+                  </article>
+                ))
+              ) : (
+                <article className="event-card">
+                  <h3>Nenhum evento cadastrado</h3>
+
+                  <p>
+                    Ainda não existem eventos relacionados ao
+                    GTA VI para este período.
+                  </p>
                 </article>
-              ))}
+              )}
             </div>
           </aside>
         </section>
