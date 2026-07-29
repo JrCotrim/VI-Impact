@@ -1,4 +1,5 @@
-﻿using VIImpact.Domain.Entities;
+﻿using VIImpact.Application.Models;
+using VIImpact.Domain.Entities;
 
 namespace VIImpact.Application.Interfaces;
 
@@ -7,10 +8,13 @@ namespace VIImpact.Application.Interfaces;
 /// </summary>
 public interface IStockMarketService
 {
-    /// <summary>
-    /// Retrieves the latest quote for a stock symbol.
-    /// </summary>
     Task<StockQuote> GetLatestQuoteAsync(
         string symbol,
+        CancellationToken cancellationToken = default);
+
+    Task<StockTimeSeries> GetTimeSeriesAsync(
+        string symbol,
+        string interval,
+        int outputSize,
         CancellationToken cancellationToken = default);
 }
