@@ -1,121 +1,113 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useState } from 'react'
 import './App.css'
+import { getDashboardData } from './services/dashboardService'
+import type { DashboardData } from './types/dashboard'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadDashboard() {
+      try {
+        setIsLoading(true)
+        setErrorMessage(null)
+
+        const data = await getDashboardData(
+          true,
+          100,
+          controller.signal,
+        )
+
+        setDashboard(data)
+      } catch (error) {
+        if (
+          error instanceof DOMException &&
+          error.name === 'AbortError'
+        ) {
+          return
+        }
+
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : 'Ocorreu um erro inesperado.',
+        )
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void loadDashboard()
+
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
+  if (isLoading) {
+    return (
+      <main>
+        <p>Carregando dados do VI Impact...</p>
+      </main>
+    )
+  }
+
+  if (errorMessage) {
+    return (
+      <main>
+        <p>Erro: {errorMessage}</p>
+      </main>
+    )
+  }
+
+  if (!dashboard || dashboard.quotes.length === 0) {
+    return (
+      <main>
+        <p>Nenhuma cotação disponível.</p>
+      </main>
+    )
+  }
+
+  const latestQuote =
+    dashboard.quotes[dashboard.quotes.length - 1]
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+    <main>
+      <h1>VI Impact</h1>
+
+      <p>
+        Análise da relação entre eventos do GTA VI e as ações da
+        Take-Two Interactive.
+      </p>
+
+      <section>
+        <h2>{dashboard.symbol}</h2>
+
+        <p>
+          Preço atual: US$ {latestQuote.price.toFixed(2)}
+        </p>
+
+        <p>
+          Variação: {latestQuote.changePercent.toFixed(2)}%
+        </p>
+
+        <p>
+          Volume: {latestQuote.volume.toLocaleString('pt-BR')}
+        </p>
+
+        <p>
+          Cotações carregadas: {dashboard.quotes.length}
+        </p>
+
+        <p>
+          Eventos do GTA VI: {dashboard.gtaEvents.length}
+        </p>
       </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    </main>
   )
 }
 
