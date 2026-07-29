@@ -1,5 +1,9 @@
-import { useEffect, useState } from 'react'
+import {
+  useEffect,
+  useState,
+} from 'react'
 import './App.css'
+import { ChartPeriodSelector } from './components/ChartPeriodSelector'
 import { StockChart } from './components/StockChart'
 import { getDashboardData } from './services/dashboardService'
 import { getStockTimeSeries } from './services/stockTimeSeriesService'
@@ -7,14 +11,18 @@ import type {
   DashboardData,
   StockQuote,
   StockTimeSeries,
+  StockTimeSeriesPeriod,
 } from './types/dashboard'
 
 type Theme = 'day' | 'night'
 
 function getInitialTheme(): Theme {
-  const savedTheme = localStorage.getItem('vi-impact-theme')
+  const savedTheme =
+    localStorage.getItem('vi-impact-theme')
 
-  return savedTheme === 'night' ? 'night' : 'day'
+  return savedTheme === 'night'
+    ? 'night'
+    : 'day'
 }
 
 function parseUtcDate(dateText: string): Date {
@@ -22,11 +30,11 @@ function parseUtcDate(dateText: string): Date {
     dateText.endsWith('Z') ||
     /[+-]\d{2}:\d{2}$/.test(dateText)
 
-  const normalizedDate = hasTimezone
-    ? dateText
-    : `${dateText}Z`
-
-  return new Date(normalizedDate)
+  return new Date(
+    hasTimezone
+      ? dateText
+      : `${dateText}Z`,
+  )
 }
 
 function formatDate(dateText: string): string {
@@ -36,23 +44,62 @@ function formatDate(dateText: string): string {
   }).format(parseUtcDate(dateText))
 }
 
+function toDateInputValue(
+  date: Date,
+): string {
+  const localDate = new Date(
+    date.getTime() -
+      date.getTimezoneOffset() *
+        60 *
+        1000,
+  )
+
+  return localDate
+    .toISOString()
+    .slice(0, 10)
+}
+
+function createInitialCustomRange() {
+  const endDate = new Date()
+  const startDate = new Date(endDate)
+
+  startDate.setMonth(
+    startDate.getMonth() - 1,
+  )
+
+  return {
+    startDate:
+      toDateInputValue(startDate),
+    endDate:
+      toDateInputValue(endDate),
+  }
+}
+
 function getLatestQuote(
   quotes: StockQuote[],
 ): StockQuote {
-  return quotes.reduce((latestQuote, currentQuote) => {
-    const latestTimestamp = parseUtcDate(
-      latestQuote.recordedAtUtc,
-    ).getTime()
+  return quotes.reduce(
+    (latestQuote, currentQuote) => {
+      const latestTimestamp =
+        parseUtcDate(
+          latestQuote.recordedAtUtc,
+        ).getTime()
 
-    const currentTimestamp = parseUtcDate(
-      currentQuote.recordedAtUtc,
-    ).getTime()
+      const currentTimestamp =
+        parseUtcDate(
+          currentQuote.recordedAtUtc,
+        ).getTime()
 
-    return currentTimestamp > latestTimestamp
-      ? currentQuote
-      : latestQuote
-  })
+      return currentTimestamp >
+        latestTimestamp
+        ? currentQuote
+        : latestQuote
+    },
+  )
 }
+
+const initialCustomRange =
+  createInitialCustomRange()
 
 function App() {
   const [dashboard, setDashboard] =
@@ -61,71 +108,97 @@ function App() {
   const [timeSeries, setTimeSeries] =
     useState<StockTimeSeries | null>(null)
 
-  const [isLoading, setIsLoading] =
-    useState(true)
+  const [
+    selectedPeriod,
+    setSelectedPeriod,
+  ] = useState<StockTimeSeriesPeriod>('1Y')
 
-  const [errorMessage, setErrorMessage] =
-    useState<string | null>(null)
+  const [
+    customStartDate,
+    setCustomStartDate,
+  ] = useState(
+    initialCustomRange.startDate,
+  )
+
+  const [
+    customEndDate,
+    setCustomEndDate,
+  ] = useState(
+    initialCustomRange.endDate,
+  )
+
+  const [
+    appliedCustomStartDate,
+    setAppliedCustomStartDate,
+  ] = useState(
+    initialCustomRange.startDate,
+  )
+
+  const [
+    appliedCustomEndDate,
+    setAppliedCustomEndDate,
+  ] = useState(
+    initialCustomRange.endDate,
+  )
+
+  const [
+    isDashboardLoading,
+    setIsDashboardLoading,
+  ] = useState(true)
+
+  const [
+    isChartLoading,
+    setIsChartLoading,
+  ] = useState(true)
+
+  const [
+    dashboardError,
+    setDashboardError,
+  ] = useState<string | null>(null)
+
+  const [
+    chartError,
+    setChartError,
+  ] = useState<string | null>(null)
 
   const [theme, setTheme] =
     useState<Theme>(getInitialTheme)
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    localStorage.setItem('vi-impact-theme', theme)
+    document.documentElement.dataset.theme =
+      theme
+
+    localStorage.setItem(
+      'vi-impact-theme',
+      theme,
+    )
   }, [theme])
 
   useEffect(() => {
-    const controller = new AbortController()
     let isActive = true
 
     async function loadDashboard() {
       try {
-        setIsLoading(true)
-        setErrorMessage(null)
-
-        const [
-          dashboardData,
-          timeSeriesData,
-        ] = await Promise.all([
-          getDashboardData(
+        const dashboardData =
+          await getDashboardData(
             true,
             100,
-            controller.signal,
-          ),
-
-          getStockTimeSeries(
-            'TTWO',
-            '1day',
-            365,
-            controller.signal,
-          ),
-        ])
-
-        if (!isActive) {
-          return
-        }
-
-        setDashboard(dashboardData)
-        setTimeSeries(timeSeriesData)
-      } catch (error) {
-        if (
-          error instanceof DOMException &&
-          error.name === 'AbortError'
-        ) {
-          return
-        }
+          )
 
         if (isActive) {
-          setErrorMessage(
+          setDashboard(dashboardData)
+        }
+      } catch (error) {
+        if (isActive) {
+          setDashboardError(
             error instanceof Error
               ? error.message
-              : 'Ocorreu um erro inesperado.',
+              : 'Não foi possível carregar o dashboard.',
           )
         }
       } finally {
         if (isActive) {
-          setIsLoading(false)
+          setIsDashboardLoading(false)
         }
       }
     }
@@ -134,41 +207,162 @@ function App() {
 
     return () => {
       isActive = false
-      controller.abort()
     }
   }, [])
 
+  useEffect(() => {
+    let isActive = true
+
+    const timeoutId =
+      window.setTimeout(() => {
+        async function loadTimeSeries() {
+          try {
+            const timeSeriesData =
+              await getStockTimeSeries(
+                'TTWO',
+                {
+                  period:
+                    selectedPeriod,
+
+                  startDate:
+                    selectedPeriod ===
+                    'CUSTOM'
+                      ? appliedCustomStartDate
+                      : undefined,
+
+                  endDate:
+                    selectedPeriod ===
+                    'CUSTOM'
+                      ? appliedCustomEndDate
+                      : undefined,
+                },
+              )
+
+            if (isActive) {
+              setTimeSeries(
+                timeSeriesData,
+              )
+            }
+          } catch (error) {
+            if (isActive) {
+              setChartError(
+                error instanceof Error
+                  ? error.message
+                  : 'Não foi possível carregar o histórico.',
+              )
+            }
+          } finally {
+            if (isActive) {
+              setIsChartLoading(false)
+            }
+          }
+        }
+
+        void loadTimeSeries()
+      }, 250)
+
+    return () => {
+      isActive = false
+      window.clearTimeout(timeoutId)
+    }
+  }, [
+    selectedPeriod,
+    appliedCustomStartDate,
+    appliedCustomEndDate,
+  ])
+
+  function prepareChartReload() {
+    setIsChartLoading(true)
+    setChartError(null)
+    setTimeSeries(null)
+  }
+
+  function handlePeriodChange(
+    period: StockTimeSeriesPeriod,
+  ) {
+    if (period === selectedPeriod) {
+      return
+    }
+
+    prepareChartReload()
+    setSelectedPeriod(period)
+  }
+
   function toggleTheme() {
     setTheme((currentTheme) =>
-      currentTheme === 'day' ? 'night' : 'day',
+      currentTheme === 'day'
+        ? 'night'
+        : 'day',
     )
   }
 
-  if (isLoading) {
+  function handleCustomDateChange(
+    field: 'start' | 'end',
+    value: string,
+  ) {
+    if (field === 'start') {
+      setCustomStartDate(value)
+      return
+    }
+
+    setCustomEndDate(value)
+  }
+
+  function handleApplyCustomPeriod() {
+    const isSameCustomPeriod =
+      selectedPeriod === 'CUSTOM' &&
+      customStartDate ===
+        appliedCustomStartDate &&
+      customEndDate ===
+        appliedCustomEndDate
+
+    if (isSameCustomPeriod) {
+      return
+    }
+
+    prepareChartReload()
+
+    setAppliedCustomStartDate(
+      customStartDate,
+    )
+
+    setAppliedCustomEndDate(
+      customEndDate,
+    )
+
+    setSelectedPeriod('CUSTOM')
+  }
+
+  if (
+    isDashboardLoading &&
+    !dashboard
+  ) {
     return (
       <main className="status-screen">
-        <p>Carregando dados do VI Impact...</p>
+        <p>
+          Carregando dados do VI Impact...
+        </p>
       </main>
     )
   }
 
-  if (errorMessage) {
+  if (dashboardError) {
     return (
       <main className="status-screen">
-        <p>Erro: {errorMessage}</p>
+        <p>Erro: {dashboardError}</p>
       </main>
     )
   }
 
   if (
     !dashboard ||
-    !timeSeries ||
-    dashboard.quotes.length === 0 ||
-    timeSeries.values.length === 0
+    dashboard.quotes.length === 0
   ) {
     return (
       <main className="status-screen">
-        <p>Nenhuma cotação disponível.</p>
+        <p>
+          Nenhuma cotação disponível.
+        </p>
       </main>
     )
   }
@@ -183,8 +377,13 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <span className="brand-symbol">VI</span>
-          <span className="brand-name">Impact</span>
+          <span className="brand-symbol">
+            VI
+          </span>
+
+          <span className="brand-name">
+            Impact
+          </span>
         </div>
 
         <nav className="sidebar-navigation">
@@ -226,13 +425,21 @@ function App() {
 
         <div className="market-status">
           <span>Mercado</span>
+
           <strong>
-            {timeSeries.exchange} · {timeSeries.currency}
+            {timeSeries?.exchange ??
+              'NASDAQ'}{' '}
+            ·{' '}
+            {timeSeries?.currency ??
+              'USD'}
           </strong>
         </div>
       </aside>
 
-      <main className="dashboard" id="dashboard">
+      <main
+        className="dashboard"
+        id="dashboard"
+      >
         <header className="dashboard-header">
           <div>
             <p className="eyebrow">
@@ -240,12 +447,14 @@ function App() {
             </p>
 
             <h1>
-              Eventos do GTA VI e o desempenho da TTWO
+              Eventos do GTA VI e o desempenho
+              da TTWO
             </h1>
 
             <p className="dashboard-description">
-              Acompanhe possíveis relações entre notícias do
-              GTA VI e as ações da Take-Two Interactive.
+              Acompanhe possíveis relações entre
+              notícias do GTA VI e as ações da
+              Take-Two Interactive.
             </p>
           </div>
 
@@ -266,10 +475,13 @@ function App() {
             <span>Preço atual</span>
 
             <strong>
-              US$ {latestQuote.price.toFixed(2)}
+              US${' '}
+              {latestQuote.price.toFixed(2)}
             </strong>
 
-            <small>{dashboard.symbol}</small>
+            <small>
+              {dashboard.symbol}
+            </small>
           </article>
 
           <article className="summary-card">
@@ -283,7 +495,10 @@ function App() {
               }
             >
               {isPositive ? '+' : ''}
-              {latestQuote.changePercent.toFixed(2)}%
+              {latestQuote.changePercent.toFixed(
+                2,
+              )}
+              %
             </strong>
 
             <small>Última cotação</small>
@@ -293,17 +508,25 @@ function App() {
             <span>Volume</span>
 
             <strong>
-              {latestQuote.volume.toLocaleString('pt-BR')}
+              {latestQuote.volume.toLocaleString(
+                'pt-BR',
+              )}
             </strong>
 
-            <small>Ações negociadas</small>
+            <small>
+              Ações negociadas
+            </small>
           </article>
 
           <article className="summary-card">
-            <span>Última atualização</span>
+            <span>
+              Última atualização
+            </span>
 
             <strong className="date-value">
-              {formatDate(latestQuote.recordedAtUtc)}
+              {formatDate(
+                latestQuote.recordedAtUtc,
+              )}
             </strong>
 
             <small>Horário local</small>
@@ -318,18 +541,68 @@ function App() {
             <div className="panel-header">
               <div>
                 <p className="panel-eyebrow">
-                  {timeSeries.symbol} · {timeSeries.exchange}
+                  {timeSeries?.symbol ??
+                    'TTWO'}{' '}
+                  ·{' '}
+                  {timeSeries?.exchange ??
+                    'NASDAQ'}
                 </p>
 
                 <h2>
-                  Histórico da ação e eventos do GTA VI
+                  Histórico da ação e eventos
+                  do GTA VI
                 </h2>
               </div>
             </div>
 
-            <StockChart
-              values={timeSeries.values}
-              events={dashboard.gtaEvents}
+            {isChartLoading && (
+              <div className="chart-state-message">
+                Carregando período...
+              </div>
+            )}
+
+            {!isChartLoading &&
+              chartError && (
+                <div className="chart-state-message error">
+                  Erro: {chartError}
+                </div>
+              )}
+
+            {!isChartLoading &&
+              !chartError &&
+              timeSeries && (
+                <StockChart
+                  values={
+                    timeSeries.values
+                  }
+                  events={
+                    dashboard.gtaEvents
+                  }
+                />
+              )}
+
+            <ChartPeriodSelector
+              selectedPeriod={
+                selectedPeriod
+              }
+              customStartDate={
+                customStartDate
+              }
+              customEndDate={
+                customEndDate
+              }
+              isLoading={
+                isChartLoading
+              }
+              onPeriodChange={
+                handlePeriodChange
+              }
+              onCustomDateChange={
+                handleCustomDateChange
+              }
+              onApplyCustomPeriod={
+                handleApplyCustomPeriod
+              }
             />
           </article>
 
@@ -343,43 +616,56 @@ function App() {
                   Linha do tempo
                 </p>
 
-                <h2>Eventos recentes</h2>
+                <h2>
+                  Eventos recentes
+                </h2>
               </div>
             </div>
 
             <div className="events-list">
-              {dashboard.gtaEvents.length > 0 ? (
-                dashboard.gtaEvents.map((gtaEvent) => (
-                  <article
-                    className="event-card"
-                    key={gtaEvent.id}
-                  >
-                    <span className="event-date">
-                      {formatDate(
-                        gtaEvent.occurredAtUtc,
-                      )}
-                    </span>
-
-                    <h3>{gtaEvent.title}</h3>
-
-                    <p>{gtaEvent.description}</p>
-
-                    <a
-                      href={gtaEvent.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
+              {dashboard.gtaEvents.length >
+              0 ? (
+                dashboard.gtaEvents.map(
+                  (gtaEvent) => (
+                    <article
+                      className="event-card"
+                      key={gtaEvent.id}
                     >
-                      Ver fonte
-                    </a>
-                  </article>
-                ))
+                      <span className="event-date">
+                        {formatDate(
+                          gtaEvent.occurredAtUtc,
+                        )}
+                      </span>
+
+                      <h3>
+                        {gtaEvent.title}
+                      </h3>
+
+                      <p>
+                        {gtaEvent.description}
+                      </p>
+
+                      <a
+                        href={
+                          gtaEvent.sourceUrl
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Ver fonte
+                      </a>
+                    </article>
+                  ),
+                )
               ) : (
                 <article className="event-card">
-                  <h3>Nenhum evento cadastrado</h3>
+                  <h3>
+                    Nenhum evento cadastrado
+                  </h3>
 
                   <p>
-                    Ainda não existem eventos relacionados ao
-                    GTA VI para este período.
+                    Ainda não existem eventos
+                    relacionados ao GTA VI.
                   </p>
                 </article>
               )}

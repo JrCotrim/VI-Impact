@@ -37,3 +37,16 @@ export interface StockTimeSeries {
   exchangeTimezone: string
   values: StockTimeSeriesPoint[]
 }
+
+export type StockTimeSeriesPeriod =
+  | '1D'
+  | '7D'
+  | '1M'
+  | '3M'
+  | '6M'
+  | 'YTD'
+  | '1Y'
+  | '2Y'
+  | '5Y'
+  | 'MAX'
+  | 'CUSTOM'

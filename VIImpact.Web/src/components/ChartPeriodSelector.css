@@ -1,0 +1,206 @@
+.chart-period-section {
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-color);
+}
+
+.chart-period-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: color-mix(
+    in srgb,
+    var(--panel-background) 92%,
+    var(--accent-pink) 8%
+  );
+  box-shadow: var(--card-shadow);
+}
+
+.chart-period-options {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.chart-period-button,
+.calendar-period-button {
+  flex: 0 0 auto;
+  min-width: 44px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--secondary-text);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.chart-period-button:hover,
+.calendar-period-button:hover {
+  color: var(--primary-text);
+  border-color: var(--border-color);
+  background: var(--panel-background);
+  transform: translateY(-1px);
+}
+
+.chart-period-button.active,
+.calendar-period-button.active {
+  color: white;
+  border-color: var(--accent-pink);
+  background: var(--accent-pink);
+  box-shadow: 0 6px 16px
+    color-mix(
+      in srgb,
+      var(--accent-pink) 30%,
+      transparent
+    );
+}
+
+.chart-period-button:disabled,
+.calendar-period-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+  transform: none;
+}
+
+.calendar-period-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  padding: 0 9px;
+}
+
+.calendar-period-button svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
+}
+
+.chart-period-loading {
+  flex: 0 0 auto;
+  color: var(--secondary-text);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.custom-period-panel {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--panel-background);
+  box-shadow: var(--card-shadow);
+}
+
+.custom-date-field {
+  display: grid;
+  gap: 6px;
+}
+
+.custom-date-field label {
+  color: var(--secondary-text);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.custom-date-field input {
+  height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  outline: none;
+  background: var(--panel-background);
+  color: var(--primary-text);
+  font: inherit;
+}
+
+.custom-date-field input:focus {
+  border-color: var(--accent-pink);
+  box-shadow: 0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--accent-pink) 18%,
+      transparent
+    );
+}
+
+.apply-custom-period-button {
+  height: 38px;
+  padding: 0 18px;
+  border: 1px solid var(--accent-pink);
+  border-radius: 9px;
+  background: var(--accent-pink);
+  color: white;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.custom-period-error {
+  width: 100%;
+  margin: 0;
+  color: var(--negative-value);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.chart-state-message {
+  display: grid;
+  min-height: 450px;
+  place-items: center;
+  color: var(--secondary-text);
+  font-weight: 700;
+  text-align: center;
+}
+
+.chart-state-message.error {
+  color: var(--negative-value);
+}
+
+@media (max-width: 900px) {
+  .chart-period-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .chart-period-options {
+    width: 100%;
+    padding-bottom: 4px;
+  }
+
+  .chart-period-loading {
+    padding-left: 4px;
+  }
+}
+
+@media (max-width: 600px) {
+  .custom-period-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .custom-date-field input,
+  .apply-custom-period-button {
+    width: 100%;
+  }
+}

@@ -14,7 +14,6 @@ public interface IStockMarketService
 
     Task<StockTimeSeries> GetTimeSeriesAsync(
         string symbol,
-        string interval,
-        int outputSize,
+        StockTimeSeriesQuery query,
         CancellationToken cancellationToken = default);
 }

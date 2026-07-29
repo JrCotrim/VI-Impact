@@ -27,42 +27,128 @@ interface ChartPoint {
 
 interface EventMarker {
   id: string
-  title: string
+  label: string
   timestamp: number
   price: number
+  labelSide: 'left' | 'right'
 }
 
-function normalizeDate(dateText: string): Date {
+interface EventMarkerLabelProps {
+  label: string
+  side: 'left' | 'right'
+  viewBox?: {
+    x?: number
+    y?: number
+  }
+}
+
+function normalizeDate(
+  dateText: string,
+): Date {
   const hasTimezone =
     dateText.endsWith('Z') ||
     /[+-]\d{2}:\d{2}$/.test(dateText)
 
   return new Date(
-    hasTimezone ? dateText : `${dateText}Z`,
+    hasTimezone
+      ? dateText
+      : `${dateText}Z`,
   )
 }
 
-function formatAxisDate(timestamp: number): string {
-  return new Intl.DateTimeFormat('pt-BR', {
-    month: 'short',
-    year: '2-digit',
-  }).format(new Date(timestamp))
+function calculateChartRangeInDays(
+  points: ChartPoint[],
+): number {
+  if (points.length < 2) {
+    return 0
+  }
+
+  const range =
+    points[points.length - 1].timestamp -
+    points[0].timestamp
+
+  return range / (24 * 60 * 60 * 1000)
 }
 
-function formatTooltipDate(timestamp: number): string {
-  return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'long',
-  }).format(new Date(timestamp))
+function formatAxisDate(
+  timestamp: number,
+  rangeInDays: number,
+): string {
+  if (rangeInDays <= 2) {
+    return new Intl.DateTimeFormat(
+      'pt-BR',
+      {
+        hour: '2-digit',
+        minute: '2-digit',
+      },
+    ).format(new Date(timestamp))
+  }
+
+  if (rangeInDays <= 45) {
+    return new Intl.DateTimeFormat(
+      'pt-BR',
+      {
+        day: '2-digit',
+        month: 'short',
+      },
+    ).format(new Date(timestamp))
+  }
+
+  if (rangeInDays <= 200) {
+    return new Intl.DateTimeFormat(
+      'pt-BR',
+      {
+        month: 'short',
+      },
+    ).format(new Date(timestamp))
+  }
+
+  return new Intl.DateTimeFormat(
+    'pt-BR',
+    {
+      month: 'short',
+      year: '2-digit',
+    },
+  ).format(new Date(timestamp))
 }
 
-function shortenTitle(title: string): string {
-  const maximumLength = 18
+function formatTooltipDate(
+  timestamp: number,
+  rangeInDays: number,
+): string {
+  const date = new Date(timestamp)
+
+  if (rangeInDays <= 14) {
+    return new Intl.DateTimeFormat(
+      'pt-BR',
+      {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      },
+    ).format(date)
+  }
+
+  return new Intl.DateTimeFormat(
+    'pt-BR',
+    {
+      dateStyle: 'long',
+    },
+  ).format(date)
+}
+
+function shortenTitle(
+  title: string,
+): string {
+  const maximumLength = 22
 
   if (title.length <= maximumLength) {
     return title
   }
 
-  return `${title.slice(0, maximumLength)}...`
+  return `${title.slice(
+    0,
+    maximumLength,
+  )}...`
 }
 
 function createChartData(
@@ -94,25 +180,37 @@ function createAxisTicks(
     return []
   }
 
-  const minimumTimestamp = points[0].timestamp
-  const maximumTimestamp =
-    points[points.length - 1].timestamp
+  const minimumTimestamp =
+    points[0].timestamp
 
-  if (minimumTimestamp === maximumTimestamp) {
+  const maximumTimestamp =
+    points[
+      points.length - 1
+    ].timestamp
+
+  if (
+    minimumTimestamp ===
+    maximumTimestamp
+  ) {
     return [minimumTimestamp]
   }
 
   const range =
-    maximumTimestamp - minimumTimestamp
+    maximumTimestamp -
+    minimumTimestamp
 
   return Array.from(
-    { length: numberOfTicks },
+    {
+      length: numberOfTicks,
+    },
     (_, index) => {
       const position =
-        index / (numberOfTicks - 1)
+        index /
+        (numberOfTicks - 1)
 
       return Math.round(
-        minimumTimestamp + range * position,
+        minimumTimestamp +
+          range * position,
       )
     },
   )
@@ -127,16 +225,22 @@ function calculateEventPrice(
   }
 
   const nearestPoint = points.reduce(
-    (currentNearestPoint, currentPoint) => {
+    (
+      currentNearestPoint,
+      currentPoint,
+    ) => {
       const currentDistance = Math.abs(
-        currentPoint.timestamp - timestamp,
+        currentPoint.timestamp -
+          timestamp,
       )
 
       const nearestDistance = Math.abs(
-        currentNearestPoint.timestamp - timestamp,
+        currentNearestPoint.timestamp -
+          timestamp,
       )
 
-      return currentDistance < nearestDistance
+      return currentDistance <
+        nearestDistance
         ? currentPoint
         : currentNearestPoint
     },
@@ -157,38 +261,108 @@ function createEventMarkers(
     chartData[0].timestamp
 
   const maximumTimestamp =
-    chartData[chartData.length - 1].timestamp
+    chartData[
+      chartData.length - 1
+    ].timestamp
 
-  return events
-    .map((gtaEvent) => {
-      const timestamp = normalizeDate(
+  const eventGroups =
+    new Map<string, GtaEvent[]>()
+
+  events.forEach((gtaEvent) => {
+    const eventDate =
+      normalizeDate(
         gtaEvent.occurredAtUtc,
-      ).getTime()
-
-      if (
-        !Number.isFinite(timestamp) ||
-        timestamp < minimumTimestamp ||
-        timestamp > maximumTimestamp
-      ) {
-        return null
-      }
-
-      const price = calculateEventPrice(
-        chartData,
-        timestamp,
       )
 
-      if (price === null) {
-        return null
-      }
+    const timestamp =
+      eventDate.getTime()
 
-      return {
-        id: gtaEvent.id,
-        title: gtaEvent.title,
-        timestamp,
-        price,
-      }
-    })
+    if (!Number.isFinite(timestamp)) {
+      return
+    }
+
+    const dateKey =
+      eventDate
+        .toISOString()
+        .slice(0, 10)
+
+    const currentGroup =
+      eventGroups.get(dateKey) ?? []
+
+    currentGroup.push(gtaEvent)
+
+    eventGroups.set(
+      dateKey,
+      currentGroup,
+    )
+  })
+
+  return Array.from(
+    eventGroups.entries(),
+  )
+    .map(
+      ([dateKey, groupedEvents]) => {
+        const timestamp = Math.min(
+          ...groupedEvents.map(
+            (gtaEvent) =>
+              normalizeDate(
+                gtaEvent.occurredAtUtc,
+              ).getTime(),
+          ),
+        )
+
+        if (
+          timestamp <
+            minimumTimestamp ||
+          timestamp >
+            maximumTimestamp
+        ) {
+          return null
+        }
+
+        const price =
+          calculateEventPrice(
+            chartData,
+            timestamp,
+          )
+
+        if (price === null) {
+          return null
+        }
+
+        const chartPosition =
+          maximumTimestamp ===
+          minimumTimestamp
+            ? 0
+            : (timestamp -
+                minimumTimestamp) /
+              (maximumTimestamp -
+                minimumTimestamp)
+
+        const label =
+          groupedEvents.length === 1
+            ? shortenTitle(
+                groupedEvents[0].title,
+              )
+            : `${groupedEvents.length} eventos GTA VI`
+
+        return {
+          id: `${dateKey}-${groupedEvents
+            .map(
+              (gtaEvent) =>
+                gtaEvent.id,
+            )
+            .join('-')}`,
+          label,
+          timestamp,
+          price,
+          labelSide:
+            chartPosition >= 0.75
+              ? 'left'
+              : 'right',
+        } satisfies EventMarker
+      },
+    )
     .filter(
       (
         marker,
@@ -197,28 +371,73 @@ function createEventMarkers(
     )
 }
 
+function EventMarkerLabel({
+  label,
+  side,
+  viewBox,
+}: EventMarkerLabelProps) {
+  const x = viewBox?.x ?? 0
+  const y = (viewBox?.y ?? 0) + 10
+
+  const horizontalOffset =
+    side === 'left' ? -8 : 8
+
+  return (
+    <text
+      x={x + horizontalOffset}
+      y={y}
+      fill="var(--primary-text)"
+      fontSize={11}
+      fontWeight={700}
+      textAnchor={
+        side === 'left'
+          ? 'end'
+          : 'start'
+      }
+      dominantBaseline="hanging"
+      pointerEvents="none"
+    >
+      {label}
+    </text>
+  )
+}
+
 export function StockChart({
   values,
   events,
 }: StockChartProps) {
-  const chartData = createChartData(values)
+  const chartData =
+    createChartData(values)
 
-  const axisTicks = createAxisTicks(
-    chartData,
-    7,
-  )
+  const chartRangeInDays =
+    calculateChartRangeInDays(
+      chartData,
+    )
 
-  const eventMarkers = createEventMarkers(
-    events,
-    chartData,
-  )
+  const axisTicks =
+    createAxisTicks(
+      chartData,
+      7,
+    )
+
+  const eventMarkers =
+    createEventMarkers(
+      events,
+      chartData,
+    )
 
   return (
     <div
       className="stock-chart-container"
-      style={{ width: '100%', height: 450 }}
+      style={{
+        width: '100%',
+        height: 450,
+      }}
     >
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer
+        width="100%"
+        height="100%"
+      >
         <AreaChart
           data={chartData}
           margin={{
@@ -260,19 +479,29 @@ export function StockChart({
             dataKey="timestamp"
             type="number"
             scale="time"
-            domain={['dataMin', 'dataMax']}
+            domain={[
+              'dataMin',
+              'dataMax',
+            ]}
             ticks={axisTicks}
             interval={0}
-            tickFormatter={(timestamp) =>
-              formatAxisDate(Number(timestamp))
+            tickFormatter={(
+              timestamp,
+            ) =>
+              formatAxisDate(
+                Number(timestamp),
+                chartRangeInDays,
+              )
             }
             tick={{
-              fill: 'var(--secondary-text)',
+              fill:
+                'var(--secondary-text)',
               fontSize: 12,
               fontWeight: 600,
             }}
             axisLine={{
-              stroke: 'var(--border-color)',
+              stroke:
+                'var(--border-color)',
             }}
             tickLine={false}
             tickMargin={14}
@@ -287,7 +516,8 @@ export function StockChart({
               Number(price).toFixed(2)
             }
             tick={{
-              fill: 'var(--secondary-text)',
+              fill:
+                'var(--secondary-text)',
               fontSize: 12,
             }}
             axisLine={false}
@@ -295,39 +525,54 @@ export function StockChart({
           />
 
           <Tooltip
-            labelFormatter={(timestamp) =>
-              formatTooltipDate(Number(timestamp))
+            labelFormatter={(
+              timestamp,
+            ) =>
+              formatTooltipDate(
+                Number(timestamp),
+                chartRangeInDays,
+              )
             }
             formatter={(value) => [
-              `US$ ${Number(value).toFixed(2)}`,
+              `US$ ${Number(
+                value,
+              ).toFixed(2)}`,
               'Fechamento',
             ]}
             contentStyle={{
-              color: 'var(--primary-text)',
-              background: 'var(--panel-background)',
+              color:
+                'var(--primary-text)',
+              background:
+                'var(--panel-background)',
               border:
                 '1px solid var(--border-color)',
               borderRadius: '12px',
-              boxShadow: 'var(--card-shadow)',
+              boxShadow:
+                'var(--card-shadow)',
             }}
           />
 
-          {eventMarkers.map((marker) => (
-            <ReferenceLine
-              key={`line-${marker.id}`}
-              x={marker.timestamp}
-              stroke="var(--accent-pink)"
-              strokeDasharray="5 5"
-              strokeWidth={2}
-              label={{
-                value: shortenTitle(marker.title),
-                position: 'insideTopLeft',
-                fill: 'var(--primary-text)',
-                fontSize: 11,
-                fontWeight: 700,
-              }}
-            />
-          ))}
+          {eventMarkers.map(
+            (marker) => (
+              <ReferenceLine
+                key={`line-${marker.id}`}
+                x={marker.timestamp}
+                stroke="var(--accent-pink)"
+                strokeDasharray="5 5"
+                strokeWidth={2}
+                label={
+                  <EventMarkerLabel
+                    label={
+                      marker.label
+                    }
+                    side={
+                      marker.labelSide
+                    }
+                  />
+                }
+              />
+            ),
+          )}
 
           <Area
             type="monotone"
@@ -339,22 +584,25 @@ export function StockChart({
             dot={false}
             activeDot={{
               r: 5,
-              fill: 'var(--accent-blue)',
+              fill:
+                'var(--accent-blue)',
             }}
             isAnimationActive={false}
           />
 
-          {eventMarkers.map((marker) => (
-            <ReferenceDot
-              key={`dot-${marker.id}`}
-              x={marker.timestamp}
-              y={marker.price}
-              r={7}
-              fill="var(--accent-pink)"
-              stroke="var(--panel-background)"
-              strokeWidth={3}
-            />
-          ))}
+          {eventMarkers.map(
+            (marker) => (
+              <ReferenceDot
+                key={`dot-${marker.id}`}
+                x={marker.timestamp}
+                y={marker.price}
+                r={7}
+                fill="var(--accent-pink)"
+                stroke="var(--panel-background)"
+                strokeWidth={3}
+              />
+            ),
+          )}
         </AreaChart>
       </ResponsiveContainer>
     </div>

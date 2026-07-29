@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -21,6 +22,14 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
         "yyyy-MM-dd HH:mm",
         "yyyy-MM-dd"
     ];
+
+    private static readonly ConcurrentDictionary<
+        string,
+        TimeSeriesCacheEntry> TimeSeriesCache = new();
+
+    private static readonly ConcurrentDictionary<
+        string,
+        SemaphoreSlim> TimeSeriesCacheLocks = new();
 
     private readonly HttpClient _httpClient;
     private readonly TwelveDataOptions _options;
@@ -113,39 +122,80 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
 
     public async Task<StockTimeSeries> GetTimeSeriesAsync(
         string symbol,
-        string interval,
-        int outputSize,
+        StockTimeSeriesQuery query,
         CancellationToken cancellationToken = default)
     {
         ValidateSymbol(symbol);
         ValidateApiKey();
-
-        if (string.IsNullOrWhiteSpace(interval))
-        {
-            throw new ArgumentException(
-                "The time-series interval is required.",
-                nameof(interval));
-        }
-
-        if (outputSize is < 1 or > 5000)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(outputSize),
-                "The output size must be between 1 and 5000.");
-        }
+        ValidateTimeSeriesQuery(query);
 
         string normalizedSymbol =
             symbol.Trim().ToUpperInvariant();
 
-        string normalizedInterval =
-            interval.Trim();
+        string cacheKey =
+            CreateTimeSeriesCacheKey(
+                normalizedSymbol,
+                query);
 
+        if (TryGetCachedTimeSeries(
+                cacheKey,
+                out StockTimeSeries? cachedTimeSeries))
+        {
+            return cachedTimeSeries;
+        }
+
+        SemaphoreSlim cacheLock =
+            TimeSeriesCacheLocks.GetOrAdd(
+                cacheKey,
+                _ => new SemaphoreSlim(1, 1));
+
+        await cacheLock.WaitAsync(
+            cancellationToken);
+
+        try
+        {
+            if (TryGetCachedTimeSeries(
+                    cacheKey,
+                    out cachedTimeSeries))
+            {
+                return cachedTimeSeries;
+            }
+
+            StockTimeSeries timeSeries =
+                await GetTimeSeriesFromProviderAsync(
+                    normalizedSymbol,
+                    query,
+                    cancellationToken);
+
+            TimeSpan cacheDuration =
+                GetTimeSeriesCacheDuration(query);
+
+            TimeSeriesCache[cacheKey] =
+                new TimeSeriesCacheEntry
+                {
+                    Value = timeSeries,
+                    ExpiresAtUtc =
+                        DateTime.UtcNow.Add(
+                            cacheDuration)
+                };
+
+            return timeSeries;
+        }
+        finally
+        {
+            cacheLock.Release();
+        }
+    }
+
+    private async Task<StockTimeSeries> GetTimeSeriesFromProviderAsync(
+        string normalizedSymbol,
+        StockTimeSeriesQuery query,
+        CancellationToken cancellationToken)
+    {
         string endpoint =
-            "/time_series" +
-            $"?symbol={Uri.EscapeDataString(normalizedSymbol)}" +
-            $"&interval={Uri.EscapeDataString(normalizedInterval)}" +
-            $"&outputsize={outputSize}" +
-            "&adjust=all";
+            CreateTimeSeriesEndpoint(
+                normalizedSymbol,
+                query);
 
         using HttpRequestMessage request =
             CreateAuthenticatedRequest(endpoint);
@@ -183,7 +233,8 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
                 "Twelve Data returned time-series data without metadata.");
 
         TimeZoneInfo exchangeTimeZone =
-            ResolveTimeZone(metadata.ExchangeTimezone);
+            ResolveTimeZone(
+                metadata.ExchangeTimezone);
 
         var values =
             new List<StockTimeSeriesPoint>();
@@ -219,12 +270,169 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
             Symbol = string.IsNullOrWhiteSpace(metadata.Symbol)
                 ? normalizedSymbol
                 : metadata.Symbol.Trim().ToUpperInvariant(),
+
             Interval = metadata.Interval,
             Currency = metadata.Currency,
             Exchange = metadata.Exchange,
-            ExchangeTimezone = metadata.ExchangeTimezone,
+
+            ExchangeTimezone =
+                metadata.ExchangeTimezone,
+
             Values = values
         };
+    }
+
+    private static bool TryGetCachedTimeSeries(
+        string cacheKey,
+        [NotNullWhen(true)] out StockTimeSeries? timeSeries)
+    {
+        timeSeries = null;
+
+        if (!TimeSeriesCache.TryGetValue(
+                cacheKey,
+                out TimeSeriesCacheEntry? cacheEntry))
+        {
+            return false;
+        }
+
+        if (cacheEntry.ExpiresAtUtc <= DateTime.UtcNow)
+        {
+            TimeSeriesCache.TryRemove(
+                cacheKey,
+                out _);
+
+            return false;
+        }
+
+        timeSeries = cacheEntry.Value;
+
+        return true;
+    }
+
+    private static string CreateTimeSeriesCacheKey(
+        string normalizedSymbol,
+        StockTimeSeriesQuery query)
+    {
+        string normalizedInterval =
+            query.Interval
+                .Trim()
+                .ToLowerInvariant();
+
+        string outputSize =
+            query.OutputSize?.ToString(
+                CultureInfo.InvariantCulture)
+            ?? "none";
+
+        string startDate =
+            query.StartDate?.ToString(
+                "O",
+                CultureInfo.InvariantCulture)
+            ?? "none";
+
+        string endDate =
+            query.EndDate?.ToString(
+                "O",
+                CultureInfo.InvariantCulture)
+            ?? "none";
+
+        return string.Join(
+            "|",
+            normalizedSymbol,
+            normalizedInterval,
+            outputSize,
+            startDate,
+            endDate);
+    }
+
+    private static TimeSpan GetTimeSeriesCacheDuration(
+        StockTimeSeriesQuery query)
+    {
+        string normalizedInterval =
+            query.Interval
+                .Trim()
+                .ToLowerInvariant();
+
+        return normalizedInterval switch
+        {
+            "1min" or
+            "5min" or
+            "15min" =>
+                TimeSpan.FromMinutes(1),
+
+            "30min" or
+            "45min" or
+            "1h" or
+            "2h" or
+            "4h" =>
+                TimeSpan.FromMinutes(5),
+
+            "1day" =>
+                TimeSpan.FromMinutes(30),
+
+            "1week" or
+            "1month" =>
+                TimeSpan.FromHours(12),
+
+            _ =>
+                TimeSpan.FromMinutes(10)
+        };
+    }
+
+    private static string CreateTimeSeriesEndpoint(
+        string normalizedSymbol,
+        StockTimeSeriesQuery query)
+    {
+        var parameters =
+            new List<string>
+            {
+                $"symbol={Uri.EscapeDataString(normalizedSymbol)}",
+                $"interval={Uri.EscapeDataString(query.Interval.Trim())}",
+                "adjust=all"
+            };
+
+        if (query.OutputSize.HasValue)
+        {
+            parameters.Add(
+                $"outputsize={query.OutputSize.Value}");
+        }
+
+        if (query.StartDate.HasValue)
+        {
+            string startDate =
+                FormatDateParameter(
+                    query.StartDate.Value);
+
+            parameters.Add(
+                $"start_date={Uri.EscapeDataString(startDate)}");
+        }
+
+        if (query.EndDate.HasValue)
+        {
+            string endDate =
+                FormatDateParameter(
+                    query.EndDate.Value);
+
+            parameters.Add(
+                $"end_date={Uri.EscapeDataString(endDate)}");
+        }
+
+        return
+            $"/time_series?{string.Join("&", parameters)}";
+    }
+
+    private static string FormatDateParameter(
+        DateTime dateTime)
+    {
+        if (dateTime.TimeOfDay == TimeSpan.Zero)
+        {
+            return dateTime.ToString(
+                "yyyy-MM-dd",
+                CultureInfo.InvariantCulture);
+        }
+
+        return dateTime.ToString(
+            "yyyy-MM-ddTHH:mm:ss",
+            CultureInfo.InvariantCulture);
     }
 
     private HttpRequestMessage CreateAuthenticatedRequest(
@@ -365,6 +573,39 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
         }
     }
 
+    private static void ValidateTimeSeriesQuery(
+        StockTimeSeriesQuery query)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        if (string.IsNullOrWhiteSpace(query.Interval))
+        {
+            throw new ArgumentException(
+                "The time-series interval is required.",
+                nameof(query));
+        }
+
+        if (
+            query.OutputSize.HasValue &&
+            query.OutputSize.Value is < 1 or > 5000)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(query),
+                "The output size must be between 1 and 5000.");
+        }
+
+        if (
+            query.StartDate.HasValue &&
+            query.EndDate.HasValue &&
+            query.StartDate.Value >
+            query.EndDate.Value)
+        {
+            throw new ArgumentException(
+                "The start date cannot be after the end date.",
+                nameof(query));
+        }
+    }
+
     private static void ValidateSymbol(
         string symbol)
     {
@@ -383,5 +624,12 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
             throw new InvalidOperationException(
                 "The Twelve Data API key was not configured.");
         }
+    }
+
+    private sealed class TimeSeriesCacheEntry
+    {
+        public required StockTimeSeries Value { get; init; }
+
+        public DateTime ExpiresAtUtc { get; init; }
     }
 }
