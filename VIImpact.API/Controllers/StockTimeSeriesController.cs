@@ -27,6 +27,20 @@ public sealed class StockTimeSeriesController : ControllerBase
         "CUSTOM"
     ];
 
+    private static readonly string[] PerformancePeriods =
+    [
+        "1D",
+        "7D",
+        "1M",
+        "3M",
+        "6M",
+        "YTD",
+        "1Y",
+        "2Y",
+        "5Y",
+        "MAX"
+    ];
+
     private readonly IStockMarketService _stockMarketService;
 
     public StockTimeSeriesController(
@@ -142,13 +156,19 @@ public sealed class StockTimeSeriesController : ControllerBase
 
     private static StockTimeSeriesResponse CreateResponse(
         StockTimeSeries timeSeries,
-        string period,
+        string requestedPeriod,
         DateTime currentDate)
     {
-        IReadOnlyList<StockTimeSeriesPoint> values =
+        IReadOnlyList<StockTimeSeriesPoint> filteredValues =
             FilterValuesForPeriod(
                 timeSeries.Values,
-                period,
+                requestedPeriod,
+                currentDate);
+
+        IReadOnlyList<StockPeriodPerformanceResponse> performances =
+            CreatePeriodPerformances(
+                timeSeries.Values,
+                requestedPeriod,
                 currentDate);
 
         return new StockTimeSeriesResponse
@@ -161,7 +181,7 @@ public sealed class StockTimeSeriesController : ControllerBase
             ExchangeTimezone =
                 timeSeries.ExchangeTimezone,
 
-            Values = values
+            Values = filteredValues
                 .Select(value =>
                     new StockTimeSeriesPointResponse
                     {
@@ -174,8 +194,145 @@ public sealed class StockTimeSeriesController : ControllerBase
                         Close = value.Close,
                         Volume = value.Volume
                     })
-                .ToList()
+                .ToList(),
+
+            Performances = performances
         };
+    }
+
+    private static IReadOnlyList<StockPeriodPerformanceResponse>
+        CreatePeriodPerformances(
+            IReadOnlyList<StockTimeSeriesPoint> values,
+            string requestedPeriod,
+            DateTime currentDate)
+    {
+        return PerformancePeriods
+            .Select(period =>
+                new StockPeriodPerformanceResponse
+                {
+                    Period = period,
+
+                    ChangePercent =
+                        CalculatePeriodPerformance(
+                            values,
+                            period,
+                            requestedPeriod,
+                            currentDate)
+                })
+            .ToList();
+    }
+
+    private static decimal? CalculatePeriodPerformance(
+        IReadOnlyList<StockTimeSeriesPoint> values,
+        string performancePeriod,
+        string requestedPeriod,
+        DateTime currentDate)
+    {
+        if (values.Count < 2)
+        {
+            return null;
+        }
+
+        StockTimeSeriesPoint lastPoint =
+            values[^1];
+
+        StockTimeSeriesPoint? firstPoint =
+            performancePeriod switch
+            {
+                "1D" =>
+                    GetOneDayStartingPoint(
+                        values,
+                        requestedPeriod),
+
+                "7D" =>
+                    GetFirstPointFromDate(
+                        values,
+                        currentDate.AddDays(-7)),
+
+                "1M" =>
+                    GetFirstPointFromDate(
+                        values,
+                        currentDate.AddMonths(-1)),
+
+                "3M" =>
+                    GetFirstPointFromDate(
+                        values,
+                        currentDate.AddMonths(-3)),
+
+                "6M" =>
+                    GetFirstPointFromDate(
+                        values,
+                        currentDate.AddMonths(-6)),
+
+                "YTD" =>
+                    GetFirstPointFromDate(
+                        values,
+                        new DateTime(
+                            currentDate.Year,
+                            1,
+                            1)),
+
+                "1Y" =>
+                    GetFirstPointFromDate(
+                        values,
+                        currentDate.AddYears(-1)),
+
+                "2Y" =>
+                    GetFirstPointFromDate(
+                        values,
+                        currentDate.AddYears(-2)),
+
+                "5Y" =>
+                    GetFirstPointFromDate(
+                        values,
+                        currentDate.AddYears(-5)),
+
+                "MAX" when requestedPeriod == "MAX" =>
+                    values[0],
+
+                _ => null
+            };
+
+        if (
+            firstPoint is null ||
+            firstPoint.Close == 0 ||
+            firstPoint.DateTime == lastPoint.DateTime)
+        {
+            return null;
+        }
+
+        decimal changePercent =
+            (lastPoint.Close - firstPoint.Close) /
+            firstPoint.Close *
+            100;
+
+        return decimal.Round(
+            changePercent,
+            2,
+            MidpointRounding.AwayFromZero);
+    }
+
+    private static StockTimeSeriesPoint? GetOneDayStartingPoint(
+        IReadOnlyList<StockTimeSeriesPoint> values,
+        string requestedPeriod)
+    {
+        if (requestedPeriod == "1D")
+        {
+            return values[0];
+        }
+
+        return values.Count >= 2
+            ? values[^2]
+            : null;
+    }
+
+    private static StockTimeSeriesPoint? GetFirstPointFromDate(
+        IReadOnlyList<StockTimeSeriesPoint> values,
+        DateTime minimumDate)
+    {
+        return values.FirstOrDefault(
+            value =>
+                value.DateTime >= minimumDate);
     }
 
     private static IReadOnlyList<StockTimeSeriesPoint>
@@ -242,6 +399,7 @@ public sealed class StockTimeSeriesController : ControllerBase
             "7D" => new StockTimeSeriesQuery
             {
                 Interval = "30min",
+
                 StartDate =
                     currentDate.AddDays(-7),
 

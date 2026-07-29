@@ -29,6 +29,11 @@ export interface StockTimeSeriesPoint {
   volume: number
 }
 
+export interface StockPeriodPerformance {
+  period: StockTimeSeriesPeriod
+  changePercent: number | null
+}
+
 export interface StockTimeSeries {
   symbol: string
   interval: string
@@ -36,6 +41,7 @@ export interface StockTimeSeries {
   exchange: string
   exchangeTimezone: string
   values: StockTimeSeriesPoint[]
+  performances: StockPeriodPerformance[]
 }
 
 export type StockTimeSeriesPeriod =

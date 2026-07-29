@@ -4,13 +4,17 @@ import {
   type FormEvent,
 } from 'react'
 import './ChartPeriodSelector.css'
-import type { StockTimeSeriesPeriod } from '../types/dashboard'
+import type {
+  StockPeriodPerformance,
+  StockTimeSeriesPeriod,
+} from '../types/dashboard'
 
 interface ChartPeriodSelectorProps {
   selectedPeriod: StockTimeSeriesPeriod
   customStartDate: string
   customEndDate: string
   isLoading: boolean
+  performances?: StockPeriodPerformance[]
   onPeriodChange: (
     period: StockTimeSeriesPeriod,
   ) => void
@@ -93,11 +97,53 @@ function getTodayDate(): string {
     .slice(0, 10)
 }
 
+function formatPerformance(
+  changePercent: number,
+): string {
+  const formattedValue =
+    Math.abs(changePercent).toLocaleString(
+      'pt-BR',
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      },
+    )
+
+  if (changePercent > 0) {
+    return `+${formattedValue}%`
+  }
+
+  if (changePercent < 0) {
+    return `-${formattedValue}%`
+  }
+
+  return `${formattedValue}%`
+}
+
+function getPerformanceClassName(
+  changePercent: number | null,
+): string {
+  if (changePercent === null) {
+    return 'chart-period-performance unavailable'
+  }
+
+  if (changePercent > 0) {
+    return 'chart-period-performance positive'
+  }
+
+  if (changePercent < 0) {
+    return 'chart-period-performance negative'
+  }
+
+  return 'chart-period-performance neutral'
+}
+
 export function ChartPeriodSelector({
   selectedPeriod,
   customStartDate,
   customEndDate,
   isLoading,
+  performances = [],
   onPeriodChange,
   onCustomDateChange,
   onApplyCustomPeriod,
@@ -113,6 +159,17 @@ export function ChartPeriodSelector({
   const maximumDate = useMemo(
     () => getTodayDate(),
     [],
+  )
+
+  const performancesByPeriod = useMemo(
+    () =>
+      new Map(
+        performances.map((performance) => [
+          performance.period,
+          performance.changePercent,
+        ]),
+      ),
+    [performances],
   )
 
   function handlePeriodChange(
@@ -171,6 +228,11 @@ export function ChartPeriodSelector({
             const isActive =
               selectedPeriod === option.value
 
+            const changePercent =
+              performancesByPeriod.get(
+                option.value,
+              ) ?? null
+
             return (
               <button
                 key={option.value}
@@ -189,7 +251,21 @@ export function ChartPeriodSelector({
                   )
                 }
               >
-                {option.label}
+                <span className="chart-period-label">
+                  {option.label}
+                </span>
+
+                <span
+                  className={getPerformanceClassName(
+                    changePercent,
+                  )}
+                >
+                  {changePercent === null
+                    ? '—'
+                    : formatPerformance(
+                        changePercent,
+                      )}
+                </span>
               </button>
             )
           })}
@@ -213,6 +289,10 @@ export function ChartPeriodSelector({
             >
               <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm12 9H5v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8ZM6 6a1 1 0 0 0-1 1v2h14V7a1 1 0 0 0-1-1H6Z" />
             </svg>
+
+            <span className="calendar-period-text">
+              Datas
+            </span>
           </button>
         </div>
 

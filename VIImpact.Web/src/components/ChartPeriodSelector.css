@@ -1,7 +1,17 @@
 .chart-period-section {
+  --period-positive-color: #15803d;
+  --period-negative-color: #dc2626;
+  --period-neutral-color: #64748b;
+
   margin-top: 8px;
   padding-top: 18px;
   border-top: 1px solid var(--border-color);
+}
+
+[data-theme='night'] .chart-period-section {
+  --period-positive-color: #4ade80;
+  --period-negative-color: #fb7185;
+  --period-neutral-color: #a8a3c0;
 }
 
 .chart-period-toolbar {
@@ -22,8 +32,8 @@
 
 .chart-period-options {
   display: flex;
-  align-items: center;
-  gap: 5px;
+  align-items: stretch;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: thin;
 }
@@ -31,43 +41,129 @@
 .chart-period-button,
 .calendar-period-button {
   flex: 0 0 auto;
-  min-width: 44px;
-  height: 36px;
-  padding: 0 12px;
+  min-width: 58px;
+  height: 54px;
+  padding: 7px 11px;
   border: 1px solid transparent;
   border-radius: 9px;
   background: transparent;
   color: var(--secondary-text);
   font: inherit;
-  font-size: 0.78rem;
-  font-weight: 800;
   cursor: pointer;
   transition:
     color 160ms ease,
     background 160ms ease,
     border-color 160ms ease,
-    transform 160ms ease;
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.chart-period-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chart-period-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.chart-period-performance {
+  font-size: 0.7rem;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.chart-period-performance.positive {
+  color: var(--period-positive-color);
+}
+
+.chart-period-performance.negative {
+  color: var(--period-negative-color);
+}
+
+.chart-period-performance.neutral {
+  color: var(--period-neutral-color);
+}
+
+.chart-period-performance.unavailable {
+  color: var(--secondary-text);
+  opacity: 0.65;
 }
 
 .chart-period-button:hover,
 .calendar-period-button:hover {
   color: var(--primary-text);
-  border-color: var(--border-color);
-  background: var(--panel-background);
+  border-color: color-mix(
+    in srgb,
+    var(--accent-pink) 45%,
+    var(--border-color)
+  );
+  background: color-mix(
+    in srgb,
+    var(--panel-background) 88%,
+    var(--accent-pink) 12%
+  );
   transform: translateY(-1px);
 }
 
 .chart-period-button.active,
 .calendar-period-button.active {
-  color: white;
-  border-color: var(--accent-pink);
-  background: var(--accent-pink);
-  box-shadow: 0 6px 16px
-    color-mix(
-      in srgb,
-      var(--accent-pink) 30%,
-      transparent
-    );
+  color: var(--accent-pink);
+  border-color: color-mix(
+    in srgb,
+    var(--accent-pink) 55%,
+    transparent
+  );
+  background: color-mix(
+    in srgb,
+    var(--panel-background) 82%,
+    var(--accent-pink) 18%
+  );
+  box-shadow:
+    0 3px 10px
+      color-mix(
+        in srgb,
+        var(--accent-pink) 16%,
+        transparent
+      ),
+    inset 0 0 0 1px
+      color-mix(
+        in srgb,
+        var(--accent-pink) 10%,
+        transparent
+      );
+}
+
+.chart-period-button.active
+  .chart-period-label {
+  color: var(--accent-pink);
+}
+
+.chart-period-button.active
+  .chart-period-performance.positive {
+  color: var(--period-positive-color);
+}
+
+.chart-period-button.active
+  .chart-period-performance.negative {
+  color: var(--period-negative-color);
+}
+
+.chart-period-button.active
+  .chart-period-performance.neutral {
+  color: var(--period-neutral-color);
+}
+
+.chart-period-button.active
+  .chart-period-performance.unavailable {
+  color: var(--secondary-text);
+  opacity: 0.8;
 }
 
 .chart-period-button:disabled,
@@ -81,14 +177,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
-  padding: 0 9px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 62px;
 }
 
 .calendar-period-button svg {
   width: 17px;
   height: 17px;
   fill: currentColor;
+}
+
+.calendar-period-text {
+  font-size: 0.67rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .chart-period-loading {
@@ -159,7 +262,7 @@
 .custom-period-error {
   width: 100%;
   margin: 0;
-  color: var(--negative-value);
+  color: var(--period-negative-color);
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -174,7 +277,7 @@
 }
 
 .chart-state-message.error {
-  color: var(--negative-value);
+  color: var(--period-negative-color);
 }
 
 @media (max-width: 900px) {
@@ -194,6 +297,15 @@
 }
 
 @media (max-width: 600px) {
+  .chart-period-toolbar {
+    padding: 9px;
+  }
+
+  .chart-period-button,
+  .calendar-period-button {
+    min-width: 56px;
+  }
+
   .custom-period-panel {
     align-items: stretch;
     flex-direction: column;

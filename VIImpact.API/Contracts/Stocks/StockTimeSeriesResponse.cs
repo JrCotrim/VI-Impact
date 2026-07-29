@@ -17,6 +17,9 @@ public sealed class StockTimeSeriesResponse
 
     public IReadOnlyList<StockTimeSeriesPointResponse> Values { get; set; } =
         Array.Empty<StockTimeSeriesPointResponse>();
+
+    public IReadOnlyList<StockPeriodPerformanceResponse> Performances { get; set; } =
+        Array.Empty<StockPeriodPerformanceResponse>();
 }
 
 /// <summary>
@@ -35,4 +38,14 @@ public sealed class StockTimeSeriesPointResponse
     public decimal Close { get; set; }
 
     public long Volume { get; set; }
+}
+
+/// <summary>
+/// Represents the stock performance for a predefined period.
+/// </summary>
+public sealed class StockPeriodPerformanceResponse
+{
+    public string Period { get; set; } = string.Empty;
+
+    public decimal? ChangePercent { get; set; }
 }

@@ -9,12 +9,121 @@ import { getDashboardData } from './services/dashboardService'
 import { getStockTimeSeries } from './services/stockTimeSeriesService'
 import type {
   DashboardData,
+  StockPeriodPerformance,
   StockQuote,
   StockTimeSeries,
   StockTimeSeriesPeriod,
 } from './types/dashboard'
 
 type Theme = 'day' | 'night'
+
+const performancePeriodOrder: StockTimeSeriesPeriod[] = [
+  '1D',
+  '7D',
+  '1M',
+  '3M',
+  '6M',
+  'YTD',
+  '1Y',
+  '2Y',
+  '5Y',
+  'MAX',
+]
+
+const longPerformancePeriods =
+  new Set<StockTimeSeriesPeriod>([
+    '1D',
+    '7D',
+    '1M',
+    '3M',
+    '6M',
+    'YTD',
+    '1Y',
+    '2Y',
+    '5Y',
+  ])
+
+function getReliablePerformancePeriods(
+  requestedPeriod: StockTimeSeriesPeriod,
+): Set<StockTimeSeriesPeriod> {
+  if (requestedPeriod === '1D') {
+    return new Set<StockTimeSeriesPeriod>([
+      '1D',
+    ])
+  }
+
+  if (requestedPeriod === '7D') {
+    return new Set<StockTimeSeriesPeriod>([
+      '7D',
+    ])
+  }
+
+  if (requestedPeriod === 'MAX') {
+    return new Set<StockTimeSeriesPeriod>([
+      'MAX',
+    ])
+  }
+
+  if (requestedPeriod === 'CUSTOM') {
+    return new Set<StockTimeSeriesPeriod>()
+  }
+
+  return longPerformancePeriods
+}
+
+function mergePeriodPerformances(
+  currentPerformances: StockPeriodPerformance[],
+  incomingPerformances: StockPeriodPerformance[],
+  requestedPeriod: StockTimeSeriesPeriod,
+): StockPeriodPerformance[] {
+  const reliablePeriods =
+    getReliablePerformancePeriods(
+      requestedPeriod,
+    )
+
+  const performancesByPeriod = new Map(
+    currentPerformances.map(
+      (performance) => [
+        performance.period,
+        performance.changePercent,
+      ],
+    ),
+  )
+
+  incomingPerformances.forEach(
+    (performance) => {
+      if (
+        reliablePeriods.has(
+          performance.period,
+        ) &&
+        performance.changePercent !== null
+      ) {
+        performancesByPeriod.set(
+          performance.period,
+          performance.changePercent,
+        )
+      }
+    },
+  )
+
+  return performancePeriodOrder.flatMap(
+    (period) => {
+      const changePercent =
+        performancesByPeriod.get(period)
+
+      if (changePercent === undefined) {
+        return []
+      }
+
+      return [
+        {
+          period,
+          changePercent,
+        },
+      ]
+    },
+  )
+}
 
 function getInitialTheme(): Theme {
   const savedTheme =
@@ -107,6 +216,11 @@ function App() {
 
   const [timeSeries, setTimeSeries] =
     useState<StockTimeSeries | null>(null)
+
+  const [
+    periodPerformances,
+    setPeriodPerformances,
+  ] = useState<StockPeriodPerformance[]>([])
 
   const [
     selectedPeriod,
@@ -239,6 +353,15 @@ function App() {
               )
 
             if (isActive) {
+              setPeriodPerformances(
+                (currentPerformances) =>
+                  mergePeriodPerformances(
+                    currentPerformances,
+                    timeSeriesData.performances,
+                    selectedPeriod,
+                  ),
+              )
+
               setTimeSeries(
                 timeSeriesData,
               )
@@ -593,6 +716,9 @@ function App() {
               }
               isLoading={
                 isChartLoading
+              }
+              performances={
+                periodPerformances
               }
               onPeriodChange={
                 handlePeriodChange
