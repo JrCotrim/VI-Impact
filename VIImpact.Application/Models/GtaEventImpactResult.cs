@@ -1,7 +1,7 @@
 ﻿namespace VIImpact.Application.Models;
 
 /// <summary>
-/// Represents the calculated stock-market impact of a GTA VI event.
+/// Represents the observed stock-market reaction around a GTA VI event.
 /// </summary>
 public sealed class GtaEventImpactResult
 {
@@ -9,8 +9,63 @@ public sealed class GtaEventImpactResult
 
     public string EventTitle { get; set; } = string.Empty;
 
+    public string Symbol { get; set; } = string.Empty;
+
     public DateTime OccurredAtUtc { get; set; }
 
+    public DateTime AnalysisTimestampUtc { get; set; }
+
+    public bool UsedPublishedAtUtc { get; set; }
+
+    public bool IsAvailable { get; set; }
+
+    public string? UnavailableReason { get; set; }
+
+    public string Exchange { get; set; } = string.Empty;
+
+    public string ExchangeTimezone { get; set; } = string.Empty;
+
+    public bool? WasPublishedAfterMarketClose { get; set; }
+
+    public DateTime? EffectiveTradingDate { get; set; }
+
+    public DateTime? PreviousTradingDate { get; set; }
+
+    public decimal? PreviousClose { get; set; }
+
+    public decimal? EventDayOpen { get; set; }
+
+    public decimal? EventDayClose { get; set; }
+
+    public long? EventDayVolume { get; set; }
+
+    public decimal? SameDayReturnPercent { get; set; }
+
+    public DateTime? Day1TradingDate { get; set; }
+
+    public decimal? Day1Close { get; set; }
+
+    public decimal? Day1ReturnPercent { get; set; }
+
+    public DateTime? Day5TradingDate { get; set; }
+
+    public decimal? Day5Close { get; set; }
+
+    public decimal? Day5ReturnPercent { get; set; }
+
+    public DateTime? Day30TradingDate { get; set; }
+
+    public decimal? Day30Close { get; set; }
+
+    public decimal? Day30ReturnPercent { get; set; }
+
+    public decimal? AverageVolumeBefore30Sessions { get; set; }
+
+    public int PreviousVolumeSessionsUsed { get; set; }
+
+    public decimal? VolumeChangePercent { get; set; }
+
+    // Backward-compatible fields used by the first API version.
     public decimal? PriceBefore { get; set; }
 
     public DateTime? PriceBeforeRecordedAtUtc { get; set; }
