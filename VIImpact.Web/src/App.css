@@ -4828,3 +4828,271 @@ a {
     width: min(286px, calc(100% - 16px));
   }
 }
+
+
+/* =========================================================
+   Historical market impact inside expanded event cards
+   ========================================================= */
+
+.event-detail-section-label {
+  margin: 0 0 7px;
+  color: #ff75ba;
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.event-detail-section-label-spaced {
+  margin-top: 15px;
+}
+
+.event-impact-section {
+  display: grid;
+  gap: 11px;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(127, 151, 201, 0.16);
+}
+
+.event-impact-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.event-impact-heading .event-detail-section-label {
+  margin: 0;
+}
+
+.event-impact-heading > span {
+  color: var(--muted-text);
+  font-size: 0.61rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.event-impact-price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.event-impact-price-grid > div {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(127, 151, 201, 0.14);
+  border-radius: 9px;
+  background: rgba(11, 25, 49, 0.56);
+}
+
+.event-impact-price-grid span,
+.event-impact-price-grid strong {
+  display: block;
+}
+
+.event-impact-price-grid span {
+  min-height: 27px;
+  color: var(--muted-text);
+  font-size: 0.57rem;
+  font-weight: 800;
+  line-height: 1.28;
+  text-transform: uppercase;
+  letter-spacing: 0.055em;
+}
+
+.event-impact-price-grid strong {
+  margin-top: 5px;
+  color: var(--dark-panel-primary);
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.event-impact-metrics {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(127, 151, 201, 0.14);
+  border-radius: 10px;
+  background: rgba(127, 151, 201, 0.12);
+}
+
+.event-impact-metrics > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 34px;
+  padding: 7px 10px;
+  background: rgba(8, 20, 42, 0.94);
+}
+
+.event-impact-metrics span {
+  color: var(--dark-panel-secondary);
+  font-size: 0.68rem;
+  font-weight: 720;
+}
+
+.event-impact-metrics strong {
+  font-size: 0.74rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.impact-positive {
+  color: var(--positive);
+}
+
+.impact-negative {
+  color: var(--negative);
+}
+
+.impact-neutral {
+  color: var(--dark-panel-primary);
+}
+
+.event-impact-loading,
+.event-impact-error,
+.event-impact-status {
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(127, 151, 201, 0.15);
+  border-radius: 10px;
+  color: var(--dark-panel-secondary);
+  background: rgba(8, 20, 42, 0.72);
+  font-size: 0.69rem;
+  line-height: 1.48;
+}
+
+.event-impact-loading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.event-impact-loading p,
+.event-impact-error p {
+  margin: 0;
+}
+
+.event-impact-spinner {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  border: 2px solid rgba(255, 117, 186, 0.25);
+  border-top-color: #ff75ba;
+  border-radius: 50%;
+  animation: event-impact-spin 700ms linear infinite;
+}
+
+@keyframes event-impact-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.event-impact-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--negative);
+}
+
+.event-impact-error button {
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 112, 143, 0.32);
+  border-radius: 8px;
+  color: #ff91a9;
+  background: rgba(255, 80, 118, 0.08);
+  font-size: 0.63rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.event-impact-explanation,
+.event-impact-disclaimer {
+  margin: 0;
+  color: var(--dark-panel-secondary);
+  font-size: 0.64rem;
+  line-height: 1.48;
+}
+
+.event-impact-explanation {
+  padding: 9px 10px;
+  border-left: 3px solid rgba(255, 77, 164, 0.72);
+  border-radius: 0 8px 8px 0;
+  background: rgba(255, 61, 159, 0.07);
+}
+
+.event-impact-disclaimer {
+  color: var(--muted-text);
+  font-size: 0.59rem;
+}
+
+:root:not([data-theme='night'])
+  .event-impact-section {
+  border-top-color: rgba(36, 69, 118, 0.13);
+}
+
+:root:not([data-theme='night'])
+  .event-impact-price-grid > div,
+:root:not([data-theme='night'])
+  .event-impact-loading,
+:root:not([data-theme='night'])
+  .event-impact-error,
+:root:not([data-theme='night'])
+  .event-impact-status {
+  border-color: rgba(36, 69, 118, 0.12);
+  background: #ffffff;
+}
+
+:root:not([data-theme='night'])
+  .event-impact-price-grid strong,
+:root:not([data-theme='night'])
+  .impact-neutral {
+  color: #17213b;
+}
+
+:root:not([data-theme='night'])
+  .event-impact-metrics {
+  border-color: rgba(36, 69, 118, 0.12);
+  background: rgba(36, 69, 118, 0.09);
+}
+
+:root:not([data-theme='night'])
+  .event-impact-metrics > div {
+  background: #ffffff;
+}
+
+:root:not([data-theme='night'])
+  .event-impact-metrics span,
+:root:not([data-theme='night'])
+  .event-impact-explanation {
+  color: #596680;
+}
+
+:root:not([data-theme='night'])
+  .event-impact-explanation {
+  background: rgba(230, 0, 122, 0.05);
+}
+
+@media (max-width: 700px) {
+  .event-impact-price-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .event-impact-price-grid span {
+    min-height: 0;
+  }
+
+  .event-impact-heading,
+  .event-impact-error {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

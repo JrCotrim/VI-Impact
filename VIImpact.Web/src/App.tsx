@@ -7,6 +7,7 @@ import './App.css'
 import { ChartPeriodSelector } from './components/ChartPeriodSelector'
 import { StockChart } from './components/StockChart'
 import { getDashboardData } from './services/dashboardService'
+import { getGtaEventImpact } from './services/gtaEventImpactService'
 import { getStockTimeSeries } from './services/stockTimeSeriesService'
 import {
   formatGtaEventDate,
@@ -19,6 +20,7 @@ import {
 import type {
   DashboardData,
   GtaEvent,
+  GtaEventImpact,
   StockPeriodPerformance,
   StockQuote,
   StockTimeSeries,
@@ -215,6 +217,110 @@ function formatCompactVolume(
     notation: 'compact',
     maximumFractionDigits: 2,
   }).format(value)
+}
+
+
+function formatImpactCurrency(
+  value: number | null,
+): string {
+  if (value === null) {
+    return 'Não disponível'
+  }
+
+  return formatCurrency(value)
+}
+
+function formatImpactPercent(
+  value: number | null,
+): string {
+  if (value === null) {
+    return 'Não disponível'
+  }
+
+  return formatSignedPercent(value)
+}
+
+function getImpactValueClassName(
+  value: number | null,
+): string {
+  if (value === null || value === 0) {
+    return 'impact-neutral'
+  }
+
+  return value > 0
+    ? 'impact-positive'
+    : 'impact-negative'
+}
+
+function formatTradingDate(
+  dateText: string | null,
+): string {
+  if (!dateText) {
+    return 'Não disponível'
+  }
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(parseUtcDate(dateText))
+}
+
+function getUtcDateKey(
+  dateText: string,
+): string {
+  return parseUtcDate(dateText)
+    .toISOString()
+    .slice(0, 10)
+}
+
+function getTradingDateExplanation(
+  gtaEvent: GtaEvent,
+  impact: GtaEventImpact,
+): string | null {
+  if (!impact.effectiveTradingDate) {
+    return null
+  }
+
+  if (impact.wasPublishedAfterMarketClose === true) {
+    return (
+      'A publicação ocorreu depois do fechamento do mercado. ' +
+      `Por isso, o pregão analisado foi ${formatTradingDate(
+        impact.effectiveTradingDate,
+      )}.`
+    )
+  }
+
+  const eventDateKey = getUtcDateKey(
+    gtaEvent.occurredAtUtc,
+  )
+
+  const tradingDateKey = getUtcDateKey(
+    impact.effectiveTradingDate,
+  )
+
+  if (eventDateKey === tradingDateKey) {
+    return null
+  }
+
+  const eventDay = parseUtcDate(
+    gtaEvent.occurredAtUtc,
+  ).getUTCDay()
+
+  const eventTimingDescription =
+    eventDay === 0
+      ? 'um domingo'
+      : eventDay === 6
+        ? 'um sábado'
+        : 'um dia sem pregão'
+
+  return (
+    `O evento ocorreu em ${eventTimingDescription}. ` +
+    `Por isso, o primeiro pregão analisado foi ${formatTradingDate(
+      impact.effectiveTradingDate,
+    )}.`
+  )
 }
 
 function toDateInputValue(
@@ -465,6 +571,24 @@ function App() {
     expandedEventId,
     setExpandedEventId,
   ] = useState<string | null>(null)
+
+  const [
+    eventImpacts,
+    setEventImpacts,
+  ] = useState<Record<string, GtaEventImpact>>({})
+
+  const [
+    loadingEventImpactIds,
+    setLoadingEventImpactIds,
+  ] = useState<Set<string>>(new Set())
+
+  const [
+    eventImpactErrors,
+    setEventImpactErrors,
+  ] = useState<Record<string, string>>({})
+
+  const eventImpactRequestsRef =
+    useRef<Set<string>>(new Set())
 
   const eventsListRef =
     useRef<HTMLDivElement | null>(null)
@@ -752,6 +876,80 @@ function App() {
     })
   }
 
+  async function loadEventImpact(
+    gtaEvent: GtaEvent,
+  ) {
+    if (
+      gtaEvent.isImpactAnalysisEligible === false ||
+      eventImpacts[gtaEvent.id] ||
+      eventImpactRequestsRef.current.has(
+        gtaEvent.id,
+      )
+    ) {
+      return
+    }
+
+    eventImpactRequestsRef.current.add(
+      gtaEvent.id,
+    )
+
+    setLoadingEventImpactIds(
+      (currentIds) => {
+        const nextIds = new Set(currentIds)
+        nextIds.add(gtaEvent.id)
+        return nextIds
+      },
+    )
+
+    setEventImpactErrors(
+      (currentErrors) => {
+        const nextErrors = {
+          ...currentErrors,
+        }
+
+        delete nextErrors[gtaEvent.id]
+        return nextErrors
+      },
+    )
+
+    try {
+      const impact =
+        await getGtaEventImpact(
+          gtaEvent.id,
+          dashboard?.symbol ?? 'TTWO',
+        )
+
+      setEventImpacts(
+        (currentImpacts) => ({
+          ...currentImpacts,
+          [gtaEvent.id]: impact,
+        }),
+      )
+    } catch (error) {
+      setEventImpactErrors(
+        (currentErrors) => ({
+          ...currentErrors,
+          [gtaEvent.id]:
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível calcular o movimento observado.',
+        }),
+      )
+    } finally {
+      eventImpactRequestsRef.current.delete(
+        gtaEvent.id,
+      )
+
+      setLoadingEventImpactIds(
+        (currentIds) => {
+          const nextIds = new Set(currentIds)
+          nextIds.delete(gtaEvent.id)
+          return nextIds
+        },
+      )
+    }
+  }
+
   function handleChartEventSelect(
     gtaEvent: GtaEvent,
   ) {
@@ -760,18 +958,25 @@ function App() {
       (currentRequest) =>
         currentRequest + 1,
     )
+    void loadEventImpact(gtaEvent)
     focusEventOnChart(gtaEvent)
   }
 
   function handleTimelineEventSelect(
     gtaEvent: GtaEvent,
   ) {
+    const willExpand =
+      expandedEventId !== gtaEvent.id
+
     setExpandedEventId(
-      (currentEventId) =>
-        currentEventId === gtaEvent.id
-          ? null
-          : gtaEvent.id,
+      willExpand
+        ? gtaEvent.id
+        : null,
     )
+
+    if (willExpand) {
+      void loadEventImpact(gtaEvent)
+    }
 
     focusEventOnChart(gtaEvent)
   }
@@ -1279,6 +1484,25 @@ function App() {
                         gtaEvent,
                       )
 
+                    const eventImpact =
+                      eventImpacts[gtaEvent.id]
+
+                    const isImpactLoading =
+                      loadingEventImpactIds.has(
+                        gtaEvent.id,
+                      )
+
+                    const eventImpactError =
+                      eventImpactErrors[gtaEvent.id]
+
+                    const tradingDateExplanation =
+                      eventImpact
+                        ? getTradingDateExplanation(
+                            gtaEvent,
+                            eventImpact,
+                          )
+                        : null
+
                     const cardClassName = [
                       'event-card',
                       isSelected
@@ -1352,8 +1576,16 @@ function App() {
                             className="event-card-details"
                             id={detailsId}
                           >
+                            <p className="event-detail-section-label">
+                              Descrição
+                            </p>
+
                             <p className="event-detail-description">
                               {gtaEvent.description}
+                            </p>
+
+                            <p className="event-detail-section-label event-detail-section-label-spaced">
+                              Detalhes do evento
                             </p>
 
                             <div className="event-detail-grid">
@@ -1386,7 +1618,189 @@ function App() {
                                     : 'Não oficial'}
                                 </strong>
                               </div>
+
+                              <div>
+                                <span>Data do evento</span>
+                                <strong>
+                                  {formatTradingDate(
+                                    gtaEvent.occurredAtUtc,
+                                  )}
+                                </strong>
+                              </div>
+
+                              <div>
+                                <span>Pregão analisado</span>
+                                <strong>
+                                  {eventImpact
+                                    ? formatTradingDate(
+                                        eventImpact.effectiveTradingDate,
+                                      )
+                                    : isImpactLoading
+                                      ? 'Calculando...'
+                                      : 'Aguardando análise'}
+                                </strong>
+                              </div>
                             </div>
+
+                            <section className="event-impact-section">
+                              <div className="event-impact-heading">
+                                <p className="event-detail-section-label">
+                                  Movimento observado
+                                </p>
+
+                                {eventImpact?.exchange && (
+                                  <span>
+                                    {eventImpact.symbol} ·{' '}
+                                    {eventImpact.exchange}
+                                  </span>
+                                )}
+                              </div>
+
+                              {gtaEvent.isImpactAnalysisEligible === false ? (
+                                <p className="event-impact-status">
+                                  Este evento não está elegível para análise de impacto.
+                                </p>
+                              ) : isImpactLoading ? (
+                                <div className="event-impact-loading">
+                                  <span className="event-impact-spinner" />
+                                  <p>
+                                    Calculando reação do mercado...
+                                  </p>
+                                </div>
+                              ) : eventImpactError ? (
+                                <div className="event-impact-error">
+                                  <p>{eventImpactError}</p>
+
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      void loadEventImpact(
+                                        gtaEvent,
+                                      )
+                                    }
+                                  >
+                                    Tentar novamente
+                                  </button>
+                                </div>
+                              ) : eventImpact && !eventImpact.isAvailable ? (
+                                <p className="event-impact-status">
+                                  {eventImpact.unavailableReason ??
+                                    'Não existem dados históricos suficientes para este evento.'}
+                                </p>
+                              ) : eventImpact ? (
+                                <>
+                                  <div className="event-impact-price-grid">
+                                    <div>
+                                      <span>Fechamento anterior</span>
+                                      <strong>
+                                        {formatImpactCurrency(
+                                          eventImpact.previousClose,
+                                        )}
+                                      </strong>
+                                    </div>
+
+                                    <div>
+                                      <span>Abertura no pregão</span>
+                                      <strong>
+                                        {formatImpactCurrency(
+                                          eventImpact.eventDayOpen,
+                                        )}
+                                      </strong>
+                                    </div>
+
+                                    <div>
+                                      <span>Fechamento no pregão</span>
+                                      <strong>
+                                        {formatImpactCurrency(
+                                          eventImpact.eventDayClose,
+                                        )}
+                                      </strong>
+                                    </div>
+                                  </div>
+
+                                  <div className="event-impact-metrics">
+                                    <div>
+                                      <span>No mesmo pregão</span>
+                                      <strong
+                                        className={getImpactValueClassName(
+                                          eventImpact.sameDayReturnPercent,
+                                        )}
+                                      >
+                                        {formatImpactPercent(
+                                          eventImpact.sameDayReturnPercent,
+                                        )}
+                                      </strong>
+                                    </div>
+
+                                    <div>
+                                      <span>Após 1 pregão</span>
+                                      <strong
+                                        className={getImpactValueClassName(
+                                          eventImpact.day1ReturnPercent,
+                                        )}
+                                      >
+                                        {formatImpactPercent(
+                                          eventImpact.day1ReturnPercent,
+                                        )}
+                                      </strong>
+                                    </div>
+
+                                    <div>
+                                      <span>Após 5 pregões</span>
+                                      <strong
+                                        className={getImpactValueClassName(
+                                          eventImpact.day5ReturnPercent,
+                                        )}
+                                      >
+                                        {formatImpactPercent(
+                                          eventImpact.day5ReturnPercent,
+                                        )}
+                                      </strong>
+                                    </div>
+
+                                    <div>
+                                      <span>Após 30 pregões</span>
+                                      <strong
+                                        className={getImpactValueClassName(
+                                          eventImpact.day30ReturnPercent,
+                                        )}
+                                      >
+                                        {formatImpactPercent(
+                                          eventImpact.day30ReturnPercent,
+                                        )}
+                                      </strong>
+                                    </div>
+
+                                    <div>
+                                      <span>Volume contra média</span>
+                                      <strong
+                                        className={getImpactValueClassName(
+                                          eventImpact.volumeChangePercent,
+                                        )}
+                                      >
+                                        {formatImpactPercent(
+                                          eventImpact.volumeChangePercent,
+                                        )}
+                                      </strong>
+                                    </div>
+                                  </div>
+
+                                  {tradingDateExplanation && (
+                                    <p className="event-impact-explanation">
+                                      {tradingDateExplanation}
+                                    </p>
+                                  )}
+
+                                  <p className="event-impact-disclaimer">
+                                    Os valores representam movimentos observados nas ações da Take-Two após o evento. Eles não comprovam que o evento foi a única causa das variações.
+                                  </p>
+                                </>
+                              ) : (
+                                <p className="event-impact-status">
+                                  Abra novamente o evento para carregar a análise.
+                                </p>
+                              )}
+                            </section>
 
                             <div className="event-detail-footer">
                               {gtaEvent.sourceUrl.trim() ? (

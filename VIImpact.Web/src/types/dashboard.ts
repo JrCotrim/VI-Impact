@@ -26,6 +26,46 @@ export interface GtaEvent {
   isImpactAnalysisEligible?: boolean
 }
 
+
+export interface GtaEventImpact {
+  eventId: string
+  eventTitle: string
+  symbol: string
+  occurredAtUtc: string
+  analysisTimestampUtc: string
+  usedPublishedAtUtc: boolean
+  isAvailable: boolean
+  unavailableReason: string | null
+  exchange: string
+  exchangeTimezone: string
+  wasPublishedAfterMarketClose: boolean | null
+  effectiveTradingDate: string | null
+  previousTradingDate: string | null
+  previousClose: number | null
+  eventDayOpen: number | null
+  eventDayClose: number | null
+  eventDayVolume: number | null
+  sameDayReturnPercent: number | null
+  day1TradingDate: string | null
+  day1Close: number | null
+  day1ReturnPercent: number | null
+  day5TradingDate: string | null
+  day5Close: number | null
+  day5ReturnPercent: number | null
+  day30TradingDate: string | null
+  day30Close: number | null
+  day30ReturnPercent: number | null
+  averageVolumeBefore30Sessions: number | null
+  previousVolumeSessionsUsed: number
+  volumeChangePercent: number | null
+  priceBefore: number | null
+  priceBeforeRecordedAtUtc: string | null
+  priceAfter: number | null
+  priceAfterRecordedAtUtc: string | null
+  priceChange: number | null
+  priceChangePercent: number | null
+}
+
 export interface DashboardData {
   symbol: string
   quotes: StockQuote[]
