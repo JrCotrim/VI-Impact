@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VIImpact.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using VIImpact.Infrastructure.Persistence;
 namespace VIImpact.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(VIImpactDbContext))]
-    partial class VIImpactDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260730174416_ExpandGtaEventCatalog")]
+    partial class ExpandGtaEventCatalog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

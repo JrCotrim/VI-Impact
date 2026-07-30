@@ -19,4 +19,10 @@
     <ProjectReference Include="..\VIImpact.Domain\VIImpact.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource
+      Include="Data\Seed\gta-events.json"
+      LogicalName="VIImpact.Infrastructure.Data.Seed.gta-events.json" />
+  </ItemGroup>
+
 </Project>

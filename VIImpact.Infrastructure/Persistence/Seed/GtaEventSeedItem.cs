@@ -1,14 +1,12 @@
-﻿using VIImpact.Domain.Enums;
+using VIImpact.Domain.Enums;
 
-namespace VIImpact.Domain.Entities;
+namespace VIImpact.Infrastructure.Persistence.Seed;
 
 /// <summary>
-/// Represents a GTA VI-related event tracked by VI Impact.
+/// Represents one GTA VI event loaded from the embedded seed catalog.
 /// </summary>
-public sealed class GtaEvent
+internal sealed class GtaEventSeedItem
 {
-    public Guid Id { get; set; }
-
     public string Slug { get; set; } = string.Empty;
 
     public string Title { get; set; } = string.Empty;
@@ -27,20 +25,10 @@ public sealed class GtaEvent
 
     public string SourceUrl { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Gets or sets the event start date in UTC.
-    /// DatePrecision indicates whether the stored time is exact.
-    /// </summary>
     public DateTime OccurredAtUtc { get; set; }
 
-    /// <summary>
-    /// Gets or sets the optional end date for events represented by a range.
-    /// </summary>
     public DateTime? OccurredUntilUtc { get; set; }
 
-    /// <summary>
-    /// Gets or sets the source publication date when it differs from the event date.
-    /// </summary>
     public DateTime? PublishedAtUtc { get; set; }
 
     public GtaEventDatePrecision DatePrecision { get; set; }

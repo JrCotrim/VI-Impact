@@ -7,6 +7,7 @@ using VIImpact.Infrastructure.Configuration;
 using VIImpact.Infrastructure.Integrations.TwelveData;
 using VIImpact.Infrastructure.Persistence;
 using VIImpact.Infrastructure.Persistence.Repositories;
+using VIImpact.Infrastructure.Persistence.Seed;
 
 const string FrontendCorsPolicy = "Frontend";
 
@@ -89,6 +90,8 @@ builder.Services.AddHttpClient<
 
 var app = builder.Build();
 
+await InitializeDatabaseAsync(app);
+
 // Global error handling
 app.UseExceptionHandler();
 app.UseStatusCodePages();
@@ -103,3 +106,39 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+/// <summary>
+/// Applies pending migrations and synchronizes the GTA VI event catalog.
+/// </summary>
+static async Task InitializeDatabaseAsync(
+    WebApplication application)
+{
+    const string legacyGtaEventCleanupSql = """
+        IF OBJECT_ID(N'[dbo].[GtaEvents]', N'U') IS NOT NULL
+        BEGIN
+            DELETE FROM [dbo].[GtaEvents]
+            WHERE [Title] IN
+            (
+                N'GTA VI event test',
+                N'GTA VI impact calculation test'
+            )
+            OR [SourceUrl] LIKE N'https://example.com/gta-vi-%';
+        END
+        """;
+
+    await using AsyncServiceScope scope =
+        application.Services.CreateAsyncScope();
+
+    VIImpactDbContext dbContext =
+        scope.ServiceProvider
+            .GetRequiredService<VIImpactDbContext>();
+
+    if (await dbContext.Database.CanConnectAsync())
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            legacyGtaEventCleanupSql);
+    }
+
+    await dbContext.Database.MigrateAsync();
+    await GtaEventSeeder.SeedAsync(dbContext);
+}
