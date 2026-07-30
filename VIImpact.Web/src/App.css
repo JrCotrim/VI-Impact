@@ -1024,6 +1024,7 @@ a {
   line-height: 1.25;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .event-metadata {
@@ -4032,5 +4033,798 @@ a {
   .event-focus-button .event-thumbnail {
     width: 76px;
     height: 62px;
+  }
+}
+
+/* =========================================================
+   Complete GTA VI event timeline and chart markers
+   ========================================================= */
+
+.events-panel {
+  display: flex;
+  min-height: 0;
+  max-height: 654px;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.events-panel .panel-header {
+  flex: 0 0 auto;
+}
+
+.events-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 83, 170, 0.24);
+  border-radius: 999px;
+  color: #ff79bc;
+  background: rgba(255, 55, 154, 0.08);
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.events-list {
+  min-height: 0;
+  padding-right: 5px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color:
+    rgba(255, 75, 164, 0.6)
+    rgba(111, 126, 166, 0.12);
+  scrollbar-width: thin;
+}
+
+.events-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.events-list::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(111, 126, 166, 0.1);
+}
+
+.events-list::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      180deg,
+      #ff4aa6,
+      #9c4ee0
+    ) padding-box;
+}
+
+.event-source-unavailable {
+  display: grid;
+  width: 26px;
+  height: 32px;
+  place-items: center;
+  color: var(--dark-panel-secondary);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: help;
+}
+
+:root:not([data-theme='night']) .events-count {
+  color: #b90c68;
+  border-color: rgba(230, 0, 122, 0.24);
+  background: rgba(230, 0, 122, 0.07);
+}
+
+:root:not([data-theme='night'])
+  .event-source-unavailable {
+  color: #7b879d;
+}
+
+.event-thumbnail.category-development {
+  background: linear-gradient(145deg, #27bfd1, #177da9 58%, #233a86);
+}
+
+.event-thumbnail.category-announcement,
+.event-thumbnail.category-game-information {
+  background: linear-gradient(145deg, #ff9c76, #f044a0 55%, #6239cc);
+}
+
+.event-thumbnail.category-trailer {
+  background: linear-gradient(145deg, #7c3aed, #b43be0 55%, #f047a2);
+}
+
+.event-thumbnail.category-leak {
+  background: linear-gradient(145deg, #64748b, #3f4a66 58%, #242c42);
+}
+
+.event-thumbnail.category-delay,
+.event-thumbnail.category-security {
+  background: linear-gradient(145deg, #f05a62, #d92d62 55%, #732b7a);
+}
+
+.event-thumbnail.category-financial,
+.event-thumbnail.category-distribution {
+  background: linear-gradient(145deg, #1d8fea, #3160d9 58%, #5034b1);
+}
+
+.event-thumbnail.category-release-window,
+.event-thumbnail.category-pre-order {
+  background: linear-gradient(145deg, #ff9d3f, #f26a2d 55%, #c03b83);
+}
+
+.event-thumbnail.category-corporate,
+.event-thumbnail.category-market-analysis {
+  background: linear-gradient(145deg, #19b8ad, #177eaa 58%, #3e43b6);
+}
+
+.event-thumbnail.category-labor-legal {
+  background: linear-gradient(145deg, #d7a028, #b56528 55%, #74305e);
+}
+
+.event-thumbnail.category-pricing,
+.event-thumbnail.category-launch {
+  background: linear-gradient(145deg, #23bc76, #0a8f69 58%, #24559f);
+}
+
+.event-badge.category-development {
+  color: #68e2ef;
+  border-color: rgba(73, 211, 226, 0.28);
+  background: rgba(34, 184, 207, 0.14);
+}
+
+.event-badge.category-announcement,
+.event-badge.category-game-information {
+  color: #ff8dc7;
+  border-color: rgba(255, 91, 177, 0.28);
+  background: rgba(242, 56, 150, 0.14);
+}
+
+.event-badge.category-trailer {
+  color: #cf9bff;
+  border-color: rgba(171, 94, 255, 0.3);
+  background: rgba(143, 66, 221, 0.16);
+}
+
+.event-badge.category-leak {
+  color: #c4cad7;
+  border-color: rgba(160, 170, 191, 0.26);
+  background: rgba(112, 123, 145, 0.15);
+}
+
+.event-badge.category-delay,
+.event-badge.category-security {
+  color: #ff91a8;
+  border-color: rgba(255, 98, 131, 0.3);
+  background: rgba(219, 49, 93, 0.15);
+}
+
+.event-badge.category-financial,
+.event-badge.category-distribution {
+  color: #8fc7ff;
+  border-color: rgba(76, 164, 255, 0.3);
+  background: rgba(39, 141, 241, 0.15);
+}
+
+.event-badge.category-release-window,
+.event-badge.category-pre-order {
+  color: #ffb56f;
+  border-color: rgba(249, 115, 22, 0.3);
+  background: rgba(249, 115, 22, 0.15);
+}
+
+.event-badge.category-corporate,
+.event-badge.category-market-analysis {
+  color: #71ddd7;
+  border-color: rgba(18, 165, 156, 0.28);
+  background: rgba(18, 165, 156, 0.14);
+}
+
+.event-badge.category-labor-legal {
+  color: #efc36b;
+  border-color: rgba(201, 138, 22, 0.3);
+  background: rgba(201, 138, 22, 0.14);
+}
+
+.event-badge.category-pricing,
+.event-badge.category-launch {
+  color: #76dfab;
+  border-color: rgba(10, 165, 100, 0.3);
+  background: rgba(10, 165, 100, 0.14);
+}
+
+:root:not([data-theme='night'])
+  .event-badge.category-development,
+:root:not([data-theme='night'])
+  .event-badge.category-corporate,
+:root:not([data-theme='night'])
+  .event-badge.category-market-analysis {
+  color: #086c70;
+  background: #d9f7f5;
+}
+
+:root:not([data-theme='night'])
+  .event-badge.category-announcement,
+:root:not([data-theme='night'])
+  .event-badge.category-game-information {
+  color: #9e155d;
+  background: #ffe1f0;
+}
+
+:root:not([data-theme='night'])
+  .event-badge.category-trailer {
+  color: #64259b;
+  background: #efe0ff;
+}
+
+:root:not([data-theme='night'])
+  .event-badge.category-leak {
+  color: #4e586d;
+  background: #e8ebf0;
+}
+
+:root:not([data-theme='night'])
+  .event-badge.category-delay,
+:root:not([data-theme='night'])
+  .event-badge.category-security {
+  color: #a51f42;
+  background: #ffe0e7;
+}
+
+:root:not([data-theme='night'])
+  .event-badge.category-financial,
+:root:not([data-theme='night'])
+  .event-badge.category-distribution {
+  color: #115b9a;
+  background: #dceeff;
+}
+
+:root:not([data-theme='night'])
+  .event-badge.category-release-window,
+:root:not([data-theme='night'])
+  .event-badge.category-pre-order,
+:root:not([data-theme='night'])
+  .event-badge.category-labor-legal {
+  color: #8c4a0b;
+  background: #fff0d8;
+}
+
+:root:not([data-theme='night'])
+  .event-badge.category-pricing,
+:root:not([data-theme='night'])
+  .event-badge.category-launch {
+  color: #087044;
+  background: #dff7ea;
+}
+
+.stock-chart-container,
+.stock-chart-container .recharts-wrapper,
+.stock-chart-container .recharts-surface {
+  overflow: visible;
+}
+
+.event-marker-tooltip-object {
+  overflow: visible;
+  pointer-events: auto;
+}
+
+.event-marker-tooltip {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-height: 190px;
+  padding: 13px 14px;
+  border: 1px solid;
+  border-radius: 13px;
+  color: var(--primary-text);
+  background: var(--panel-background);
+  box-shadow:
+    0 18px 42px rgba(2, 7, 20, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.035);
+  font-family:
+    Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  line-height: 1.35;
+}
+
+.event-marker-tooltip-heading {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+
+.event-marker-tooltip-heading > div {
+  min-width: 0;
+}
+
+.event-marker-tooltip-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 9px;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 7px 16px rgba(3, 7, 18, 0.22);
+}
+
+.event-marker-tooltip-category {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.67rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.event-marker-tooltip-heading strong {
+  display: block;
+  color: var(--primary-text);
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+
+.event-marker-tooltip-date {
+  margin: 0;
+  color: var(--secondary-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.event-marker-tooltip-description {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--secondary-text);
+  font-size: 0.74rem;
+  line-height: 1.42;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+}
+
+.event-marker-tooltip-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 7px;
+  border-top: 1px solid var(--border-color);
+  color: var(--muted-text);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.event-marker-tooltip-footer span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:root:not([data-theme='night'])
+  .event-marker-tooltip {
+  color: #0b132b;
+  background: #ffffff;
+  box-shadow:
+    0 18px 38px rgba(11, 19, 43, 0.18),
+    0 0 0 1px rgba(11, 19, 43, 0.03);
+}
+
+:root:not([data-theme='night'])
+  .event-marker-tooltip-heading strong {
+  color: #0b132b;
+}
+
+:root:not([data-theme='night'])
+  .event-marker-tooltip-date,
+:root:not([data-theme='night'])
+  .event-marker-tooltip-description {
+  color: #596680;
+}
+
+@media (max-width: 1180px) {
+  .events-panel {
+    max-height: 560px;
+  }
+}
+
+@media (max-width: 700px) {
+  .events-panel {
+    max-height: 520px;
+  }
+
+  .events-count {
+    min-height: 28px;
+  }
+}
+
+
+/* =========================================================
+   Expandable event timeline and non-overlapping chart tooltips
+   ========================================================= */
+
+.event-card {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.event-focus-button {
+  width: 100%;
+  grid-template-columns:
+    92px
+    minmax(0, 1fr)
+    28px;
+  padding: 8px;
+}
+
+.event-expand-indicator {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--dark-panel-secondary);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition:
+    color 170ms ease,
+    background 170ms ease,
+    transform 170ms ease;
+}
+
+.event-focus-button:hover
+  .event-expand-indicator {
+  color: #ff7abc;
+  background: rgba(255, 70, 162, 0.09);
+}
+
+.event-card.expanded
+  .event-expand-indicator {
+  color: #ff7abc;
+  background: rgba(255, 70, 162, 0.12);
+  transform: rotate(90deg);
+}
+
+.event-card.expanded {
+  border-color: rgba(255, 68, 160, 0.52);
+}
+
+.event-card-details {
+  margin: 0 10px 10px;
+  padding: 14px;
+  border-top: 1px solid rgba(129, 151, 196, 0.18);
+  border-radius: 0 0 10px 10px;
+  background: rgba(5, 14, 31, 0.42);
+  animation: event-details-enter 170ms ease-out;
+}
+
+@keyframes event-details-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.event-detail-description {
+  margin: 0;
+  color: var(--dark-panel-secondary);
+  font-size: 0.76rem;
+  line-height: 1.52;
+}
+
+.event-detail-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 13px;
+}
+
+.event-detail-grid > div {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(127, 151, 201, 0.14);
+  border-radius: 9px;
+  background: rgba(11, 25, 49, 0.56);
+}
+
+.event-detail-grid span,
+.event-detail-grid strong {
+  display: block;
+}
+
+.event-detail-grid span {
+  margin-bottom: 3px;
+  color: var(--muted-text);
+  font-size: 0.61rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.event-detail-grid strong {
+  overflow: hidden;
+  color: var(--dark-panel-primary);
+  font-size: 0.71rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+}
+
+.event-detail-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(127, 151, 201, 0.14);
+}
+
+.event-detail-source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 74, 166, 0.3);
+  border-radius: 8px;
+  color: #ff83c2;
+  background: rgba(255, 54, 154, 0.09);
+  font-size: 0.69rem;
+  font-weight: 850;
+  text-decoration: none;
+  transition:
+    border-color 170ms ease,
+    background 170ms ease,
+    transform 170ms ease;
+}
+
+.event-detail-source-link:hover {
+  border-color: rgba(255, 74, 166, 0.56);
+  background: rgba(255, 54, 154, 0.16);
+  transform: translateY(-1px);
+}
+
+.event-detail-source-missing,
+.event-detail-subcategory {
+  color: var(--muted-text);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.event-detail-subcategory {
+  max-width: 52%;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-marker-tooltip-market {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background:
+    color-mix(
+      in srgb,
+      var(--panel-background) 82%,
+      var(--accent-pink) 18%
+    );
+}
+
+.event-marker-tooltip-market span {
+  color: var(--secondary-text);
+  font-size: 0.66rem;
+  font-weight: 750;
+}
+
+.event-marker-tooltip-market strong {
+  color: var(--primary-text);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+:root:not([data-theme='night'])
+  .event-card-details {
+  border-top-color: rgba(36, 69, 118, 0.13);
+  background: rgba(243, 247, 255, 0.82);
+}
+
+:root:not([data-theme='night'])
+  .event-detail-description {
+  color: #596680;
+}
+
+:root:not([data-theme='night'])
+  .event-detail-grid > div {
+  border-color: rgba(36, 69, 118, 0.12);
+  background: #ffffff;
+}
+
+:root:not([data-theme='night'])
+  .event-detail-grid strong {
+  color: #17213b;
+}
+
+:root:not([data-theme='night'])
+  .event-expand-indicator {
+  color: #73809a;
+}
+
+:root:not([data-theme='night'])
+  .event-card.expanded
+  .event-expand-indicator,
+:root:not([data-theme='night'])
+  .event-focus-button:hover
+  .event-expand-indicator {
+  color: #c41470;
+  background: rgba(230, 0, 122, 0.08);
+}
+
+:root:not([data-theme='night'])
+  .event-detail-source-link {
+  color: #ae0e61;
+  border-color: rgba(206, 20, 113, 0.25);
+  background: rgba(230, 0, 122, 0.06);
+}
+
+@media (max-width: 700px) {
+  .event-focus-button {
+    grid-template-columns:
+      76px
+      minmax(0, 1fr)
+      26px;
+  }
+
+  .event-card-details {
+    margin: 0 8px 8px;
+    padding: 12px;
+  }
+
+  .event-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .event-detail-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .event-detail-subcategory {
+    max-width: 100%;
+    text-align: left;
+  }
+}
+
+/* =========================================================
+   Stable expandable timeline and top-layer chart event popup
+   ========================================================= */
+
+.events-list {
+  flex: 1 1 auto;
+  grid-auto-rows: max-content;
+  align-content: start;
+}
+
+.event-card {
+  min-height: 88px;
+  overflow: hidden;
+}
+
+.event-focus-button {
+  display: grid;
+  width: 100%;
+  min-height: 86px;
+  grid-template-columns: 92px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  opacity: 1;
+  visibility: visible;
+}
+
+.event-focus-button > * {
+  opacity: 1;
+  visibility: visible;
+}
+
+.event-card.expanded {
+  min-height: 88px;
+}
+
+.event-card.expanded .event-focus-button {
+  min-height: 86px;
+}
+
+.chart-panel,
+.chart-content,
+.stock-chart-container {
+  overflow: visible;
+}
+
+.chart-content,
+.stock-chart-container {
+  position: relative;
+}
+
+.stock-chart-container {
+  z-index: 2;
+  isolation: isolate;
+}
+
+.event-chart-popup {
+  position: absolute;
+  z-index: 10000;
+  display: grid;
+  gap: 8px;
+  width: min(318px, calc(100% - 24px));
+  min-height: 190px;
+  padding: 13px 14px;
+  border: 1px solid;
+  border-radius: 13px;
+  color: var(--primary-text);
+  background: var(--panel-background);
+  box-shadow:
+    0 22px 54px rgba(2, 7, 20, 0.46),
+    0 0 0 1px rgba(255, 255, 255, 0.045);
+  font-family:
+    Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  line-height: 1.35;
+  pointer-events: none;
+}
+
+.event-chart-popup.right {
+  transform: translateX(20px);
+}
+
+.event-chart-popup.left {
+  transform: translateX(calc(-100% - 20px));
+}
+
+.event-chart-popup .event-marker-tooltip-heading strong {
+  color: var(--primary-text);
+}
+
+:root:not([data-theme='night']) .event-chart-popup {
+  color: #0b132b;
+  background: #ffffff;
+  box-shadow:
+    0 22px 48px rgba(11, 19, 43, 0.24),
+    0 0 0 1px rgba(11, 19, 43, 0.04);
+}
+
+:root:not([data-theme='night'])
+  .event-chart-popup
+  .event-marker-tooltip-heading strong {
+  color: #0b132b;
+}
+
+@media (max-width: 700px) {
+  .event-focus-button {
+    min-height: 78px;
+    grid-template-columns: 76px minmax(0, 1fr) 26px;
+    gap: 10px;
+  }
+
+  .event-chart-popup {
+    width: min(286px, calc(100% - 16px));
   }
 }

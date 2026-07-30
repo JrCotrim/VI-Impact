@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useRef,
   useState,
 } from 'react'
 import './App.css'
@@ -7,6 +8,14 @@ import { ChartPeriodSelector } from './components/ChartPeriodSelector'
 import { StockChart } from './components/StockChart'
 import { getDashboardData } from './services/dashboardService'
 import { getStockTimeSeries } from './services/stockTimeSeriesService'
+import {
+  formatGtaEventDate,
+  getGtaEventPresentation,
+  getGtaEventPriorityLabel,
+  getGtaEventSourceLabel,
+  isOccurredGtaEvent,
+  parseGtaEventDate,
+} from './utils/gtaEventPresentation'
 import type {
   DashboardData,
   GtaEvent,
@@ -17,12 +26,6 @@ import type {
 } from './types/dashboard'
 
 type Theme = 'day' | 'night'
-
-type EventStyle = {
-  badge: string
-  className: string
-  symbol: string
-}
 
 const performancePeriodOrder: StockTimeSeriesPeriod[] = [
   '1D',
@@ -145,15 +148,7 @@ function getInitialTheme(): Theme {
 }
 
 function parseUtcDate(dateText: string): Date {
-  const hasTimezone =
-    dateText.endsWith('Z') ||
-    /[+-]\d{2}:\d{2}$/.test(dateText)
-
-  return new Date(
-    hasTimezone
-      ? dateText
-      : `${dateText}Z`,
-  )
+  return parseGtaEventDate(dateText)
 }
 
 function formatTime(dateText: string): string {
@@ -161,16 +156,6 @@ function formatTime(dateText: string): string {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-  }).format(parseUtcDate(dateText))
-}
-
-function formatEventDate(
-  dateText: string,
-): string {
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
   }).format(parseUtcDate(dateText))
 }
 
@@ -273,25 +258,32 @@ function createEventFocusRange(
 
   const startDate = new Date(eventDate)
   const endDate = new Date(eventDate)
-  const today = new Date()
 
-  startDate.setDate(
-    startDate.getDate() - 14,
+  startDate.setUTCDate(
+    startDate.getUTCDate() - 14,
   )
 
-  endDate.setDate(
-    endDate.getDate() + 14,
+  endDate.setUTCDate(
+    endDate.getUTCDate() + 14,
   )
 
-  if (endDate.getTime() > today.getTime()) {
-    endDate.setTime(today.getTime())
-  }
+  const startDateValue = startDate
+    .toISOString()
+    .slice(0, 10)
+
+  const proposedEndDateValue = endDate
+    .toISOString()
+    .slice(0, 10)
+
+  const todayValue =
+    toDateInputValue(new Date())
 
   return {
-    startDate:
-      toDateInputValue(startDate),
+    startDate: startDateValue,
     endDate:
-      toDateInputValue(endDate),
+      proposedEndDateValue > todayValue
+        ? todayValue
+        : proposedEndDateValue,
   }
 }
 
@@ -395,67 +387,6 @@ function createVolumeBars(
   )
 }
 
-function getEventStyle(
-  gtaEvent: GtaEvent,
-  index: number,
-): EventStyle {
-  const normalizedText =
-    `${gtaEvent.title} ${gtaEvent.description}`
-      .toLowerCase()
-
-  if (normalizedText.includes('trailer')) {
-    return {
-      badge: 'Anúncio oficial',
-      className: 'official',
-      symbol: 'VI',
-    }
-  }
-
-  if (
-    normalizedText.includes('adiado') ||
-    normalizedText.includes('adiamento')
-  ) {
-    return {
-      badge: 'Comunicado',
-      className: 'delay',
-      symbol: '!',
-    }
-  }
-
-  if (
-    normalizedText.includes('resultado') ||
-    normalizedText.includes('financeiro')
-  ) {
-    return {
-      badge: 'Financeiro',
-      className: 'financial',
-      symbol: 'T2',
-    }
-  }
-
-  const fallbackStyles: EventStyle[] = [
-    {
-      badge: 'Notícia',
-      className: 'news',
-      symbol: 'VI',
-    },
-    {
-      badge: 'Mercado',
-      className: 'market',
-      symbol: 'TT',
-    },
-    {
-      badge: 'Evento',
-      className: 'event',
-      symbol: '★',
-    },
-  ]
-
-  return fallbackStyles[
-    index % fallbackStyles.length
-  ]
-}
-
 function App() {
   const [dashboard, setDashboard] =
     useState<DashboardData | null>(null)
@@ -530,6 +461,19 @@ function App() {
     setSelectedEventId,
   ] = useState<string | null>(null)
 
+  const [
+    expandedEventId,
+    setExpandedEventId,
+  ] = useState<string | null>(null)
+
+  const eventsListRef =
+    useRef<HTMLDivElement | null>(null)
+
+  const [
+    timelineScrollRequest,
+    setTimelineScrollRequest,
+  ] = useState(0)
+
   useEffect(() => {
     document.documentElement.dataset.theme =
       theme
@@ -539,6 +483,58 @@ function App() {
       theme,
     )
   }, [theme])
+
+  useEffect(() => {
+    if (!expandedEventId) {
+      return
+    }
+
+    const animationFrameId =
+      window.requestAnimationFrame(() => {
+        const eventsList =
+          eventsListRef.current
+
+        const expandedEventCard =
+          document.getElementById(
+            `event-card-${expandedEventId}`,
+          )
+
+        if (
+          !eventsList ||
+          !expandedEventCard
+        ) {
+          return
+        }
+
+        const eventsListRect =
+          eventsList.getBoundingClientRect()
+
+        const eventCardRect =
+          expandedEventCard.getBoundingClientRect()
+
+        const centeredScrollTop =
+          eventsList.scrollTop +
+          eventCardRect.top -
+          eventsListRect.top -
+          (eventsList.clientHeight -
+            eventCardRect.height) /
+            2
+
+        eventsList.scrollTo({
+          top: Math.max(0, centeredScrollTop),
+          behavior: 'smooth',
+        })
+      })
+
+    return () => {
+      window.cancelAnimationFrame(
+        animationFrameId,
+      )
+    }
+  }, [
+    expandedEventId,
+    timelineScrollRequest,
+  ])
 
   useEffect(() => {
     let isActive = true
@@ -660,6 +656,7 @@ function App() {
     }
 
     setSelectedEventId(null)
+    setExpandedEventId(null)
     prepareChartReload()
     setSelectedPeriod(period)
   }
@@ -697,6 +694,7 @@ function App() {
     }
 
     setSelectedEventId(null)
+    setExpandedEventId(null)
     prepareChartReload()
 
     setAppliedCustomStartDate(
@@ -710,7 +708,7 @@ function App() {
     setSelectedPeriod('CUSTOM')
   }
 
-  function handleEventSelect(
+  function focusEventOnChart(
     gtaEvent: GtaEvent,
   ) {
     const focusRange =
@@ -752,6 +750,30 @@ function App() {
           block: 'start',
         })
     })
+  }
+
+  function handleChartEventSelect(
+    gtaEvent: GtaEvent,
+  ) {
+    setExpandedEventId(gtaEvent.id)
+    setTimelineScrollRequest(
+      (currentRequest) =>
+        currentRequest + 1,
+    )
+    focusEventOnChart(gtaEvent)
+  }
+
+  function handleTimelineEventSelect(
+    gtaEvent: GtaEvent,
+  ) {
+    setExpandedEventId(
+      (currentEventId) =>
+        currentEventId === gtaEvent.id
+          ? null
+          : gtaEvent.id,
+    )
+
+    focusEventOnChart(gtaEvent)
   }
 
   if (
@@ -817,8 +839,11 @@ function App() {
       dashboard.quotes,
     )
 
-  const recentEvents =
+  const occurredEvents =
     [...dashboard.gtaEvents]
+      .filter((gtaEvent) =>
+        isOccurredGtaEvent(gtaEvent),
+      )
       .sort(
         (firstEvent, secondEvent) =>
           parseUtcDate(
@@ -828,7 +853,6 @@ function App() {
             firstEvent.occurredAtUtc,
           ).getTime(),
       )
-      .slice(0, 4)
 
   return (
     <div className="app-shell">
@@ -1183,10 +1207,13 @@ function App() {
                       timeSeries.values
                     }
                     events={
-                      dashboard.gtaEvents
+                      occurredEvents
                     }
                     selectedEventId={
                       selectedEventId
+                    }
+                    onEventSelect={
+                      handleChartEventSelect
                     }
                   />
                 )}
@@ -1213,37 +1240,74 @@ function App() {
                   Eventos relacionados ao GTA 6
                 </h2>
               </div>
+
+              <span className="events-count">
+                {occurredEvents.length}{' '}
+                {occurredEvents.length === 1
+                  ? 'evento'
+                  : 'eventos'}
+              </span>
             </div>
 
-            <div className="events-list">
-              {recentEvents.length > 0 ? (
-                recentEvents.map(
-                  (gtaEvent, index) => {
+            <div
+              className="events-list"
+              ref={eventsListRef}
+            >
+              {occurredEvents.length > 0 ? (
+                occurredEvents.map(
+                  (gtaEvent) => {
                     const eventStyle =
-                      getEventStyle(
+                      getGtaEventPresentation(
                         gtaEvent,
-                        index,
                       )
+
+                    const isSelected =
+                      selectedEventId ===
+                      gtaEvent.id
+
+                    const isExpanded =
+                      expandedEventId ===
+                      gtaEvent.id
+
+                    const priorityLabel =
+                      getGtaEventPriorityLabel(
+                        gtaEvent,
+                      ) ?? 'Sem prioridade definida'
+
+                    const sourceLabel =
+                      getGtaEventSourceLabel(
+                        gtaEvent,
+                      )
+
+                    const cardClassName = [
+                      'event-card',
+                      isSelected
+                        ? 'selected'
+                        : '',
+                      isExpanded
+                        ? 'expanded'
+                        : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')
+
+                    const detailsId =
+                      `event-details-${gtaEvent.id}`
 
                     return (
                       <article
-                        className={
-                          selectedEventId ===
-                          gtaEvent.id
-                            ? 'event-card selected'
-                            : 'event-card'
-                        }
+                        id={`event-card-${gtaEvent.id}`}
+                        className={cardClassName}
                         key={gtaEvent.id}
                       >
                         <button
                           className="event-focus-button"
                           type="button"
-                          aria-pressed={
-                            selectedEventId ===
-                            gtaEvent.id
-                          }
+                          aria-pressed={isSelected}
+                          aria-expanded={isExpanded}
+                          aria-controls={detailsId}
                           onClick={() =>
-                            handleEventSelect(
+                            handleTimelineEventSelect(
                               gtaEvent,
                             )
                           }
@@ -1263,7 +1327,7 @@ function App() {
                             </h3>
 
                             <p className="event-metadata">
-                              {formatEventDate(
+                              {formatGtaEventDate(
                                 gtaEvent.occurredAtUtc,
                               )}
                             </p>
@@ -1271,22 +1335,86 @@ function App() {
                             <span
                               className={`event-badge ${eventStyle.className}`}
                             >
-                              {eventStyle.badge}
+                              {eventStyle.label}
                             </span>
                           </div>
+
+                          <span
+                            className="event-expand-indicator"
+                            aria-hidden="true"
+                          >
+                            ›
+                          </span>
                         </button>
 
-                        <a
-                          className="event-source-link"
-                          href={
-                            gtaEvent.sourceUrl
-                          }
-                          target="_blank"
-                          rel="noreferrer"
-                          aria-label={`Ver fonte de ${gtaEvent.title}`}
-                        >
-                          ›
-                        </a>
+                        {isExpanded && (
+                          <div
+                            className="event-card-details"
+                            id={detailsId}
+                          >
+                            <p className="event-detail-description">
+                              {gtaEvent.description}
+                            </p>
+
+                            <div className="event-detail-grid">
+                              <div>
+                                <span>Categoria</span>
+                                <strong>
+                                  {eventStyle.label}
+                                </strong>
+                              </div>
+
+                              <div>
+                                <span>Prioridade</span>
+                                <strong>
+                                  {priorityLabel}
+                                </strong>
+                              </div>
+
+                              <div>
+                                <span>Fonte</span>
+                                <strong>
+                                  {sourceLabel}
+                                </strong>
+                              </div>
+
+                              <div>
+                                <span>Confirmação</span>
+                                <strong>
+                                  {gtaEvent.isOfficial
+                                    ? 'Oficial'
+                                    : 'Não oficial'}
+                                </strong>
+                              </div>
+                            </div>
+
+                            <div className="event-detail-footer">
+                              {gtaEvent.sourceUrl.trim() ? (
+                                <a
+                                  className="event-detail-source-link"
+                                  href={gtaEvent.sourceUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  Abrir fonte
+                                  <span aria-hidden="true">
+                                    ↗
+                                  </span>
+                                </a>
+                              ) : (
+                                <span className="event-detail-source-missing">
+                                  Fonte ainda não cadastrada
+                                </span>
+                              )}
+
+                              {gtaEvent.subcategory?.trim() && (
+                                <span className="event-detail-subcategory">
+                                  {gtaEvent.subcategory}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </article>
                     )
                   },

@@ -1,4 +1,8 @@
 import {
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react'
+import {
   Area,
   AreaChart,
   CartesianGrid,
@@ -14,11 +18,22 @@ import type {
   GtaEvent,
   StockTimeSeriesPoint,
 } from '../types/dashboard'
+import {
+  formatGtaEventDate,
+  getGtaEventPresentation,
+  getGtaEventPriorityLabel,
+  getGtaEventSourceLabel,
+  parseGtaEventDate,
+  type GtaEventIconKey,
+  type GtaEventPresentation,
+  type RichGtaEvent,
+} from '../utils/gtaEventPresentation'
 
 interface StockChartProps {
   values: StockTimeSeriesPoint[]
   events: GtaEvent[]
   selectedEventId: string | null
+  onEventSelect: (gtaEvent: GtaEvent) => void
 }
 
 interface ChartPoint {
@@ -28,7 +43,7 @@ interface ChartPoint {
 }
 
 interface EligibleEvent {
-  event: GtaEvent
+  event: RichGtaEvent
   timestamp: number
   price: number
   dateKey: string
@@ -36,50 +51,40 @@ interface EligibleEvent {
 
 interface EventMarker {
   id: string
-  title: string
-  occurredAtUtc: string
-  category: string
+  event: RichGtaEvent
+  presentation: GtaEventPresentation
   timestamp: number
   price: number
   labelSide: 'left' | 'right'
   horizontalOffset: number
-  color: string
   isSelected: boolean
 }
 
-interface EventMarkerLabelProps {
-  title: string
-  side: 'left' | 'right'
-  color: string
-  viewBox?: {
-    x?: number
-    y?: number
-  }
+interface EventTooltipState {
+  marker: EventMarker
+  x: number
+  y: number
 }
 
 interface EventMarkerShapeProps {
   marker: EventMarker
+  onSelect: (gtaEvent: GtaEvent) => void
+  onTooltipChange: (
+    tooltip: EventTooltipState | null,
+  ) => void
   cx?: number
   cy?: number
+}
+
+interface EventIconGlyphProps {
+  iconKey: GtaEventIconKey
+  x: number
+  y: number
 }
 
 interface ImpactWindow {
   startTimestamp: number
   endTimestamp: number
-}
-
-function normalizeDate(
-  dateText: string,
-): Date {
-  const hasTimezone =
-    dateText.endsWith('Z') ||
-    /[+-]\d{2}:\d{2}$/.test(dateText)
-
-  return new Date(
-    hasTimezone
-      ? dateText
-      : `${dateText}Z`,
-  )
 }
 
 function calculateChartRangeInDays(
@@ -162,16 +167,24 @@ function formatTooltipDate(
   ).format(date)
 }
 
-function formatEventDate(
-  dateText: string,
+function shortenDescription(
+  description: string,
 ): string {
-  return new Intl.DateTimeFormat(
-    'pt-BR',
-    {
-      dateStyle: 'long',
-      timeStyle: 'short',
-    },
-  ).format(normalizeDate(dateText))
+  const maximumLength = 220
+  const normalizedDescription =
+    description.trim()
+
+  if (
+    normalizedDescription.length <=
+    maximumLength
+  ) {
+    return normalizedDescription
+  }
+
+  return `${normalizedDescription.slice(
+    0,
+    maximumLength,
+  )}…`
 }
 
 function createChartData(
@@ -181,7 +194,7 @@ function createChartData(
     .map((value) => ({
       price: value.close,
       volume: value.volume,
-      timestamp: normalizeDate(
+      timestamp: parseGtaEventDate(
         value.dateTimeUtc,
       ).getTime(),
     }))
@@ -207,20 +220,16 @@ function createAxisTicks(
     points[0].timestamp
 
   const maximumTimestamp =
-    points[
-      points.length - 1
-    ].timestamp
+    points[points.length - 1].timestamp
 
   if (
-    minimumTimestamp ===
-    maximumTimestamp
+    minimumTimestamp === maximumTimestamp
   ) {
     return [minimumTimestamp]
   }
 
   const range =
-    maximumTimestamp -
-    minimumTimestamp
+    maximumTimestamp - minimumTimestamp
 
   return Array.from(
     {
@@ -228,8 +237,7 @@ function createAxisTicks(
     },
     (_, index) => {
       const position =
-        index /
-        (numberOfTicks - 1)
+        index / (numberOfTicks - 1)
 
       return Math.round(
         minimumTimestamp +
@@ -237,6 +245,33 @@ function createAxisTicks(
       )
     },
   )
+}
+
+function createPriceDomain(
+  points: ChartPoint[],
+): [number, number] {
+  if (points.length === 0) {
+    return [0, 1]
+  }
+
+  const prices = points.map(
+    (point) => point.price,
+  )
+
+  const minimumPrice = Math.min(...prices)
+  const maximumPrice = Math.max(...prices)
+  const priceRange =
+    maximumPrice - minimumPrice
+
+  const padding =
+    priceRange > 0
+      ? priceRange * 0.08
+      : Math.max(minimumPrice * 0.02, 1)
+
+  return [
+    Math.max(0, minimumPrice - padding),
+    maximumPrice + padding,
+  ]
 }
 
 function findNearestPointIndex(
@@ -270,100 +305,6 @@ function findNearestPointIndex(
   return nearestIndex
 }
 
-function calculateEventPrice(
-  points: ChartPoint[],
-  timestamp: number,
-): number | null {
-  const nearestPointIndex =
-    findNearestPointIndex(
-      points,
-      timestamp,
-    )
-
-  if (nearestPointIndex < 0) {
-    return null
-  }
-
-  return points[nearestPointIndex].price
-}
-
-function getEventCategory(
-  gtaEvent: GtaEvent,
-): string {
-  const normalizedText =
-    `${gtaEvent.title} ${gtaEvent.description}`
-      .toLowerCase()
-
-  if (
-    normalizedText.includes('adiado') ||
-    normalizedText.includes('adiamento')
-  ) {
-    return 'Adiamento'
-  }
-
-  if (normalizedText.includes('trailer')) {
-    return 'Trailer'
-  }
-
-  if (
-    normalizedText.includes('resultado') ||
-    normalizedText.includes('financeiro')
-  ) {
-    return 'Resultados financeiros'
-  }
-
-  if (
-    normalizedText.includes('pré-venda') ||
-    normalizedText.includes('pre-venda')
-  ) {
-    return 'Pré-venda'
-  }
-
-  if (
-    normalizedText.includes('lançamento') ||
-    normalizedText.includes('lancamento')
-  ) {
-    return 'Lançamento'
-  }
-
-  if (
-    normalizedText.includes('rumor') ||
-    normalizedText.includes('vazamento') ||
-    normalizedText.includes('leak')
-  ) {
-    return 'Rumor ou vazamento'
-  }
-
-  return 'Evento'
-}
-
-function getEventMarkerColor(
-  category: string,
-): string {
-  switch (category) {
-    case 'Adiamento':
-      return 'var(--negative)'
-
-    case 'Trailer':
-      return 'var(--accent-purple)'
-
-    case 'Resultados financeiros':
-      return 'var(--accent-blue)'
-
-    case 'Pré-venda':
-      return '#f97316'
-
-    case 'Lançamento':
-      return 'var(--positive)'
-
-    case 'Rumor ou vazamento':
-      return 'var(--secondary-text)'
-
-    default:
-      return 'var(--accent-pink)'
-  }
-}
-
 function createEligibleEvents(
   events: GtaEvent[],
   chartData: ChartPoint[],
@@ -376,27 +317,24 @@ function createEligibleEvents(
     chartData[0].timestamp
 
   const maximumTimestamp =
-    chartData[
-      chartData.length - 1
-    ].timestamp
+    chartData[chartData.length - 1].timestamp
 
   return [...events]
     .sort(
       (firstEvent, secondEvent) =>
-        normalizeDate(
+        parseGtaEventDate(
           firstEvent.occurredAtUtc,
         ).getTime() -
-        normalizeDate(
+        parseGtaEventDate(
           secondEvent.occurredAtUtc,
         ).getTime(),
     )
     .map((gtaEvent) => {
-      const eventDate = normalizeDate(
+      const eventDate = parseGtaEventDate(
         gtaEvent.occurredAtUtc,
       )
 
-      const timestamp =
-        eventDate.getTime()
+      const timestamp = eventDate.getTime()
 
       if (
         !Number.isFinite(timestamp) ||
@@ -406,20 +344,21 @@ function createEligibleEvents(
         return null
       }
 
-      const price =
-        calculateEventPrice(
+      const nearestPointIndex =
+        findNearestPointIndex(
           chartData,
           timestamp,
         )
 
-      if (price === null) {
+      if (nearestPointIndex < 0) {
         return null
       }
 
       return {
-        event: gtaEvent,
+        event: gtaEvent as RichGtaEvent,
         timestamp,
-        price,
+        price:
+          chartData[nearestPointIndex].price,
         dateKey: eventDate
           .toISOString()
           .slice(0, 10),
@@ -446,34 +385,26 @@ function createEventMarkers(
     chartData[0].timestamp
 
   const maximumTimestamp =
-    chartData[
-      chartData.length - 1
-    ].timestamp
-
-  const eligibleEvents =
-    createEligibleEvents(
-      events,
-      chartData,
-    )
+    chartData[chartData.length - 1].timestamp
 
   const groupsByDate =
     new Map<string, EligibleEvent[]>()
 
-  eligibleEvents.forEach(
-    (eligibleEvent) => {
-      const currentGroup =
-        groupsByDate.get(
-          eligibleEvent.dateKey,
-        ) ?? []
-
-      currentGroup.push(eligibleEvent)
-
-      groupsByDate.set(
+  createEligibleEvents(
+    events,
+    chartData,
+  ).forEach((eligibleEvent) => {
+    const currentGroup =
+      groupsByDate.get(
         eligibleEvent.dateKey,
-        currentGroup,
-      )
-    },
-  )
+      ) ?? []
+
+    currentGroup.push(eligibleEvent)
+    groupsByDate.set(
+      eligibleEvent.dateKey,
+      currentGroup,
+    )
+  })
 
   const markers: EventMarker[] = []
 
@@ -507,7 +438,7 @@ function createEventMarkers(
                 : 1
 
             horizontalOffset =
-              direction * distance * 14
+              direction * distance * 18
 
             unselectedOffsetIndex += 1
           }
@@ -515,7 +446,7 @@ function createEventMarkers(
           horizontalOffset =
             (index -
               (group.length - 1) / 2) *
-            14
+            18
         }
 
         const chartPosition =
@@ -527,27 +458,21 @@ function createEventMarkers(
               (maximumTimestamp -
                 minimumTimestamp)
 
-        const category =
-          getEventCategory(
-            eligibleEvent.event,
-          )
-
         markers.push({
           id: eligibleEvent.event.id,
-          title: eligibleEvent.event.title,
-          occurredAtUtc:
-            eligibleEvent.event.occurredAtUtc,
-          category,
+          event: eligibleEvent.event,
+          presentation:
+            getGtaEventPresentation(
+              eligibleEvent.event,
+            ),
           timestamp:
             eligibleEvent.timestamp,
           price: eligibleEvent.price,
           labelSide:
-            chartPosition >= 0.72
+            chartPosition >= 0.7
               ? 'left'
               : 'right',
           horizontalOffset,
-          color:
-            getEventMarkerColor(category),
           isSelected,
         })
       },
@@ -593,95 +518,587 @@ function createImpactWindow(
   }
 }
 
-function EventMarkerLabel({
-  title,
-  side,
-  color,
-  viewBox,
-}: EventMarkerLabelProps) {
-  const x = viewBox?.x ?? 0
-  const y = 15
+function EventIconGlyph({
+  iconKey,
+  x,
+  y,
+}: EventIconGlyphProps) {
+  const centerX = x
+  const centerY = y
 
-  const horizontalOffset =
-    side === 'left' ? -10 : 10
+  switch (iconKey) {
+    case 'trailer':
+      return (
+        <path
+          d={`M ${centerX - 4} ${centerY - 7} L ${centerX + 7} ${centerY} L ${centerX - 4} ${centerY + 7} Z`}
+          fill="currentColor"
+        />
+      )
+
+    case 'delay':
+      return (
+        <g
+          stroke="currentColor"
+          strokeWidth="2.3"
+          strokeLinecap="round"
+        >
+          <line
+            x1={centerX}
+            y1={centerY - 7}
+            x2={centerX}
+            y2={centerY + 2}
+          />
+          <circle
+            cx={centerX}
+            cy={centerY + 7}
+            r="1.35"
+            fill="currentColor"
+            stroke="none"
+          />
+        </g>
+      )
+
+    case 'financial':
+    case 'market-analysis':
+      return (
+        <g fill="currentColor">
+          <rect
+            x={centerX - 8}
+            y={centerY + 1}
+            width="3.5"
+            height="7"
+            rx="1"
+          />
+          <rect
+            x={centerX - 1.75}
+            y={centerY - 4}
+            width="3.5"
+            height="12"
+            rx="1"
+          />
+          <rect
+            x={centerX + 4.5}
+            y={centerY - 8}
+            width="3.5"
+            height="16"
+            rx="1"
+          />
+        </g>
+      )
+
+    case 'pre-order':
+      return (
+        <g
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path
+            d={`M ${centerX - 7} ${centerY - 3} H ${centerX + 7} L ${centerX + 5} ${centerY + 8} H ${centerX - 5} Z`}
+          />
+          <path
+            d={`M ${centerX - 4} ${centerY - 3} C ${centerX - 4} ${centerY - 9}, ${centerX + 4} ${centerY - 9}, ${centerX + 4} ${centerY - 3}`}
+          />
+        </g>
+      )
+
+    case 'pricing':
+      return (
+        <text
+          x={centerX}
+          y={centerY + 6}
+          fill="currentColor"
+          fontSize="18"
+          fontWeight="900"
+          textAnchor="middle"
+        >
+          $
+        </text>
+      )
+
+    case 'distribution':
+      return (
+        <g
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+        >
+          <path
+            d={`M ${centerX - 8} ${centerY - 5} L ${centerX} ${centerY - 9} L ${centerX + 8} ${centerY - 5} L ${centerX} ${centerY - 1} Z`}
+          />
+          <path
+            d={`M ${centerX - 8} ${centerY - 5} V ${centerY + 5} L ${centerX} ${centerY + 9} L ${centerX + 8} ${centerY + 5} V ${centerY - 5}`}
+          />
+          <line
+            x1={centerX}
+            y1={centerY - 1}
+            x2={centerX}
+            y2={centerY + 9}
+          />
+        </g>
+      )
+
+    case 'launch':
+      return (
+        <path
+          d={`M ${centerX} ${centerY - 9} L ${centerX + 2.7} ${centerY - 3} L ${centerX + 9} ${centerY - 2.3} L ${centerX + 4.2} ${centerY + 2} L ${centerX + 5.7} ${centerY + 8} L ${centerX} ${centerY + 4.8} L ${centerX - 5.7} ${centerY + 8} L ${centerX - 4.2} ${centerY + 2} L ${centerX - 9} ${centerY - 2.3} L ${centerX - 2.7} ${centerY - 3} Z`}
+          fill="currentColor"
+        />
+      )
+
+    case 'leak':
+      return (
+        <g
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.9"
+        >
+          <path
+            d={`M ${centerX - 10} ${centerY} C ${centerX - 5} ${centerY - 7}, ${centerX + 5} ${centerY - 7}, ${centerX + 10} ${centerY} C ${centerX + 5} ${centerY + 7}, ${centerX - 5} ${centerY + 7}, ${centerX - 10} ${centerY} Z`}
+          />
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r="3"
+          />
+        </g>
+      )
+
+    case 'security':
+      return (
+        <path
+          d={`M ${centerX} ${centerY - 9} L ${centerX + 8} ${centerY - 5} V ${centerY + 1} C ${centerX + 8} ${centerY + 6}, ${centerX + 4} ${centerY + 9}, ${centerX} ${centerY + 11} C ${centerX - 4} ${centerY + 9}, ${centerX - 8} ${centerY + 6}, ${centerX - 8} ${centerY + 1} V ${centerY - 5} Z`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+        />
+      )
+
+    case 'labor-legal':
+      return (
+        <g
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line
+            x1={centerX}
+            y1={centerY - 8}
+            x2={centerX}
+            y2={centerY + 8}
+          />
+          <line
+            x1={centerX - 8}
+            y1={centerY - 4}
+            x2={centerX + 8}
+            y2={centerY - 4}
+          />
+          <path
+            d={`M ${centerX - 8} ${centerY - 4} L ${centerX - 12} ${centerY + 3} H ${centerX - 4} Z`}
+          />
+          <path
+            d={`M ${centerX + 8} ${centerY - 4} L ${centerX + 4} ${centerY + 3} H ${centerX + 12} Z`}
+          />
+          <line
+            x1={centerX - 5}
+            y1={centerY + 9}
+            x2={centerX + 5}
+            y2={centerY + 9}
+          />
+        </g>
+      )
+
+    case 'development':
+      return (
+        <g
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path
+            d={`M ${centerX - 3} ${centerY - 7} L ${centerX - 9} ${centerY} L ${centerX - 3} ${centerY + 7}`}
+          />
+          <path
+            d={`M ${centerX + 3} ${centerY - 7} L ${centerX + 9} ${centerY} L ${centerX + 3} ${centerY + 7}`}
+          />
+        </g>
+      )
+
+    case 'corporate':
+      return (
+        <g fill="currentColor">
+          <rect
+            x={centerX - 8}
+            y={centerY - 8}
+            width="16"
+            height="16"
+            rx="2"
+          />
+          <rect
+            x={centerX - 4.5}
+            y={centerY - 4.5}
+            width="3"
+            height="3"
+            fill="var(--panel-background)"
+          />
+          <rect
+            x={centerX + 1.5}
+            y={centerY - 4.5}
+            width="3"
+            height="3"
+            fill="var(--panel-background)"
+          />
+          <rect
+            x={centerX - 2}
+            y={centerY + 1}
+            width="4"
+            height="7"
+            fill="var(--panel-background)"
+          />
+        </g>
+      )
+
+    case 'release-window':
+      return (
+        <g
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect
+            x={centerX - 9}
+            y={centerY - 7}
+            width="18"
+            height="16"
+            rx="2"
+          />
+          <line
+            x1={centerX - 9}
+            y1={centerY - 2}
+            x2={centerX + 9}
+            y2={centerY - 2}
+          />
+          <line
+            x1={centerX - 5}
+            y1={centerY - 10}
+            x2={centerX - 5}
+            y2={centerY - 4}
+          />
+          <line
+            x1={centerX + 5}
+            y1={centerY - 10}
+            x2={centerX + 5}
+            y2={centerY - 4}
+          />
+        </g>
+      )
+
+    case 'game-information':
+      return (
+        <g
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r="9"
+          />
+          <line
+            x1={centerX}
+            y1={centerY - 1}
+            x2={centerX}
+            y2={centerY + 6}
+          />
+          <circle
+            cx={centerX}
+            cy={centerY - 5}
+            r="1.2"
+            fill="currentColor"
+            stroke="none"
+          />
+        </g>
+      )
+
+    default:
+      return (
+        <g
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path
+            d={`M ${centerX - 9} ${centerY - 4} L ${centerX + 3} ${centerY - 8} V ${centerY + 8} L ${centerX - 9} ${centerY + 4} Z`}
+          />
+          <line
+            x1={centerX - 9}
+            y1={centerY + 4}
+            x2={centerX - 6}
+            y2={centerY + 10}
+          />
+        </g>
+      )
+  }
+}
+
+function EventTooltipCard({
+  tooltip,
+}: {
+  tooltip: EventTooltipState
+}) {
+  const { marker } = tooltip
+  const priorityLabel =
+    getGtaEventPriorityLabel(marker.event)
+  const sourceLabel =
+    getGtaEventSourceLabel(marker.event)
+
+  const tooltipHeight = 236
+  const verticalPosition = Math.max(
+    8,
+    Math.min(
+      tooltip.y - tooltipHeight / 2,
+      450 - tooltipHeight - 8,
+    ),
+  )
 
   return (
-    <text
-      x={x + horizontalOffset}
-      y={y}
-      fill={color}
-      fontSize={12}
-      fontWeight={850}
-      textAnchor={
-        side === 'left'
-          ? 'end'
-          : 'start'
-      }
-      dominantBaseline="hanging"
-      pointerEvents="none"
+    <div
+      className={`event-chart-popup ${marker.labelSide}`}
+      role="tooltip"
+      style={{
+        left: tooltip.x,
+        top: verticalPosition,
+        borderColor: marker.presentation.color,
+      }}
     >
-      {title}
-    </text>
+      <div className="event-marker-tooltip-heading">
+        <span
+          className="event-marker-tooltip-icon"
+          style={{
+            background: marker.presentation.color,
+          }}
+          aria-hidden="true"
+        >
+          {marker.presentation.symbol}
+        </span>
+
+        <div>
+          <span
+            className="event-marker-tooltip-category"
+            style={{
+              color: marker.presentation.color,
+            }}
+          >
+            {marker.presentation.label}
+          </span>
+
+          <strong>{marker.event.title}</strong>
+        </div>
+      </div>
+
+      <p className="event-marker-tooltip-date">
+        {formatGtaEventDate(
+          marker.event.occurredAtUtc,
+        )}
+      </p>
+
+      <div className="event-marker-tooltip-market">
+        <span>Fechamento mais próximo</span>
+
+        <strong>
+          US${' '}
+          {marker.price.toLocaleString(
+            'pt-BR',
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            },
+          )}
+        </strong>
+      </div>
+
+      <p className="event-marker-tooltip-description">
+        {shortenDescription(
+          marker.event.description,
+        )}
+      </p>
+
+      <div className="event-marker-tooltip-footer">
+        <span>{sourceLabel}</span>
+        {priorityLabel && (
+          <span>{priorityLabel}</span>
+        )}
+      </div>
+    </div>
   )
 }
 
 function EventMarkerShape({
   marker,
+  onSelect,
+  onTooltipChange,
   cx = 0,
   cy = 0,
 }: EventMarkerShapeProps) {
-  const radius = marker.isSelected
-    ? 9
-    : 5.5
+  const [isHovered, setIsHovered] =
+    useState(false)
+
+  const [isFocused, setIsFocused] =
+    useState(false)
+
+  const iconX =
+    cx + marker.horizontalOffset
+
+  const iconSize = marker.isSelected
+    ? 32
+    : 27
 
   const markerLabel = [
-    marker.title,
-    `Data: ${formatEventDate(
-      marker.occurredAtUtc,
+    marker.event.title,
+    `Data: ${formatGtaEventDate(
+      marker.event.occurredAtUtc,
     )}`,
-    `Categoria: ${marker.category}`,
+    `Categoria: ${marker.presentation.label}`,
   ].join('\n')
+
+  function showTooltip() {
+    onTooltipChange({
+      marker,
+      x: iconX,
+      y: cy,
+    })
+  }
+
+  function handleMouseEnter() {
+    setIsHovered(true)
+    showTooltip()
+  }
+
+  function handleMouseLeave() {
+    setIsHovered(false)
+
+    if (!isFocused) {
+      onTooltipChange(null)
+    }
+  }
+
+  function handleFocus() {
+    setIsFocused(true)
+    showTooltip()
+  }
+
+  function handleBlur() {
+    setIsFocused(false)
+
+    if (!isHovered) {
+      onTooltipChange(null)
+    }
+  }
+
+  function handleKeyDown(
+    event: ReactKeyboardEvent<SVGGElement>,
+  ) {
+    if (
+      event.key !== 'Enter' &&
+      event.key !== ' '
+    ) {
+      return
+    }
+
+    event.preventDefault()
+    onSelect(marker.event)
+  }
 
   return (
     <g
-      transform={`translate(${marker.horizontalOffset} 0)`}
-      role="img"
+      role="button"
       aria-label={markerLabel}
       tabIndex={0}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseDown={(
+        event: { preventDefault: () => void },
+      ) => event.preventDefault()
+      }
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onClick={() =>
+        onSelect(marker.event)
+      }
+      onKeyDown={handleKeyDown}
       style={{
-        cursor: 'help',
+        cursor: 'pointer',
         outline: 'none',
       }}
     >
-      <title>{markerLabel}</title>
+      {marker.horizontalOffset !== 0 && (
+        <line
+          x1={cx}
+          y1={cy}
+          x2={iconX}
+          y2={cy}
+          stroke={marker.presentation.color}
+          strokeWidth="1.5"
+          strokeOpacity="0.72"
+          strokeDasharray="2 2"
+          pointerEvents="none"
+        />
+      )}
 
-      <circle
-        cx={cx}
-        cy={cy}
-        r={radius + 3}
-        fill="var(--panel-background)"
+      {marker.isSelected && (
+        <rect
+          x={iconX - iconSize / 2 - 5}
+          y={cy - iconSize / 2 - 5}
+          width={iconSize + 10}
+          height={iconSize + 10}
+          rx="12"
+          fill={marker.presentation.color}
+          opacity="0.17"
+          pointerEvents="none"
+        />
+      )}
+
+      <rect
+        x={iconX - iconSize / 2}
+        y={cy - iconSize / 2}
+        width={iconSize}
+        height={iconSize}
+        rx={marker.isSelected ? 10 : 8}
+        fill={marker.presentation.color}
+        stroke="var(--panel-background)"
+        strokeWidth={marker.isSelected ? 3 : 2}
         opacity={
-          marker.isSelected ? 1 : 0.88
+          marker.isSelected || isHovered
+            ? 1
+            : 0.9
         }
       />
 
-      <circle
-        cx={cx}
-        cy={cy}
-        r={radius}
-        fill={marker.color}
-        stroke={
-          marker.isSelected
-            ? 'var(--primary-text)'
-            : marker.color
-        }
-        strokeWidth={
-          marker.isSelected ? 3 : 1.5
-        }
-        opacity={
-          marker.isSelected ? 1 : 0.82
-        }
-      />
+      <g
+        color="#ffffff"
+        pointerEvents="none"
+      >
+        <EventIconGlyph
+          iconKey={
+            marker.presentation.iconKey
+          }
+          x={iconX}
+          y={cy}
+        />
+      </g>
     </g>
   )
 }
@@ -690,20 +1107,26 @@ export function StockChart({
   values,
   events,
   selectedEventId,
+  onEventSelect,
 }: StockChartProps) {
-  const chartData =
-    createChartData(values)
+  const [
+    activeEventTooltip,
+    setActiveEventTooltip,
+  ] = useState<EventTooltipState | null>(null)
 
+  const chartData = createChartData(values)
   const chartRangeInDays =
     calculateChartRangeInDays(
       chartData,
     )
 
-  const axisTicks =
-    createAxisTicks(
-      chartData,
-      7,
-    )
+  const axisTicks = createAxisTicks(
+    chartData,
+    7,
+  )
+
+  const priceDomain =
+    createPriceDomain(chartData)
 
   const eventMarkers =
     createEventMarkers(
@@ -723,6 +1146,8 @@ export function StockChart({
       chartData,
     )
 
+
+
   return (
     <div
       className="stock-chart-container"
@@ -738,7 +1163,7 @@ export function StockChart({
         <AreaChart
           data={chartData}
           margin={{
-            top: 82,
+            top: 34,
             right: 34,
             bottom: 26,
             left: 18,
@@ -798,9 +1223,7 @@ export function StockChart({
             ]}
             ticks={axisTicks}
             interval={0}
-            tickFormatter={(
-              timestamp,
-            ) =>
+            tickFormatter={(timestamp: unknown) =>
               formatAxisDate(
                 Number(timestamp),
                 chartRangeInDays,
@@ -822,10 +1245,10 @@ export function StockChart({
 
           <YAxis
             dataKey="price"
-            domain={['auto', 'auto']}
+            domain={priceDomain}
             width={76}
             tickMargin={10}
-            tickFormatter={(price) =>
+            tickFormatter={(price: unknown) =>
               Number(price).toFixed(2)
             }
             tick={{
@@ -838,15 +1261,13 @@ export function StockChart({
           />
 
           <Tooltip
-            labelFormatter={(
-              timestamp,
-            ) =>
+            labelFormatter={(timestamp: unknown) =>
               formatTooltipDate(
                 Number(timestamp),
                 chartRangeInDays,
               )
             }
-            formatter={(value) => [
+            formatter={(value: unknown) => [
               `US$ ${Number(
                 value,
               ).toFixed(2)}`,
@@ -863,28 +1284,45 @@ export function StockChart({
               boxShadow:
                 'var(--card-shadow)',
             }}
+            wrapperStyle={{
+              visibility:
+                activeEventTooltip
+                  ? 'hidden'
+                  : 'visible',
+              pointerEvents: 'none',
+            }}
           />
 
-          {selectedMarker && (
+          {eventMarkers.map((marker) => (
             <ReferenceLine
-              x={selectedMarker.timestamp}
-              stroke={selectedMarker.color}
-              strokeDasharray="3 3"
-              strokeWidth={3}
-              strokeOpacity={1}
-              label={
-                <EventMarkerLabel
-                  title={selectedMarker.title}
-                  side={
-                    selectedMarker.labelSide
-                  }
-                  color={
-                    selectedMarker.color
-                  }
-                />
+              key={`event-line-${marker.id}`}
+              segment={[
+                {
+                  x: marker.timestamp,
+                  y: marker.price,
+                },
+                {
+                  x: marker.timestamp,
+                  y: priceDomain[0],
+                },
+              ]}
+              stroke={
+                marker.presentation.color
               }
+              strokeDasharray={
+                marker.isSelected
+                  ? '4 3'
+                  : '3 5'
+              }
+              strokeWidth={
+                marker.isSelected ? 2.4 : 1.25
+              }
+              strokeOpacity={
+                marker.isSelected ? 0.92 : 0.36
+              }
+              ifOverflow="visible"
             />
-          )}
+          ))}
 
           <Area
             type="monotone"
@@ -902,42 +1340,46 @@ export function StockChart({
             isAnimationActive={false}
           />
 
-          {eventMarkers.map(
-            (marker) => (
-              <ReferenceDot
-                key={`dot-${marker.id}`}
-                x={marker.timestamp}
-                y={marker.price}
-                r={
-                  marker.isSelected ? 9 : 6
+          {eventMarkers.map((marker) => (
+            <ReferenceDot
+              key={`event-marker-${marker.id}`}
+              x={marker.timestamp}
+              y={marker.price}
+              r={16}
+              fill="transparent"
+              stroke="transparent"
+              ifOverflow="visible"
+              shape={(shapeProps: unknown) => {
+                const {
+                  cx,
+                  cy,
+                } = shapeProps as {
+                  cx?: number
+                  cy?: number
                 }
-                fill={marker.color}
-                stroke="transparent"
-                ifOverflow="visible"
-                shape={(
-                  shapeProps: unknown,
-                ) => {
-                  const {
-                    cx,
-                    cy,
-                  } = shapeProps as {
-                    cx?: number
-                    cy?: number
-                  }
 
-                  return (
-                    <EventMarkerShape
-                      marker={marker}
-                      cx={cx}
-                      cy={cy}
-                    />
-                  )
-                }}
-              />
-            ),
-          )}
+                return (
+                  <EventMarkerShape
+                    marker={marker}
+                    onSelect={onEventSelect}
+                    onTooltipChange={
+                      setActiveEventTooltip
+                    }
+                    cx={cx}
+                    cy={cy}
+                  />
+                )
+              }}
+            />
+          ))}
         </AreaChart>
       </ResponsiveContainer>
+
+      {activeEventTooltip && (
+        <EventTooltipCard
+          tooltip={activeEventTooltip}
+        />
+      )}
     </div>
   )
 }

@@ -8,10 +8,22 @@ export interface StockQuote {
 
 export interface GtaEvent {
   id: string
+  slug?: string
   title: string
   description: string
+  category?: string | number
+  subcategory?: string
+  priority?: string | number
+  sourceType?: string | number
+  sourceName?: string
   sourceUrl: string
   occurredAtUtc: string
+  occurredUntilUtc?: string | null
+  publishedAtUtc?: string | null
+  datePrecision?: string | number
+  status?: string | number
+  isOfficial?: boolean
+  isImpactAnalysisEligible?: boolean
 }
 
 export interface DashboardData {
