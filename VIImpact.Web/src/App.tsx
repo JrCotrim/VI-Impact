@@ -9,6 +9,7 @@ import { getDashboardData } from './services/dashboardService'
 import { getStockTimeSeries } from './services/stockTimeSeriesService'
 import type {
   DashboardData,
+  GtaEvent,
   StockPeriodPerformance,
   StockQuote,
   StockTimeSeries,
@@ -16,6 +17,12 @@ import type {
 } from './types/dashboard'
 
 type Theme = 'day' | 'night'
+
+type EventStyle = {
+  badge: string
+  className: string
+  symbol: string
+}
 
 const performancePeriodOrder: StockTimeSeriesPeriod[] = [
   '1D',
@@ -42,6 +49,9 @@ const longPerformancePeriods =
     '2Y',
     '5Y',
   ])
+
+const initialCustomRange =
+  createInitialCustomRange()
 
 function getReliablePerformancePeriods(
   requestedPeriod: StockTimeSeriesPeriod,
@@ -146,11 +156,80 @@ function parseUtcDate(dateText: string): Date {
   )
 }
 
-function formatDate(dateText: string): string {
+function formatTime(dateText: string): string {
   return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
   }).format(parseUtcDate(dateText))
+}
+
+function formatEventDate(
+  dateText: string,
+): string {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(parseUtcDate(dateText))
+}
+
+function formatCurrency(
+  value: number,
+): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+function formatSignedCurrency(
+  value: number,
+): string {
+  const absoluteValue = formatCurrency(
+    Math.abs(value),
+  )
+
+  if (value > 0) {
+    return `+${absoluteValue}`
+  }
+
+  if (value < 0) {
+    return `-${absoluteValue}`
+  }
+
+  return absoluteValue
+}
+
+function formatSignedPercent(
+  value: number,
+): string {
+  const formattedValue = Math.abs(value)
+    .toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+
+  if (value > 0) {
+    return `+${formattedValue}%`
+  }
+
+  if (value < 0) {
+    return `-${formattedValue}%`
+  }
+
+  return `${formattedValue}%`
+}
+
+function formatCompactVolume(
+  value: number,
+): string {
+  return new Intl.NumberFormat('pt-BR', {
+    notation: 'compact',
+    maximumFractionDigits: 2,
+  }).format(value)
 }
 
 function toDateInputValue(
@@ -184,31 +263,166 @@ function createInitialCustomRange() {
   }
 }
 
-function getLatestQuote(
+function getSortedQuotes(
   quotes: StockQuote[],
-): StockQuote {
-  return quotes.reduce(
-    (latestQuote, currentQuote) => {
-      const latestTimestamp =
-        parseUtcDate(
-          latestQuote.recordedAtUtc,
-        ).getTime()
-
-      const currentTimestamp =
-        parseUtcDate(
-          currentQuote.recordedAtUtc,
-        ).getTime()
-
-      return currentTimestamp >
-        latestTimestamp
-        ? currentQuote
-        : latestQuote
-    },
+): StockQuote[] {
+  return [...quotes].sort(
+    (firstQuote, secondQuote) =>
+      parseUtcDate(
+        firstQuote.recordedAtUtc,
+      ).getTime() -
+      parseUtcDate(
+        secondQuote.recordedAtUtc,
+      ).getTime(),
   )
 }
 
-const initialCustomRange =
-  createInitialCustomRange()
+function getLatestQuote(
+  quotes: StockQuote[],
+): StockQuote {
+  return getSortedQuotes(quotes).at(-1) ??
+    quotes[0]
+}
+
+function calculateAbsoluteChange(
+  price: number,
+  changePercent: number,
+): number {
+  const divisor = 1 + changePercent / 100
+
+  if (divisor === 0) {
+    return 0
+  }
+
+  const previousClose = price / divisor
+
+  return price - previousClose
+}
+
+function createSparklinePoints(
+  quotes: StockQuote[],
+): string {
+  const recentQuotes = getSortedQuotes(quotes)
+    .slice(-28)
+
+  if (recentQuotes.length === 0) {
+    return '0,26 180,26'
+  }
+
+  const prices = recentQuotes.map(
+    (quote) => quote.price,
+  )
+
+  const minimumPrice = Math.min(...prices)
+  const maximumPrice = Math.max(...prices)
+  const priceRange =
+    maximumPrice - minimumPrice || 1
+
+  return prices
+    .map((price, index) => {
+      const x =
+        prices.length === 1
+          ? 90
+          : (index /
+              (prices.length - 1)) *
+            180
+
+      const y =
+        48 -
+        ((price - minimumPrice) /
+          priceRange) *
+          40
+
+      return `${x.toFixed(2)},${y.toFixed(2)}`
+    })
+    .join(' ')
+}
+
+function createVolumeBars(
+  quotes: StockQuote[],
+): number[] {
+  const volumes = getSortedQuotes(quotes)
+    .slice(-13)
+    .map((quote) => quote.volume)
+
+  if (volumes.length === 0) {
+    return [20, 34, 26, 42, 30, 48, 36]
+  }
+
+  const maximumVolume =
+    Math.max(...volumes) || 1
+
+  return volumes.map(
+    (volume) =>
+      Math.max(
+        10,
+        Math.round(
+          (volume / maximumVolume) * 48,
+        ),
+      ),
+  )
+}
+
+function getEventStyle(
+  gtaEvent: GtaEvent,
+  index: number,
+): EventStyle {
+  const normalizedText =
+    `${gtaEvent.title} ${gtaEvent.description}`
+      .toLowerCase()
+
+  if (normalizedText.includes('trailer')) {
+    return {
+      badge: 'Anúncio oficial',
+      className: 'official',
+      symbol: 'VI',
+    }
+  }
+
+  if (
+    normalizedText.includes('adiado') ||
+    normalizedText.includes('adiamento')
+  ) {
+    return {
+      badge: 'Comunicado',
+      className: 'delay',
+      symbol: '!',
+    }
+  }
+
+  if (
+    normalizedText.includes('resultado') ||
+    normalizedText.includes('financeiro')
+  ) {
+    return {
+      badge: 'Financeiro',
+      className: 'financial',
+      symbol: 'T2',
+    }
+  }
+
+  const fallbackStyles: EventStyle[] = [
+    {
+      badge: 'Notícia',
+      className: 'news',
+      symbol: 'VI',
+    },
+    {
+      badge: 'Mercado',
+      className: 'market',
+      symbol: 'TT',
+    },
+    {
+      badge: 'Evento',
+      className: 'event',
+      symbol: '★',
+    },
+  ]
+
+  return fallbackStyles[
+    index % fallbackStyles.length
+  ]
+}
 
 function App() {
   const [dashboard, setDashboard] =
@@ -462,9 +676,12 @@ function App() {
   ) {
     return (
       <main className="status-screen">
-        <p>
-          Carregando dados do VI Impact...
-        </p>
+        <div className="status-card">
+          <span className="status-pulse" />
+          <p>
+            Carregando dados do VI Impact...
+          </p>
+        </div>
       </main>
     )
   }
@@ -472,7 +689,9 @@ function App() {
   if (dashboardError) {
     return (
       <main className="status-screen">
-        <p>Erro: {dashboardError}</p>
+        <div className="status-card error">
+          <p>Erro: {dashboardError}</p>
+        </div>
       </main>
     )
   }
@@ -483,9 +702,11 @@ function App() {
   ) {
     return (
       <main className="status-screen">
-        <p>
-          Nenhuma cotação disponível.
-        </p>
+        <div className="status-card">
+          <p>
+            Nenhuma cotação disponível.
+          </p>
+        </div>
       </main>
     )
   }
@@ -496,163 +717,316 @@ function App() {
   const isPositive =
     latestQuote.changePercent >= 0
 
+  const absoluteChange =
+    calculateAbsoluteChange(
+      latestQuote.price,
+      latestQuote.changePercent,
+    )
+
+  const sparklinePoints =
+    createSparklinePoints(
+      dashboard.quotes,
+    )
+
+  const volumeBars =
+    createVolumeBars(
+      dashboard.quotes,
+    )
+
+  const recentEvents =
+    [...dashboard.gtaEvents]
+      .sort(
+        (firstEvent, secondEvent) =>
+          parseUtcDate(
+            secondEvent.occurredAtUtc,
+          ).getTime() -
+          parseUtcDate(
+            firstEvent.occurredAtUtc,
+          ).getTime(),
+      )
+      .slice(0, 4)
+
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <span className="brand-symbol">
-            VI
-          </span>
+      <header className="topbar">
+        <a
+          className="brand-link"
+          href="#dashboard"
+          aria-label="Ir para o dashboard"
+        >
+          <img
+            className="brand-logo"
+            src="/vi-impact-logo.png"
+            alt="VI Impact"
+          />
+        </a>
 
-          <span className="brand-name">
-            Impact
-          </span>
+        <div className="topbar-actions">
+          <button
+            className={`theme-toggle ${theme}`}
+            type="button"
+            onClick={toggleTheme}
+            aria-label={
+              theme === 'night'
+                ? 'Ativar tema Dia'
+                : 'Ativar tema Noite'
+            }
+            aria-pressed={
+              theme === 'night'
+            }
+          >
+            <span
+              className="theme-toggle-status-icon"
+              aria-hidden="true"
+            >
+              {theme === 'night' ? (
+                <svg viewBox="0 0 24 24">
+                  <path d="M20.4 15.5A8.4 8.4 0 0 1 8.5 3.6a8.5 8.5 0 1 0 11.9 11.9Z" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
+                </svg>
+              )}
+            </span>
+
+            <span className="theme-toggle-copy">
+              <span className="theme-toggle-title">
+                {theme === 'night'
+                  ? 'Noite'
+                  : 'Dia'}
+              </span>
+              <span className="theme-toggle-subtitle">
+                Tema
+              </span>
+            </span>
+
+            <span
+              className="theme-toggle-track"
+              aria-hidden="true"
+            >
+              <span className="theme-toggle-thumb" />
+            </span>
+          </button>
         </div>
-
-        <nav className="sidebar-navigation">
-          <a
-            className="navigation-link active"
-            href="#dashboard"
-          >
-            Dashboard
-          </a>
-
-          <a
-            className="navigation-link"
-            href="#chart"
-          >
-            Gráfico
-          </a>
-
-          <a
-            className="navigation-link"
-            href="#events"
-          >
-            Eventos
-          </a>
-
-          <a
-            className="navigation-link"
-            href="#impact"
-          >
-            Impacto
-          </a>
-
-          <a
-            className="navigation-link"
-            href="#history"
-          >
-            Histórico
-          </a>
-        </nav>
-
-        <div className="market-status">
-          <span>Mercado</span>
-
-          <strong>
-            {timeSeries?.exchange ??
-              'NASDAQ'}{' '}
-            ·{' '}
-            {timeSeries?.currency ??
-              'USD'}
-          </strong>
-        </div>
-      </aside>
+      </header>
 
       <main
         className="dashboard"
         id="dashboard"
       >
-        <header className="dashboard-header">
-          <div>
-            <p className="eyebrow">
-              VI Impact Dashboard
+        <section className="hero-banner">
+          <div className="hero-copy">
+            <p className="hero-eyebrow">
+              VI Impact · Mercado e entretenimento
             </p>
 
             <h1>
-              Eventos do GTA VI e o desempenho
-              da TTWO
+              Take-Two Interactive ({dashboard.symbol})
             </h1>
 
-            <p className="dashboard-description">
-              Acompanhe possíveis relações entre
-              notícias do GTA VI e as ações da
-              Take-Two Interactive.
+            <p>
+              Acompanhe a reação das ações da Take-Two aos eventos de GTA VI
             </p>
           </div>
 
-          <button
-            className="theme-button"
-            type="button"
-            onClick={toggleTheme}
-            aria-label="Alternar tema"
+          <div
+            className="hero-art"
+            aria-hidden="true"
           >
-            {theme === 'day'
-              ? '🌙 Vice City Night'
-              : '☀️ Vice City Day'}
-          </button>
-        </header>
-
-        <section className="summary-grid">
-          <article className="summary-card">
-            <span>Preço atual</span>
-
-            <strong>
-              US${' '}
-              {latestQuote.price.toFixed(2)}
-            </strong>
-
-            <small>
-              {dashboard.symbol}
-            </small>
-          </article>
-
-          <article className="summary-card">
-            <span>Variação</span>
-
-            <strong
-              className={
-                isPositive
-                  ? 'positive-value'
-                  : 'negative-value'
-              }
+            <svg
+              viewBox="0 0 760 220"
+              preserveAspectRatio="xMidYMax meet"
             >
-              {isPositive ? '+' : ''}
-              {latestQuote.changePercent.toFixed(
-                2,
-              )}
-              %
-            </strong>
+              <g className="hero-sun">
+                <circle
+                  cx="562"
+                  cy="96"
+                  r="54"
+                />
+              </g>
 
-            <small>Última cotação</small>
-          </article>
+              <g className="hero-buildings">
+                <path d="M5 220V176h34v-29h24v73h18v-93h31v93h18v-58h28v58h22v-112h34v112h22v-74h30v74h17v-126h38v126h18v-92h28v92h23v-147h41v147h23v-83h25v83h24v-113h34v113h21v-64h27v64h24v-135h39v135h22v-101h30v101h20v-72h28v72h30v-119h36v119h27v-83h31v83Z" />
+              </g>
 
-          <article className="summary-card">
-            <span>Volume</span>
+              <g className="hero-palms">
+                <path d="M568 220c-2-51-2-87 4-128l8 1c-4 43-3 83 1 127Zm7-132c-23-17-39-18-55-7 18-2 31 4 43 17-19-4-34 1-44 14 18-8 34-6 48 4-7-20-4-35 8-49-3 10-2 20 4 29 4-19 15-31 33-38-11 11-17 23-18 36 13-13 29-17 48-11-16 3-29 11-39 25 17-7 32-4 45 8-21-5-38-2-52 10-7-16-14-29-21-38Z" />
+                <path d="M690 220c1-39 0-70-4-103l7-1c6 34 8 69 8 104Zm-2-107c-18-13-31-14-44-6 15-1 25 4 34 14-15-3-27 1-35 11 15-6 27-5 39 3-5-16-3-28 7-39-2 8-1 16 3 23 4-15 13-25 27-30-9 9-14 18-15 29 11-10 24-13 39-8-13 2-23 9-31 19 14-5 26-3 36 7-17-4-30-2-41 8-5-13-11-23-17-31Z" />
+              </g>
+            </svg>
+          </div>
+        </section>
 
-            <strong>
-              {latestQuote.volume.toLocaleString(
-                'pt-BR',
-              )}
-            </strong>
+        <section
+          className="summary-grid"
+          aria-label="Resumo da cotação"
+        >
+          <article className="summary-card price-card">
+            <div className="summary-card-heading">
+              <span className="summary-icon price-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M12 2v20M16.5 6.5H9.75a3.25 3.25 0 0 0 0 6.5h4.5a3.25 3.25 0 0 1 0 6.5H7.5" />
+                </svg>
+              </span>
+              <span>Preço atual</span>
+            </div>
+
+            <div className="summary-card-main">
+              <strong>
+                {formatCurrency(
+                  latestQuote.price,
+                )}
+              </strong>
+
+            </div>
 
             <small>
-              Ações negociadas
+              <span className="live-dot" />
+              Cotação mais recente
             </small>
           </article>
 
-          <article className="summary-card">
-            <span>
-              Última atualização
-            </span>
+          <article className="summary-card variation-card">
+            <div className="summary-card-heading">
+              <span className="summary-icon variation-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="m5 16 5-5 3 3 6-7" />
+                  <path d="M14 7h5v5" />
+                </svg>
+              </span>
+              <span>Variação</span>
+            </div>
 
-            <strong className="date-value">
-              {formatDate(
-                latestQuote.recordedAtUtc,
+            <div className="variation-content">
+              <div className="variation-values">
+                <strong
+                  className={
+                    isPositive
+                      ? 'positive-value'
+                      : 'negative-value'
+                  }
+                >
+                  {formatSignedCurrency(
+                    absoluteChange,
+                  )}
+                </strong>
+
+                <span
+                  className={
+                    isPositive
+                      ? 'variation-percent positive-value'
+                      : 'variation-percent negative-value'
+                  }
+                >
+                  {formatSignedPercent(
+                    latestQuote.changePercent,
+                  )}
+                </span>
+              </div>
+
+              <svg
+                className={
+                  isPositive
+                    ? 'summary-sparkline positive'
+                    : 'summary-sparkline negative'
+                }
+                viewBox="0 0 180 56"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <polyline
+                  points={sparklinePoints}
+                  fill="none"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+            </div>
+
+            <small>
+              <span className="live-dot" />
+              Últimas cotações registradas
+            </small>
+          </article>
+
+          <article className="summary-card volume-card">
+            <div className="summary-card-heading">
+              <span className="summary-icon volume-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M5 20V11M12 20V5M19 20V8" />
+                </svg>
+              </span>
+              <span>Volume</span>
+            </div>
+
+            <div className="summary-card-main">
+              <strong>
+                {formatCompactVolume(
+                  latestQuote.volume,
+                )}
+              </strong>
+
+            </div>
+
+            <div
+              className="volume-bars"
+              aria-hidden="true"
+            >
+              {volumeBars.map(
+                (height, index) => (
+                  <span
+                    key={`${height}-${index}`}
+                    style={{
+                      height: `${height}px`,
+                    }}
+                  />
+                ),
               )}
-            </strong>
+            </div>
 
-            <small>Horário local</small>
+            <small>
+              <span className="live-dot" />
+              Volume acumulado da cotação
+            </small>
+          </article>
+
+          <article className="summary-card update-card">
+            <div className="summary-card-heading">
+              <span className="summary-icon update-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="8" />
+                  <path d="M12 7v5l3 2" />
+                </svg>
+              </span>
+              <span>Última atualização</span>
+            </div>
+
+            <div className="summary-card-main">
+              <strong className="time-value">
+                {formatTime(
+                  latestQuote.recordedAtUtc,
+                )}
+              </strong>
+
+            </div>
+
+            <small>
+              <span className="live-dot" />
+              Horário local
+            </small>
           </article>
         </section>
 
@@ -665,44 +1039,16 @@ function App() {
               <div>
                 <p className="panel-eyebrow">
                   {timeSeries?.symbol ??
-                    'TTWO'}{' '}
+                    dashboard.symbol}{' '}
                   ·{' '}
                   {timeSeries?.exchange ??
                     'NASDAQ'}
                 </p>
 
-                <h2>
-                  Histórico da ação e eventos
-                  do GTA VI
-                </h2>
+                <h2>Gráfico de cotações</h2>
               </div>
+
             </div>
-
-            {isChartLoading && (
-              <div className="chart-state-message">
-                Carregando período...
-              </div>
-            )}
-
-            {!isChartLoading &&
-              chartError && (
-                <div className="chart-state-message error">
-                  Erro: {chartError}
-                </div>
-              )}
-
-            {!isChartLoading &&
-              !chartError &&
-              timeSeries && (
-                <StockChart
-                  values={
-                    timeSeries.values
-                  }
-                  events={
-                    dashboard.gtaEvents
-                  }
-                />
-              )}
 
             <ChartPeriodSelector
               selectedPeriod={
@@ -730,6 +1076,40 @@ function App() {
                 handleApplyCustomPeriod
               }
             />
+
+            <div className="chart-content">
+              {isChartLoading && (
+                <div className="chart-state-message">
+                  Carregando período...
+                </div>
+              )}
+
+              {!isChartLoading &&
+                chartError && (
+                  <div className="chart-state-message error">
+                    Erro: {chartError}
+                  </div>
+                )}
+
+              {!isChartLoading &&
+                !chartError &&
+                timeSeries && (
+                  <StockChart
+                    values={
+                      timeSeries.values
+                    }
+                    events={
+                      dashboard.gtaEvents
+                    }
+                  />
+                )}
+            </div>
+
+            <p className="chart-footnote">
+              Dados referentes ao período selecionado.
+              Cotações em{' '}
+              {timeSeries?.currency ?? 'USD'}.
+            </p>
           </article>
 
           <aside
@@ -743,48 +1123,70 @@ function App() {
                 </p>
 
                 <h2>
-                  Eventos recentes
+                  Eventos relacionados ao GTA 6
                 </h2>
               </div>
             </div>
 
             <div className="events-list">
-              {dashboard.gtaEvents.length >
-              0 ? (
-                dashboard.gtaEvents.map(
-                  (gtaEvent) => (
-                    <article
-                      className="event-card"
-                      key={gtaEvent.id}
-                    >
-                      <span className="event-date">
-                        {formatDate(
-                          gtaEvent.occurredAtUtc,
-                        )}
-                      </span>
+              {recentEvents.length > 0 ? (
+                recentEvents.map(
+                  (gtaEvent, index) => {
+                    const eventStyle =
+                      getEventStyle(
+                        gtaEvent,
+                        index,
+                      )
 
-                      <h3>
-                        {gtaEvent.title}
-                      </h3>
-
-                      <p>
-                        {gtaEvent.description}
-                      </p>
-
-                      <a
-                        href={
-                          gtaEvent.sourceUrl
-                        }
-                        target="_blank"
-                        rel="noreferrer"
+                    return (
+                      <article
+                        className="event-card"
+                        key={gtaEvent.id}
                       >
-                        Ver fonte
-                      </a>
-                    </article>
-                  ),
+                        <div
+                          className={`event-thumbnail ${eventStyle.className}`}
+                          aria-hidden="true"
+                        >
+                          <span>
+                            {eventStyle.symbol}
+                          </span>
+                        </div>
+
+                        <div className="event-card-content">
+                          <h3>
+                            {gtaEvent.title}
+                          </h3>
+
+                          <p className="event-metadata">
+                            {formatEventDate(
+                              gtaEvent.occurredAtUtc,
+                            )}
+                          </p>
+
+                          <span
+                            className={`event-badge ${eventStyle.className}`}
+                          >
+                            {eventStyle.badge}
+                          </span>
+                        </div>
+
+                        <a
+                          className="event-source-link"
+                          href={
+                            gtaEvent.sourceUrl
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`Ver fonte de ${gtaEvent.title}`}
+                        >
+                          ›
+                        </a>
+                      </article>
+                    )
+                  },
                 )
               ) : (
-                <article className="event-card">
+                <article className="empty-event-card">
                   <h3>
                     Nenhum evento cadastrado
                   </h3>
@@ -796,9 +1198,26 @@ function App() {
                 </article>
               )}
             </div>
+
           </aside>
         </section>
       </main>
+
+      <footer
+        className="site-footer"
+        id="about"
+      >
+
+        <p>
+          Monitorando possíveis relações entre
+          notícias do GTA 6 e o mercado financeiro.
+        </p>
+
+        <span>
+          Dados de mercado fornecidos por{' '}
+          <strong>Twelve Data</strong>
+        </span>
+      </footer>
     </div>
   )
 }
