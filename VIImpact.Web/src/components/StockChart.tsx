@@ -2,6 +2,7 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  ReferenceArea,
   ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
@@ -17,6 +18,7 @@ import type {
 interface StockChartProps {
   values: StockTimeSeriesPoint[]
   events: GtaEvent[]
+  selectedEventId: string | null
 }
 
 interface ChartPoint {
@@ -25,21 +27,45 @@ interface ChartPoint {
   timestamp: number
 }
 
+interface EligibleEvent {
+  event: GtaEvent
+  timestamp: number
+  price: number
+  dateKey: string
+}
+
 interface EventMarker {
   id: string
-  label: string
+  title: string
+  occurredAtUtc: string
+  category: string
   timestamp: number
   price: number
   labelSide: 'left' | 'right'
+  horizontalOffset: number
+  color: string
+  isSelected: boolean
 }
 
 interface EventMarkerLabelProps {
-  label: string
+  title: string
   side: 'left' | 'right'
+  color: string
   viewBox?: {
     x?: number
     y?: number
   }
+}
+
+interface EventMarkerShapeProps {
+  marker: EventMarker
+  cx?: number
+  cy?: number
+}
+
+interface ImpactWindow {
+  startTimestamp: number
+  endTimestamp: number
 }
 
 function normalizeDate(
@@ -136,19 +162,16 @@ function formatTooltipDate(
   ).format(date)
 }
 
-function shortenTitle(
-  title: string,
+function formatEventDate(
+  dateText: string,
 ): string {
-  const maximumLength = 22
-
-  if (title.length <= maximumLength) {
-    return title
-  }
-
-  return `${title.slice(
-    0,
-    maximumLength,
-  )}...`
+  return new Intl.DateTimeFormat(
+    'pt-BR',
+    {
+      dateStyle: 'long',
+      timeStyle: 'short',
+    },
+  ).format(normalizeDate(dateText))
 }
 
 function createChartData(
@@ -216,42 +239,204 @@ function createAxisTicks(
   )
 }
 
+function findNearestPointIndex(
+  points: ChartPoint[],
+  timestamp: number,
+): number {
+  if (points.length === 0) {
+    return -1
+  }
+
+  let nearestIndex = 0
+  let nearestDistance = Math.abs(
+    points[0].timestamp - timestamp,
+  )
+
+  for (
+    let index = 1;
+    index < points.length;
+    index += 1
+  ) {
+    const currentDistance = Math.abs(
+      points[index].timestamp - timestamp,
+    )
+
+    if (currentDistance < nearestDistance) {
+      nearestIndex = index
+      nearestDistance = currentDistance
+    }
+  }
+
+  return nearestIndex
+}
+
 function calculateEventPrice(
   points: ChartPoint[],
   timestamp: number,
 ): number | null {
-  if (points.length === 0) {
+  const nearestPointIndex =
+    findNearestPointIndex(
+      points,
+      timestamp,
+    )
+
+  if (nearestPointIndex < 0) {
     return null
   }
 
-  const nearestPoint = points.reduce(
-    (
-      currentNearestPoint,
-      currentPoint,
-    ) => {
-      const currentDistance = Math.abs(
-        currentPoint.timestamp -
-          timestamp,
+  return points[nearestPointIndex].price
+}
+
+function getEventCategory(
+  gtaEvent: GtaEvent,
+): string {
+  const normalizedText =
+    `${gtaEvent.title} ${gtaEvent.description}`
+      .toLowerCase()
+
+  if (
+    normalizedText.includes('adiado') ||
+    normalizedText.includes('adiamento')
+  ) {
+    return 'Adiamento'
+  }
+
+  if (normalizedText.includes('trailer')) {
+    return 'Trailer'
+  }
+
+  if (
+    normalizedText.includes('resultado') ||
+    normalizedText.includes('financeiro')
+  ) {
+    return 'Resultados financeiros'
+  }
+
+  if (
+    normalizedText.includes('pré-venda') ||
+    normalizedText.includes('pre-venda')
+  ) {
+    return 'Pré-venda'
+  }
+
+  if (
+    normalizedText.includes('lançamento') ||
+    normalizedText.includes('lancamento')
+  ) {
+    return 'Lançamento'
+  }
+
+  if (
+    normalizedText.includes('rumor') ||
+    normalizedText.includes('vazamento') ||
+    normalizedText.includes('leak')
+  ) {
+    return 'Rumor ou vazamento'
+  }
+
+  return 'Evento'
+}
+
+function getEventMarkerColor(
+  category: string,
+): string {
+  switch (category) {
+    case 'Adiamento':
+      return 'var(--negative)'
+
+    case 'Trailer':
+      return 'var(--accent-purple)'
+
+    case 'Resultados financeiros':
+      return 'var(--accent-blue)'
+
+    case 'Pré-venda':
+      return '#f97316'
+
+    case 'Lançamento':
+      return 'var(--positive)'
+
+    case 'Rumor ou vazamento':
+      return 'var(--secondary-text)'
+
+    default:
+      return 'var(--accent-pink)'
+  }
+}
+
+function createEligibleEvents(
+  events: GtaEvent[],
+  chartData: ChartPoint[],
+): EligibleEvent[] {
+  if (chartData.length === 0) {
+    return []
+  }
+
+  const minimumTimestamp =
+    chartData[0].timestamp
+
+  const maximumTimestamp =
+    chartData[
+      chartData.length - 1
+    ].timestamp
+
+  return [...events]
+    .sort(
+      (firstEvent, secondEvent) =>
+        normalizeDate(
+          firstEvent.occurredAtUtc,
+        ).getTime() -
+        normalizeDate(
+          secondEvent.occurredAtUtc,
+        ).getTime(),
+    )
+    .map((gtaEvent) => {
+      const eventDate = normalizeDate(
+        gtaEvent.occurredAtUtc,
       )
 
-      const nearestDistance = Math.abs(
-        currentNearestPoint.timestamp -
+      const timestamp =
+        eventDate.getTime()
+
+      if (
+        !Number.isFinite(timestamp) ||
+        timestamp < minimumTimestamp ||
+        timestamp > maximumTimestamp
+      ) {
+        return null
+      }
+
+      const price =
+        calculateEventPrice(
+          chartData,
           timestamp,
-      )
+        )
 
-      return currentDistance <
-        nearestDistance
-        ? currentPoint
-        : currentNearestPoint
-    },
-  )
+      if (price === null) {
+        return null
+      }
 
-  return nearestPoint.price
+      return {
+        event: gtaEvent,
+        timestamp,
+        price,
+        dateKey: eventDate
+          .toISOString()
+          .slice(0, 10),
+      } satisfies EligibleEvent
+    })
+    .filter(
+      (
+        eligibleEvent,
+      ): eligibleEvent is EligibleEvent =>
+        eligibleEvent !== null,
+    )
 }
 
 function createEventMarkers(
   events: GtaEvent[],
   chartData: ChartPoint[],
+  selectedEventId: string | null,
 ): EventMarker[] {
   if (chartData.length === 0) {
     return []
@@ -265,130 +450,168 @@ function createEventMarkers(
       chartData.length - 1
     ].timestamp
 
-  const eventGroups =
-    new Map<string, GtaEvent[]>()
-
-  events.forEach((gtaEvent) => {
-    const eventDate =
-      normalizeDate(
-        gtaEvent.occurredAtUtc,
-      )
-
-    const timestamp =
-      eventDate.getTime()
-
-    if (!Number.isFinite(timestamp)) {
-      return
-    }
-
-    const dateKey =
-      eventDate
-        .toISOString()
-        .slice(0, 10)
-
-    const currentGroup =
-      eventGroups.get(dateKey) ?? []
-
-    currentGroup.push(gtaEvent)
-
-    eventGroups.set(
-      dateKey,
-      currentGroup,
+  const eligibleEvents =
+    createEligibleEvents(
+      events,
+      chartData,
     )
-  })
 
-  return Array.from(
-    eventGroups.entries(),
+  const groupsByDate =
+    new Map<string, EligibleEvent[]>()
+
+  eligibleEvents.forEach(
+    (eligibleEvent) => {
+      const currentGroup =
+        groupsByDate.get(
+          eligibleEvent.dateKey,
+        ) ?? []
+
+      currentGroup.push(eligibleEvent)
+
+      groupsByDate.set(
+        eligibleEvent.dateKey,
+        currentGroup,
+      )
+    },
   )
-    .map(
-      ([dateKey, groupedEvents]) => {
-        const timestamp = Math.min(
-          ...groupedEvents.map(
-            (gtaEvent) =>
-              normalizeDate(
-                gtaEvent.occurredAtUtc,
-              ).getTime(),
-          ),
-        )
 
-        if (
-          timestamp <
-            minimumTimestamp ||
-          timestamp >
-            maximumTimestamp
-        ) {
-          return null
-        }
+  const markers: EventMarker[] = []
 
-        const price =
-          calculateEventPrice(
-            chartData,
-            timestamp,
-          )
+  groupsByDate.forEach((group) => {
+    const selectedEvent = group.find(
+      (eligibleEvent) =>
+        eligibleEvent.event.id ===
+        selectedEventId,
+    )
 
-        if (price === null) {
-          return null
+    let unselectedOffsetIndex = 0
+
+    group.forEach(
+      (eligibleEvent, index) => {
+        const isSelected =
+          eligibleEvent.event.id ===
+          selectedEventId
+
+        let horizontalOffset = 0
+
+        if (selectedEvent) {
+          if (!isSelected) {
+            const distance =
+              Math.floor(
+                unselectedOffsetIndex / 2,
+              ) + 1
+
+            const direction =
+              unselectedOffsetIndex % 2 === 0
+                ? -1
+                : 1
+
+            horizontalOffset =
+              direction * distance * 14
+
+            unselectedOffsetIndex += 1
+          }
+        } else {
+          horizontalOffset =
+            (index -
+              (group.length - 1) / 2) *
+            14
         }
 
         const chartPosition =
           maximumTimestamp ===
           minimumTimestamp
             ? 0
-            : (timestamp -
+            : (eligibleEvent.timestamp -
                 minimumTimestamp) /
               (maximumTimestamp -
                 minimumTimestamp)
 
-        const label =
-          groupedEvents.length === 1
-            ? shortenTitle(
-                groupedEvents[0].title,
-              )
-            : `${groupedEvents.length} eventos GTA VI`
+        const category =
+          getEventCategory(
+            eligibleEvent.event,
+          )
 
-        return {
-          id: `${dateKey}-${groupedEvents
-            .map(
-              (gtaEvent) =>
-                gtaEvent.id,
-            )
-            .join('-')}`,
-          label,
-          timestamp,
-          price,
+        markers.push({
+          id: eligibleEvent.event.id,
+          title: eligibleEvent.event.title,
+          occurredAtUtc:
+            eligibleEvent.event.occurredAtUtc,
+          category,
+          timestamp:
+            eligibleEvent.timestamp,
+          price: eligibleEvent.price,
           labelSide:
-            chartPosition >= 0.75
+            chartPosition >= 0.72
               ? 'left'
               : 'right',
-        } satisfies EventMarker
+          horizontalOffset,
+          color:
+            getEventMarkerColor(category),
+          isSelected,
+        })
       },
     )
-    .filter(
-      (
-        marker,
-      ): marker is EventMarker =>
-        marker !== null,
+  })
+
+  return markers
+}
+
+function createImpactWindow(
+  selectedMarker: EventMarker | undefined,
+  chartData: ChartPoint[],
+): ImpactWindow | null {
+  if (!selectedMarker) {
+    return null
+  }
+
+  const selectedPointIndex =
+    findNearestPointIndex(
+      chartData,
+      selectedMarker.timestamp,
     )
+
+  if (selectedPointIndex < 0) {
+    return null
+  }
+
+  const startIndex = Math.max(
+    0,
+    selectedPointIndex - 5,
+  )
+
+  const endIndex = Math.min(
+    chartData.length - 1,
+    selectedPointIndex + 5,
+  )
+
+  return {
+    startTimestamp:
+      chartData[startIndex].timestamp,
+    endTimestamp:
+      chartData[endIndex].timestamp,
+  }
 }
 
 function EventMarkerLabel({
-  label,
+  title,
   side,
+  color,
   viewBox,
 }: EventMarkerLabelProps) {
   const x = viewBox?.x ?? 0
-  const y = (viewBox?.y ?? 0) + 10
+  const y = 15
 
   const horizontalOffset =
-    side === 'left' ? -8 : 8
+    side === 'left' ? -10 : 10
 
   return (
     <text
       x={x + horizontalOffset}
       y={y}
-      fill="var(--primary-text)"
-      fontSize={11}
-      fontWeight={700}
+      fill={color}
+      fontSize={12}
+      fontWeight={850}
       textAnchor={
         side === 'left'
           ? 'end'
@@ -397,14 +620,76 @@ function EventMarkerLabel({
       dominantBaseline="hanging"
       pointerEvents="none"
     >
-      {label}
+      {title}
     </text>
+  )
+}
+
+function EventMarkerShape({
+  marker,
+  cx = 0,
+  cy = 0,
+}: EventMarkerShapeProps) {
+  const radius = marker.isSelected
+    ? 9
+    : 5.5
+
+  const markerLabel = [
+    marker.title,
+    `Data: ${formatEventDate(
+      marker.occurredAtUtc,
+    )}`,
+    `Categoria: ${marker.category}`,
+  ].join('\n')
+
+  return (
+    <g
+      transform={`translate(${marker.horizontalOffset} 0)`}
+      role="img"
+      aria-label={markerLabel}
+      tabIndex={0}
+      style={{
+        cursor: 'help',
+        outline: 'none',
+      }}
+    >
+      <title>{markerLabel}</title>
+
+      <circle
+        cx={cx}
+        cy={cy}
+        r={radius + 3}
+        fill="var(--panel-background)"
+        opacity={
+          marker.isSelected ? 1 : 0.88
+        }
+      />
+
+      <circle
+        cx={cx}
+        cy={cy}
+        r={radius}
+        fill={marker.color}
+        stroke={
+          marker.isSelected
+            ? 'var(--primary-text)'
+            : marker.color
+        }
+        strokeWidth={
+          marker.isSelected ? 3 : 1.5
+        }
+        opacity={
+          marker.isSelected ? 1 : 0.82
+        }
+      />
+    </g>
   )
 }
 
 export function StockChart({
   values,
   events,
+  selectedEventId,
 }: StockChartProps) {
   const chartData =
     createChartData(values)
@@ -424,6 +709,18 @@ export function StockChart({
     createEventMarkers(
       events,
       chartData,
+      selectedEventId,
+    )
+
+  const selectedMarker =
+    eventMarkers.find(
+      (marker) => marker.isSelected,
+    )
+
+  const impactWindow =
+    createImpactWindow(
+      selectedMarker,
+      chartData,
     )
 
   return (
@@ -441,7 +738,7 @@ export function StockChart({
         <AreaChart
           data={chartData}
           margin={{
-            top: 72,
+            top: 82,
             right: 34,
             bottom: 26,
             left: 18,
@@ -457,14 +754,14 @@ export function StockChart({
             >
               <stop
                 offset="0%"
-                stopColor="var(--accent-blue)"
+                stopColor="var(--accent-pink)"
                 stopOpacity={0.42}
               />
 
               <stop
                 offset="100%"
-                stopColor="var(--accent-blue)"
-                stopOpacity={0.02}
+                stopColor="var(--accent-pink)"
+                stopOpacity={0.03}
               />
             </linearGradient>
           </defs>
@@ -474,6 +771,22 @@ export function StockChart({
             strokeDasharray="4 4"
             vertical={false}
           />
+
+          {impactWindow && (
+            <ReferenceArea
+              x1={
+                impactWindow.startTimestamp
+              }
+              x2={
+                impactWindow.endTimestamp
+              }
+              fill="var(--accent-pink)"
+              fillOpacity={0.07}
+              stroke="var(--accent-pink)"
+              strokeOpacity={0.2}
+              ifOverflow="extendDomain"
+            />
+          )}
 
           <XAxis
             dataKey="timestamp"
@@ -552,40 +865,39 @@ export function StockChart({
             }}
           />
 
-          {eventMarkers.map(
-            (marker) => (
-              <ReferenceLine
-                key={`line-${marker.id}`}
-                x={marker.timestamp}
-                stroke="var(--accent-pink)"
-                strokeDasharray="5 5"
-                strokeWidth={2}
-                label={
-                  <EventMarkerLabel
-                    label={
-                      marker.label
-                    }
-                    side={
-                      marker.labelSide
-                    }
-                  />
-                }
-              />
-            ),
+          {selectedMarker && (
+            <ReferenceLine
+              x={selectedMarker.timestamp}
+              stroke={selectedMarker.color}
+              strokeDasharray="3 3"
+              strokeWidth={3}
+              strokeOpacity={1}
+              label={
+                <EventMarkerLabel
+                  title={selectedMarker.title}
+                  side={
+                    selectedMarker.labelSide
+                  }
+                  color={
+                    selectedMarker.color
+                  }
+                />
+              }
+            />
           )}
 
           <Area
             type="monotone"
             dataKey="price"
             name="Fechamento"
-            stroke="var(--accent-blue)"
+            stroke="var(--accent-pink)"
             strokeWidth={3}
             fill="url(#stockPriceGradient)"
             dot={false}
             activeDot={{
               r: 5,
               fill:
-                'var(--accent-blue)',
+                'var(--accent-pink)',
             }}
             isAnimationActive={false}
           />
@@ -596,10 +908,31 @@ export function StockChart({
                 key={`dot-${marker.id}`}
                 x={marker.timestamp}
                 y={marker.price}
-                r={7}
-                fill="var(--accent-pink)"
-                stroke="var(--panel-background)"
-                strokeWidth={3}
+                r={
+                  marker.isSelected ? 9 : 6
+                }
+                fill={marker.color}
+                stroke="transparent"
+                ifOverflow="visible"
+                shape={(
+                  shapeProps: unknown,
+                ) => {
+                  const {
+                    cx,
+                    cy,
+                  } = shapeProps as {
+                    cx?: number
+                    cy?: number
+                  }
+
+                  return (
+                    <EventMarkerShape
+                      marker={marker}
+                      cx={cx}
+                      cy={cy}
+                    />
+                  )
+                }}
               />
             ),
           )}

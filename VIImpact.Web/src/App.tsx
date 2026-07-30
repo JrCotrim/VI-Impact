@@ -263,6 +263,38 @@ function createInitialCustomRange() {
   }
 }
 
+
+function createEventFocusRange(
+  eventDateText: string,
+) {
+  const eventDate = parseUtcDate(
+    eventDateText,
+  )
+
+  const startDate = new Date(eventDate)
+  const endDate = new Date(eventDate)
+  const today = new Date()
+
+  startDate.setDate(
+    startDate.getDate() - 14,
+  )
+
+  endDate.setDate(
+    endDate.getDate() + 14,
+  )
+
+  if (endDate.getTime() > today.getTime()) {
+    endDate.setTime(today.getTime())
+  }
+
+  return {
+    startDate:
+      toDateInputValue(startDate),
+    endDate:
+      toDateInputValue(endDate),
+  }
+}
+
 function getSortedQuotes(
   quotes: StockQuote[],
 ): StockQuote[] {
@@ -492,6 +524,12 @@ function App() {
   const [theme, setTheme] =
     useState<Theme>(getInitialTheme)
 
+
+  const [
+    selectedEventId,
+    setSelectedEventId,
+  ] = useState<string | null>(null)
+
   useEffect(() => {
     document.documentElement.dataset.theme =
       theme
@@ -621,6 +659,7 @@ function App() {
       return
     }
 
+    setSelectedEventId(null)
     prepareChartReload()
     setSelectedPeriod(period)
   }
@@ -657,6 +696,7 @@ function App() {
       return
     }
 
+    setSelectedEventId(null)
     prepareChartReload()
 
     setAppliedCustomStartDate(
@@ -668,6 +708,50 @@ function App() {
     )
 
     setSelectedPeriod('CUSTOM')
+  }
+
+  function handleEventSelect(
+    gtaEvent: GtaEvent,
+  ) {
+    const focusRange =
+      createEventFocusRange(
+        gtaEvent.occurredAtUtc,
+      )
+
+    const requiresReload =
+      selectedPeriod !== 'CUSTOM' ||
+      focusRange.startDate !==
+        appliedCustomStartDate ||
+      focusRange.endDate !==
+        appliedCustomEndDate
+
+    setSelectedEventId(gtaEvent.id)
+    setCustomStartDate(
+      focusRange.startDate,
+    )
+    setCustomEndDate(
+      focusRange.endDate,
+    )
+    setAppliedCustomStartDate(
+      focusRange.startDate,
+    )
+    setAppliedCustomEndDate(
+      focusRange.endDate,
+    )
+
+    if (requiresReload) {
+      prepareChartReload()
+      setSelectedPeriod('CUSTOM')
+    }
+
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById('chart')
+        ?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+    })
   }
 
   if (
@@ -827,7 +911,7 @@ function App() {
             </h1>
 
             <p>
-              Acompanhe a reação das ações da Take-Two aos eventos de GTA VI
+              Impacto de notícias do GTA 6 no mercado
             </p>
           </div>
 
@@ -1101,6 +1185,9 @@ function App() {
                     events={
                       dashboard.gtaEvents
                     }
+                    selectedEventId={
+                      selectedEventId
+                    }
                   />
                 )}
             </div>
@@ -1140,35 +1227,54 @@ function App() {
 
                     return (
                       <article
-                        className="event-card"
+                        className={
+                          selectedEventId ===
+                          gtaEvent.id
+                            ? 'event-card selected'
+                            : 'event-card'
+                        }
                         key={gtaEvent.id}
                       >
-                        <div
-                          className={`event-thumbnail ${eventStyle.className}`}
-                          aria-hidden="true"
+                        <button
+                          className="event-focus-button"
+                          type="button"
+                          aria-pressed={
+                            selectedEventId ===
+                            gtaEvent.id
+                          }
+                          onClick={() =>
+                            handleEventSelect(
+                              gtaEvent,
+                            )
+                          }
                         >
-                          <span>
-                            {eventStyle.symbol}
-                          </span>
-                        </div>
-
-                        <div className="event-card-content">
-                          <h3>
-                            {gtaEvent.title}
-                          </h3>
-
-                          <p className="event-metadata">
-                            {formatEventDate(
-                              gtaEvent.occurredAtUtc,
-                            )}
-                          </p>
-
-                          <span
-                            className={`event-badge ${eventStyle.className}`}
+                          <div
+                            className={`event-thumbnail ${eventStyle.className}`}
+                            aria-hidden="true"
                           >
-                            {eventStyle.badge}
-                          </span>
-                        </div>
+                            <span>
+                              {eventStyle.symbol}
+                            </span>
+                          </div>
+
+                          <div className="event-card-content">
+                            <h3>
+                              {gtaEvent.title}
+                            </h3>
+
+                            <p className="event-metadata">
+                              {formatEventDate(
+                                gtaEvent.occurredAtUtc,
+                              )}
+                            </p>
+
+                            <span
+                              className={`event-badge ${eventStyle.className}`}
+                            >
+                              {eventStyle.badge}
+                            </span>
+                          </div>
+                        </button>
 
                         <a
                           className="event-source-link"

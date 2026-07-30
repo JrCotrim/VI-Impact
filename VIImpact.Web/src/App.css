@@ -3941,3 +3941,96 @@ a {
   color: #5f2c91;
   background: #eee2ff;
 }
+
+/* =========================================================
+   Event-to-chart focus interaction
+   ========================================================= */
+
+.event-card {
+  grid-template-columns: minmax(0, 1fr) 26px;
+}
+
+.event-focus-button {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.event-focus-button:focus-visible {
+  border-radius: 9px;
+  box-shadow:
+    0 0 0 3px
+      color-mix(
+        in srgb,
+        var(--accent-pink) 30%,
+        transparent
+      );
+}
+
+.event-card.selected {
+  border-color: rgba(255, 42, 133, 0.76);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 42, 133, 0.13),
+      rgba(13, 25, 49, 0.92)
+    );
+  box-shadow:
+    0 0 0 1px rgba(255, 42, 133, 0.14),
+    0 10px 24px rgba(3, 8, 20, 0.26);
+  transform: translateX(-2px);
+}
+
+.event-card.selected .event-thumbnail {
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.12),
+    0 0 20px rgba(255, 42, 133, 0.24);
+}
+
+.event-card.selected h3 {
+  color: #ffffff;
+}
+
+:root:not([data-theme='night']) .event-card.selected {
+  border-color: rgba(230, 0, 122, 0.68);
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #fff0f8
+    );
+  box-shadow:
+    0 0 0 1px rgba(230, 0, 122, 0.1),
+    0 12px 24px rgba(11, 19, 43, 0.11);
+}
+
+:root:not([data-theme='night'])
+  .event-card.selected h3 {
+  color: #0b132b;
+}
+
+:root:not([data-theme='night'])
+  .event-card.selected .event-metadata {
+  color: #596680;
+}
+
+@media (max-width: 520px) {
+  .event-focus-button {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .event-focus-button .event-thumbnail {
+    width: 76px;
+    height: 62px;
+  }
+}
