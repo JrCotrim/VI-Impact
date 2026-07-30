@@ -224,7 +224,7 @@ function formatImpactCurrency(
   value: number | null,
 ): string {
   if (value === null) {
-    return 'Não disponível'
+    return 'Ainda não disponível'
   }
 
   return formatCurrency(value)
@@ -234,7 +234,7 @@ function formatImpactPercent(
   value: number | null,
 ): string {
   if (value === null) {
-    return 'Não disponível'
+    return 'Ainda não disponível'
   }
 
   return formatSignedPercent(value)
@@ -256,7 +256,7 @@ function formatTradingDate(
   dateText: string | null,
 ): string {
   if (!dateText) {
-    return 'Não disponível'
+    return 'Ainda não disponível'
   }
 
   return new Intl.DateTimeFormat('pt-BR', {
