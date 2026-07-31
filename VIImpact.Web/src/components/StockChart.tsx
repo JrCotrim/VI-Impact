@@ -15,7 +15,6 @@ import {
   LineChart,
   ReferenceArea,
   ReferenceDot,
-  Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
@@ -127,14 +126,17 @@ interface ChartSize {
   height: number
 }
 
-interface StockPointTooltipProps {
-  active?: boolean
-  payload?: Array<{
-    payload?: ChartPoint
-  }>
-  primarySymbol: string
-  benchmarkSymbol: string
+interface ChartBounds {
+  left: number
+  top: number
 }
+
+interface PendingChartCrosshair {
+  x: number
+  y: number
+  point: ChartPoint
+}
+
 
 const minimumVisiblePointCount = 3
 const maximumWheelDelta = 240
@@ -383,6 +385,194 @@ function getViewportPoints(
   )
 
   return points.slice(startIndex, endIndex + 1)
+}
+
+function largestTriangleDownsample(
+  points: ChartPoint[],
+  maximumPointCount: number,
+  getValue: (point: ChartPoint) => number,
+): ChartPoint[] {
+  if (
+    maximumPointCount >= points.length ||
+    maximumPointCount < 3
+  ) {
+    return points
+  }
+
+  const sampledPoints: ChartPoint[] = [
+    points[0],
+  ]
+  const bucketSize =
+    (points.length - 2) /
+    (maximumPointCount - 2)
+
+  let previousSelectedIndex = 0
+
+  for (
+    let bucketIndex = 0;
+    bucketIndex < maximumPointCount - 2;
+    bucketIndex += 1
+  ) {
+    const averageRangeStart = Math.floor(
+      (bucketIndex + 1) * bucketSize,
+    ) + 1
+    const averageRangeEnd = Math.min(
+      Math.floor(
+        (bucketIndex + 2) * bucketSize,
+      ) + 1,
+      points.length,
+    )
+
+    let averageTimestamp = 0
+    let averageValue = 0
+    let averagePointCount = 0
+
+    for (
+      let pointIndex = averageRangeStart;
+      pointIndex < averageRangeEnd;
+      pointIndex += 1
+    ) {
+      averageTimestamp +=
+        points[pointIndex].timestamp
+      averageValue +=
+        getValue(points[pointIndex])
+      averagePointCount += 1
+    }
+
+    if (averagePointCount === 0) {
+      const fallbackPoint =
+        points[
+          Math.min(
+            averageRangeStart,
+            points.length - 1,
+          )
+        ]
+
+      averageTimestamp =
+        fallbackPoint.timestamp
+      averageValue =
+        getValue(fallbackPoint)
+      averagePointCount = 1
+    }
+
+    averageTimestamp /= averagePointCount
+    averageValue /= averagePointCount
+
+    const currentRangeStart = Math.floor(
+      bucketIndex * bucketSize,
+    ) + 1
+    const currentRangeEnd = Math.min(
+      Math.floor(
+        (bucketIndex + 1) * bucketSize,
+      ) + 1,
+      points.length - 1,
+    )
+
+    const previousPoint =
+      points[previousSelectedIndex]
+    const previousValue =
+      getValue(previousPoint)
+
+    let selectedIndex = currentRangeStart
+    let largestTriangleArea = -1
+
+    for (
+      let pointIndex = currentRangeStart;
+      pointIndex < currentRangeEnd;
+      pointIndex += 1
+    ) {
+      const currentPoint =
+        points[pointIndex]
+      const currentValue =
+        getValue(currentPoint)
+
+      const triangleArea = Math.abs(
+        (previousPoint.timestamp -
+          averageTimestamp) *
+          (currentValue - previousValue) -
+          (previousPoint.timestamp -
+            currentPoint.timestamp) *
+            (averageValue - previousValue),
+      )
+
+      if (
+        triangleArea >
+        largestTriangleArea
+      ) {
+        largestTriangleArea =
+          triangleArea
+        selectedIndex = pointIndex
+      }
+    }
+
+    sampledPoints.push(
+      points[selectedIndex],
+    )
+    previousSelectedIndex =
+      selectedIndex
+  }
+
+  sampledPoints.push(
+    points[points.length - 1],
+  )
+
+  return sampledPoints
+}
+
+function createRenderPoints(
+  points: ChartPoint[],
+  maximumPointCount: number,
+): ChartPoint[] {
+  if (points.length <= maximumPointCount) {
+    return points
+  }
+
+  const hasBenchmark = points.some(
+    (point) =>
+      point.benchmarkNormalized !== null,
+  )
+
+  if (!hasBenchmark) {
+    return largestTriangleDownsample(
+      points,
+      maximumPointCount,
+      (point) => point.price,
+    )
+  }
+
+  const primaryPointCount =
+    Math.ceil(maximumPointCount / 2)
+  const benchmarkPointCount =
+    Math.floor(maximumPointCount / 2)
+
+  const primaryPoints =
+    largestTriangleDownsample(
+      points,
+      primaryPointCount,
+      (point) => point.price,
+    )
+
+  const benchmarkPoints =
+    largestTriangleDownsample(
+      points,
+      benchmarkPointCount,
+      (point) =>
+        point.benchmarkNormalized ??
+        point.price,
+    )
+
+  const selectedTimestamps = new Set(
+    [
+      ...primaryPoints,
+      ...benchmarkPoints,
+    ].map((point) => point.timestamp),
+  )
+
+  return points.filter((point) =>
+    selectedTimestamps.has(
+      point.timestamp,
+    ),
+  )
 }
 
 function calculateChartRangeInDays(
@@ -819,27 +1009,45 @@ function findNearestPointIndex(
     return -1
   }
 
-  let nearestIndex = 0
-  let nearestDistance = Math.abs(
-    points[0].timestamp - timestamp,
-  )
+  let lowerIndex = 0
+  let upperIndex = points.length - 1
 
-  for (
-    let index = 1;
-    index < points.length;
-    index += 1
-  ) {
-    const currentDistance = Math.abs(
-      points[index].timestamp - timestamp,
+  while (lowerIndex <= upperIndex) {
+    const middleIndex = Math.floor(
+      (lowerIndex + upperIndex) / 2,
     )
+    const middleTimestamp =
+      points[middleIndex].timestamp
 
-    if (currentDistance < nearestDistance) {
-      nearestIndex = index
-      nearestDistance = currentDistance
+    if (middleTimestamp === timestamp) {
+      return middleIndex
+    }
+
+    if (middleTimestamp < timestamp) {
+      lowerIndex = middleIndex + 1
+    } else {
+      upperIndex = middleIndex - 1
     }
   }
 
-  return nearestIndex
+  if (lowerIndex >= points.length) {
+    return points.length - 1
+  }
+
+  if (upperIndex < 0) {
+    return 0
+  }
+
+  const lowerDistance = Math.abs(
+    points[lowerIndex].timestamp - timestamp,
+  )
+  const upperDistance = Math.abs(
+    points[upperIndex].timestamp - timestamp,
+  )
+
+  return lowerDistance < upperDistance
+    ? lowerIndex
+    : upperIndex
 }
 
 function createEligibleEvents(
@@ -1130,105 +1338,6 @@ function formatNormalizedChange(
 
   return '0,00%'
 }
-
-function StockPointTooltip({
-  active,
-  payload,
-  primarySymbol,
-  benchmarkSymbol,
-}: StockPointTooltipProps) {
-  const point = payload?.[0]?.payload
-
-  if (!active || !point) {
-    return null
-  }
-
-  const primaryNormalized =
-    point.primaryNormalized
-
-  if (primaryNormalized !== null) {
-    const primaryClassName =
-      primaryNormalized >= 100
-        ? 'positive-value'
-        : 'negative-value'
-    const benchmarkClassName =
-      point.benchmarkNormalized === null
-        ? ''
-        : point.benchmarkNormalized >= 100
-          ? 'positive-value'
-          : 'negative-value'
-
-    return (
-      <div className="stock-point-tooltip stock-point-tooltip-compact">
-        <strong className="stock-point-tooltip-date">
-          {formatTooltipDate(
-            point.timestamp,
-            14,
-          )}
-        </strong>
-
-        <div className="stock-point-tooltip-grid stock-point-tooltip-grid-compact">
-          <span>{primarySymbol}</span>
-          <strong className={primaryClassName}>
-            {formatNormalizedValue(
-              primaryNormalized,
-            )}{' '}
-            ·{' '}
-            {formatNormalizedChange(
-              primaryNormalized,
-            )}
-          </strong>
-
-          <span>{benchmarkSymbol}</span>
-          <strong className={benchmarkClassName}>
-            {point.benchmarkNormalized === null
-              ? 'Sem dado'
-              : `${formatNormalizedValue(
-                  point.benchmarkNormalized,
-                )} · ${formatNormalizedChange(
-                  point.benchmarkNormalized,
-                )}`}
-          </strong>
-
-          <span>Preço de {primarySymbol}</span>
-          <strong>
-            {formatCurrency(point.close)}
-          </strong>
-        </div>
-      </div>
-    )
-  }
-
-  const priceChange = point.close - point.open
-  const changeClassName =
-    priceChange >= 0
-      ? 'positive-value'
-      : 'negative-value'
-
-  return (
-    <div className="stock-point-tooltip stock-point-tooltip-compact">
-      <strong className="stock-point-tooltip-date">
-        {formatTooltipDate(
-          point.timestamp,
-          14,
-        )}
-      </strong>
-
-      <div className="stock-point-tooltip-grid stock-point-tooltip-grid-compact">
-        <span>Fechamento</span>
-        <strong className={changeClassName}>
-          {formatCurrency(point.close)}
-        </strong>
-
-        <span>Volume</span>
-        <strong>
-          {point.volume.toLocaleString('pt-BR')}
-        </strong>
-      </div>
-    </div>
-  )
-}
-
 
 function EventIconGlyph({
   iconKey,
@@ -1715,9 +1824,11 @@ function EventMarkerShape({
     EVENT_MARKER_RAIL_TOP +
     marker.lane * EVENT_MARKER_LANE_GAP
 
-  const iconSize = marker.isSelected
-    ? 32
-    : 27
+  const iconRadius = marker.isSelected
+    ? 15
+    : 13
+  const hasEmphasis =
+    marker.isSelected || isHovered
 
   const markerLabel = [
     marker.event.title,
@@ -1783,15 +1894,15 @@ function EventMarkerShape({
     >
       <line
         x1={iconX}
-        y1={iconY + iconSize / 2}
+        y1={iconY + iconRadius + 4}
         x2={iconX}
         y2={cy}
         stroke={marker.presentation.color}
         strokeWidth={
-          marker.isSelected ? 1.8 : 1.15
+          marker.isSelected ? 1.9 : 1.2
         }
         strokeOpacity={
-          marker.isSelected ? 0.78 : 0.34
+          marker.isSelected ? 0.82 : 0.38
         }
         strokeDasharray="3 4"
         pointerEvents="none"
@@ -1821,37 +1932,44 @@ function EventMarkerShape({
         pointerEvents="none"
       />
 
-      {marker.isSelected && (
-        <rect
-          x={iconX - iconSize / 2 - 5}
-          y={iconY - iconSize / 2 - 5}
-          width={iconSize + 10}
-          height={iconSize + 10}
-          rx="12"
+      {hasEmphasis && (
+        <circle
+          cx={iconX}
+          cy={iconY}
+          r={iconRadius + 7}
           fill={marker.presentation.color}
-          opacity="0.17"
+          opacity={
+            marker.isSelected ? 0.18 : 0.1
+          }
           pointerEvents="none"
         />
       )}
 
-      <rect
-        x={iconX - iconSize / 2}
-        y={iconY - iconSize / 2}
-        width={iconSize}
-        height={iconSize}
-        rx={marker.isSelected ? 10 : 8}
-        fill={marker.presentation.color}
-        stroke="var(--panel-background)"
-        strokeWidth={marker.isSelected ? 3 : 2}
-        opacity={
-          marker.isSelected || isHovered
-            ? 1
-            : 0.9
+      <circle
+        cx={iconX}
+        cy={iconY}
+        r={iconRadius + 1.5}
+        fill="var(--panel-background)"
+        stroke={marker.presentation.color}
+        strokeWidth={
+          marker.isSelected ? 2.8 : 2.2
         }
+        pointerEvents="none"
+      />
+
+      <circle
+        cx={iconX}
+        cy={iconY}
+        r={Math.max(iconRadius - 4, 8)}
+        fill={marker.presentation.color}
+        opacity={
+          marker.isSelected ? 0.18 : 0.12
+        }
+        pointerEvents="none"
       />
 
       <g
-        color="#ffffff"
+        color={marker.presentation.color}
         pointerEvents="none"
       >
         <EventIconGlyph
@@ -1862,6 +1980,14 @@ function EventMarkerShape({
           y={iconY}
         />
       </g>
+
+      <circle
+        cx={iconX}
+        cy={iconY}
+        r={iconRadius + 7}
+        fill="transparent"
+        pointerEvents="all"
+      />
     </g>
   )
 }
@@ -1888,6 +2014,32 @@ export function StockChart({
     useRef<ChartViewport | null>(null)
   const animationFrameRef =
     useRef<number | null>(null)
+  const crosshairAnimationFrameRef =
+    useRef<number | null>(null)
+  const pendingCrosshairRef =
+    useRef<PendingChartCrosshair | null>(null)
+  const chartBoundsRef =
+    useRef<ChartBounds | null>(null)
+  const crosshairOverlayRef =
+    useRef<HTMLDivElement | null>(null)
+  const crosshairVerticalRef =
+    useRef<HTMLSpanElement | null>(null)
+  const crosshairHorizontalRef =
+    useRef<HTMLSpanElement | null>(null)
+  const crosshairTooltipRef =
+    useRef<HTMLDivElement | null>(null)
+  const crosshairDateRef =
+    useRef<HTMLElement | null>(null)
+  const crosshairPrimaryValueRef =
+    useRef<HTMLElement | null>(null)
+  const crosshairBenchmarkValueRef =
+    useRef<HTMLElement | null>(null)
+  const crosshairPriceValueRef =
+    useRef<HTMLElement | null>(null)
+  const crosshairVolumeValueRef =
+    useRef<HTMLElement | null>(null)
+  const lastCrosshairTimestampRef =
+    useRef<number | null>(null)
 
   const [
     activeEventTooltip,
@@ -1905,7 +2057,6 @@ export function StockChart({
       width: 0,
       height: 0,
     })
-
   const chartData = useMemo(
     () =>
       createChartData(
@@ -1955,6 +2106,36 @@ export function StockChart({
       ),
     [chartData, normalizedViewport],
   )
+  const widthPointBudget = Math.max(
+    160,
+    Math.min(
+      360,
+      Math.floor(chartSize.width / 3),
+    ),
+  )
+  const maximumRenderedPointCount =
+    viewportPoints.length > 2500
+      ? Math.min(widthPointBudget, 160)
+      : viewportPoints.length > 1200
+        ? Math.min(widthPointBudget, 210)
+        : viewportPoints.length > 700
+          ? Math.min(widthPointBudget, 270)
+          : widthPointBudget
+  const renderPoints = useMemo(
+    () =>
+      createRenderPoints(
+        viewportPoints,
+        maximumRenderedPointCount,
+      ),
+    [
+      maximumRenderedPointCount,
+      viewportPoints,
+    ],
+  )
+  const crosshairLookupPoints =
+    viewportPoints.length > 700
+      ? renderPoints
+      : viewportPoints
 
   useEffect(() => {
     viewportRef.current = normalizedViewport
@@ -1973,6 +2154,10 @@ export function StockChart({
     const measureChart = () => {
       const bounds =
         chartContainer.getBoundingClientRect()
+      chartBoundsRef.current = {
+        left: bounds.left,
+        top: bounds.top,
+      }
       const parentBounds =
         chartContainer.parentElement
           ?.getBoundingClientRect()
@@ -2108,6 +2293,15 @@ export function StockChart({
           animationFrameRef.current,
         )
       }
+
+      if (
+        crosshairAnimationFrameRef.current !==
+        null
+      ) {
+        window.cancelAnimationFrame(
+          crosshairAnimationFrameRef.current,
+        )
+      }
     },
     [],
   )
@@ -2177,38 +2371,69 @@ export function StockChart({
     selectedEventId,
   ])
 
-  const chartRangeInDays =
-    calculateChartRangeInDays(
-      startTimestamp,
+  const chartRangeInDays = useMemo(
+    () =>
+      calculateChartRangeInDays(
+        startTimestamp,
+        endTimestamp,
+      ),
+    [endTimestamp, startTimestamp],
+  )
+  const axisTicks = useMemo(
+    () =>
+      createAxisTicks(
+        viewportPoints,
+        startTimestamp,
+        endTimestamp,
+        7,
+      ),
+    [
       endTimestamp,
-    )
-  const axisTicks = createAxisTicks(
-    viewportPoints,
-    startTimestamp,
-    endTimestamp,
-    7,
+      startTimestamp,
+      viewportPoints,
+    ],
   )
-  const priceDomain = createPriceDomain(
-    viewportPoints,
+  const priceDomain = useMemo(
+    () => createPriceDomain(viewportPoints),
+    [viewportPoints],
   )
-  const eventMarkers = createEventMarkers(
-    events,
-    chartData,
-    selectedEventId,
-    startTimestamp,
-    endTimestamp,
-    chartSize.width,
+  const eventMarkers = useMemo(
+    () =>
+      createEventMarkers(
+        events,
+        chartData,
+        selectedEventId,
+        startTimestamp,
+        endTimestamp,
+        chartSize.width,
+      ),
+    [
+      chartData,
+      chartSize.width,
+      endTimestamp,
+      events,
+      selectedEventId,
+      startTimestamp,
+    ],
   )
   const chartTopMargin =
     eventMarkers.length > 0
       ? EVENT_MARKER_CHART_TOP_MARGIN
       : 30
-  const selectedMarker = eventMarkers.find(
-    (marker) => marker.isSelected,
+  const selectedMarker = useMemo(
+    () =>
+      eventMarkers.find(
+        (marker) => marker.isSelected,
+      ),
+    [eventMarkers],
   )
-  const impactWindow = createImpactWindow(
-    selectedMarker,
-    chartData,
+  const impactWindow = useMemo(
+    () =>
+      createImpactWindow(
+        selectedMarker,
+        chartData,
+      ),
+    [chartData, selectedMarker],
   )
 
   useEffect(() => {
@@ -2231,6 +2456,13 @@ export function StockChart({
 
       event.preventDefault()
       setActiveEventTooltip(null)
+      pendingCrosshairRef.current = null
+      lastCrosshairTimestampRef.current = null
+
+      if (crosshairOverlayRef.current) {
+        crosshairOverlayRef.current.style.opacity =
+          '0'
+      }
 
       const containerBounds =
         chartElement.getBoundingClientRect()
@@ -2271,8 +2503,202 @@ export function StockChart({
     totalPointCount,
   ])
 
+  const hideCrosshair = useCallback(() => {
+    pendingCrosshairRef.current = null
+    lastCrosshairTimestampRef.current = null
+
+    if (crosshairOverlayRef.current) {
+      crosshairOverlayRef.current.style.opacity =
+        '0'
+    }
+  }, [])
+
+  const updateCrosshairTooltip = useCallback(
+    (point: ChartPoint) => {
+      if (
+        lastCrosshairTimestampRef.current ===
+        point.timestamp
+      ) {
+        return
+      }
+
+      lastCrosshairTimestampRef.current =
+        point.timestamp
+
+      if (crosshairDateRef.current) {
+        crosshairDateRef.current.textContent =
+          formatTooltipDate(
+            point.timestamp,
+            14,
+          )
+      }
+
+      if (point.primaryNormalized !== null) {
+        if (
+          crosshairPrimaryValueRef.current
+        ) {
+          crosshairPrimaryValueRef.current.textContent =
+            `${formatNormalizedValue(
+              point.primaryNormalized,
+            )} · ${formatNormalizedChange(
+              point.primaryNormalized,
+            )}`
+          crosshairPrimaryValueRef.current.className =
+            point.primaryNormalized >= 100
+              ? 'positive-value'
+              : 'negative-value'
+        }
+
+        if (
+          crosshairBenchmarkValueRef.current
+        ) {
+          const benchmarkNormalized =
+            point.benchmarkNormalized
+
+          crosshairBenchmarkValueRef.current.textContent =
+            benchmarkNormalized === null
+              ? 'Sem dado'
+              : `${formatNormalizedValue(
+                  benchmarkNormalized,
+                )} · ${formatNormalizedChange(
+                  benchmarkNormalized,
+                )}`
+
+          crosshairBenchmarkValueRef.current.className =
+            benchmarkNormalized === null
+              ? ''
+              : benchmarkNormalized >= 100
+                ? 'positive-value'
+                : 'negative-value'
+        }
+
+        if (crosshairPriceValueRef.current) {
+          crosshairPriceValueRef.current.textContent =
+            formatCurrency(point.close)
+          crosshairPriceValueRef.current.className =
+            ''
+        }
+
+        return
+      }
+
+      const priceChange =
+        point.close - point.open
+
+      if (crosshairPriceValueRef.current) {
+        crosshairPriceValueRef.current.textContent =
+          formatCurrency(point.close)
+        crosshairPriceValueRef.current.className =
+          priceChange >= 0
+            ? 'positive-value'
+            : 'negative-value'
+      }
+
+      if (crosshairVolumeValueRef.current) {
+        crosshairVolumeValueRef.current.textContent =
+          point.volume.toLocaleString('pt-BR')
+      }
+    },
+    [],
+  )
+
+  const scheduleCrosshairUpdate = useCallback(
+    (
+      x: number,
+      y: number,
+      point: ChartPoint,
+    ) => {
+      pendingCrosshairRef.current = {
+        x,
+        y,
+        point,
+      }
+
+      if (
+        crosshairAnimationFrameRef.current !==
+        null
+      ) {
+        return
+      }
+
+      crosshairAnimationFrameRef.current =
+        window.requestAnimationFrame(() => {
+          crosshairAnimationFrameRef.current =
+            null
+
+          const pendingCrosshair =
+            pendingCrosshairRef.current
+
+          if (!pendingCrosshair) {
+            return
+          }
+
+          const tooltipX = Math.max(
+            12,
+            Math.min(
+              pendingCrosshair.x + 16,
+              chartSize.width - 252,
+            ),
+          )
+          const tooltipY = Math.max(
+            8,
+            Math.min(
+              pendingCrosshair.y + 16,
+              chartSize.height - 142,
+            ),
+          )
+
+          if (crosshairVerticalRef.current) {
+            crosshairVerticalRef.current.style.transform =
+              `translate3d(${pendingCrosshair.x}px, 0, 0)`
+          }
+
+          if (crosshairHorizontalRef.current) {
+            crosshairHorizontalRef.current.style.transform =
+              `translate3d(0, ${pendingCrosshair.y}px, 0)`
+          }
+
+          if (crosshairTooltipRef.current) {
+            crosshairTooltipRef.current.style.transform =
+              `translate3d(${tooltipX}px, ${tooltipY}px, 0)`
+          }
+
+          updateCrosshairTooltip(
+            pendingCrosshair.point,
+          )
+
+          if (crosshairOverlayRef.current) {
+            crosshairOverlayRef.current.style.opacity =
+              '1'
+          }
+        })
+    },
+    [
+      chartSize.height,
+      chartSize.width,
+      updateCrosshairTooltip,
+    ],
+  )
+
   function clearChartInteractionState() {
     setActiveEventTooltip(null)
+  }
+
+  function refreshChartBounds() {
+    const chartContainer =
+      chartContainerRef.current
+
+    if (!chartContainer) {
+      return
+    }
+
+    const bounds =
+      chartContainer.getBoundingClientRect()
+
+    chartBoundsRef.current = {
+      left: bounds.left,
+      top: bounds.top,
+    }
   }
 
   function handlePointerDown(
@@ -2294,6 +2720,7 @@ export function StockChart({
     }
 
     clearChartInteractionState()
+    hideCrosshair()
     dragStateRef.current = {
       pointerId: event.pointerId,
       startClientX: event.clientX,
@@ -2312,8 +2739,104 @@ export function StockChart({
   ) {
     const dragState = dragStateRef.current
 
+    if (!dragState) {
+      const target = event.target
+
+      if (
+        target instanceof Element &&
+        target.closest(
+          '[data-event-marker="true"]',
+        )
+      ) {
+        hideCrosshair()
+        return
+      }
+
+      const cachedBounds =
+        chartBoundsRef.current
+
+      if (!cachedBounds) {
+        refreshChartBounds()
+      }
+
+      const chartBounds =
+        chartBoundsRef.current
+
+      if (!chartBounds) {
+        return
+      }
+
+      const pointerX =
+        event.clientX - chartBounds.left
+      const pointerY =
+        event.clientY - chartBounds.top
+      const interactionLeft = 12
+      const interactionRight = Math.max(
+        interactionLeft,
+        chartSize.width - 12,
+      )
+      const interactionTop = 0
+      const interactionBottom = Math.max(
+        interactionTop,
+        chartSize.height - 34,
+      )
+
+      if (
+        pointerX >= interactionLeft &&
+        pointerX <= interactionRight &&
+        pointerY >= interactionTop &&
+        pointerY <= interactionBottom &&
+        crosshairLookupPoints.length > 0
+      ) {
+        const dataPlotRight = Math.max(
+          interactionLeft,
+          chartSize.width - 92,
+        )
+        const dataPlotWidth = Math.max(
+          1,
+          dataPlotRight - interactionLeft,
+        )
+        const clampedDataX = clamp(
+          pointerX,
+          interactionLeft,
+          dataPlotRight,
+        )
+        const pointerRatio =
+          (clampedDataX - interactionLeft) /
+          dataPlotWidth
+        const hoveredTimestamp =
+          startTimestamp +
+          (endTimestamp - startTimestamp) *
+            pointerRatio
+        const hoveredPointIndex =
+          findNearestPointIndex(
+            crosshairLookupPoints,
+            hoveredTimestamp,
+          )
+        const hoveredPoint =
+          crosshairLookupPoints[
+            hoveredPointIndex
+          ]
+
+        if (hoveredPoint) {
+          scheduleCrosshairUpdate(
+            pointerX,
+            pointerY,
+            hoveredPoint,
+          )
+        } else {
+          hideCrosshair()
+        }
+      } else {
+        hideCrosshair()
+      }
+
+      return
+    }
+
+    hideCrosshair()
+
     if (
-      !dragState ||
       dragState.pointerId !== event.pointerId
     ) {
       return
@@ -2345,6 +2868,12 @@ export function StockChart({
         totalPointCount,
       ),
     )
+  }
+
+  function handlePointerLeave() {
+    if (!dragStateRef.current) {
+      hideCrosshair()
+    }
   }
 
   function finishDragging(
@@ -2415,6 +2944,9 @@ export function StockChart({
         width: '100%',
         height: '100%',
         minHeight: 0,
+        contain: 'layout paint style',
+        isolation: 'isolate',
+        touchAction: 'none',
       }}
       tabIndex={0}
       aria-label={
@@ -2422,10 +2954,15 @@ export function StockChart({
           ? `Gráfico comparativo normalizado de ${primarySymbol} e ${benchmarkSymbol}. Use o scroll para aproximar ou afastar e arraste para navegar pelas datas.`
           : 'Gráfico de linha interativo. Use o scroll para aproximar ou afastar e arraste para navegar pelas datas.'
       }
+      onPointerEnter={refreshChartBounds}
       onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
+      onPointerMoveCapture={(event) => {
+        event.stopPropagation()
+        handlePointerMove(event)
+      }}
       onPointerUp={finishDragging}
       onPointerCancel={finishDragging}
+      onPointerLeave={handlePointerLeave}
       onKeyDown={handleKeyDown}
     >
       {chartSize.width > 0 &&
@@ -2433,7 +2970,7 @@ export function StockChart({
         <LineChart
           width={chartSize.width}
           height={chartSize.height}
-          data={viewportPoints}
+          data={renderPoints}
           margin={{
             top: chartTopMargin,
             right: 14,
@@ -2510,32 +3047,6 @@ export function StockChart({
             tickLine={false}
           />
 
-          {!activeEventTooltip && (
-            <Tooltip
-              content={
-                <StockPointTooltip
-                  primarySymbol={primarySymbol}
-                  benchmarkSymbol={benchmarkSymbol}
-                />
-              }
-              cursor={{
-                stroke:
-                  'var(--secondary-text)',
-                strokeDasharray: '3 3',
-                strokeOpacity: 0.55,
-                strokeWidth: 1,
-              }}
-              wrapperStyle={{
-                visibility:
-                  activeEventTooltip || isDragging
-                    ? 'hidden'
-                    : 'visible',
-                pointerEvents: 'none',
-                zIndex: 30,
-              }}
-            />
-          )}
-
           <Line
             type="linear"
             dataKey="price"
@@ -2547,14 +3058,7 @@ export function StockChart({
             stroke="var(--accent-pink)"
             strokeWidth={2.4}
             dot={false}
-            activeDot={{
-              r: 4,
-              fill:
-                'var(--accent-pink)',
-              stroke:
-                'var(--panel-background)',
-              strokeWidth: 2,
-            }}
+            activeDot={false}
             isAnimationActive={false}
           />
 
@@ -2567,14 +3071,7 @@ export function StockChart({
               strokeWidth={2.1}
               strokeDasharray="7 4"
               dot={false}
-              activeDot={{
-                r: 4,
-                fill:
-                  'var(--accent-blue)',
-                stroke:
-                  'var(--panel-background)',
-                strokeWidth: 2,
-              }}
+              activeDot={false}
               connectNulls={false}
               isAnimationActive={false}
             />
@@ -2618,6 +3115,116 @@ export function StockChart({
           Preparando gráfico...
         </div>
       )}
+
+      <div
+        ref={crosshairOverlayRef}
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 20,
+          overflow: 'hidden',
+          borderRadius: 12,
+          opacity: 0,
+          pointerEvents: 'none',
+          transition: 'opacity 40ms linear',
+          contain: 'strict',
+        }}
+      >
+        <span
+          ref={crosshairVerticalRef}
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: 0,
+            height: Math.max(
+              0,
+              chartSize.height - 34,
+            ),
+            borderLeft:
+              '1px dashed rgba(174, 190, 226, 0.74)',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+          }}
+        />
+
+        <span
+          ref={crosshairHorizontalRef}
+          style={{
+            position: 'absolute',
+            left: 12,
+            top: 0,
+            width: Math.max(
+              0,
+              chartSize.width - 24,
+            ),
+            height: 0,
+            borderTop:
+              '1px dashed rgba(174, 190, 226, 0.6)',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+          }}
+        />
+
+        <div
+          ref={crosshairTooltipRef}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: 31,
+            pointerEvents: 'none',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+            contain: 'layout paint style',
+          }}
+        >
+          <div className="stock-point-tooltip stock-point-tooltip-compact">
+            <strong
+              ref={crosshairDateRef}
+              className="stock-point-tooltip-date"
+            />
+
+            {isComparisonMode ? (
+              <div className="stock-point-tooltip-grid stock-point-tooltip-grid-compact">
+                <span>{primarySymbol}</span>
+                <strong
+                  ref={
+                    crosshairPrimaryValueRef
+                  }
+                />
+
+                <span>{benchmarkSymbol}</span>
+                <strong
+                  ref={
+                    crosshairBenchmarkValueRef
+                  }
+                />
+
+                <span>
+                  Preço de {primarySymbol}
+                </span>
+                <strong
+                  ref={crosshairPriceValueRef}
+                />
+              </div>
+            ) : (
+              <div className="stock-point-tooltip-grid stock-point-tooltip-grid-compact">
+                <span>Fechamento</span>
+                <strong
+                  ref={crosshairPriceValueRef}
+                />
+
+                <span>Volume</span>
+                <strong
+                  ref={crosshairVolumeValueRef}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {activeEventTooltip && (
         <EventTooltipCard
