@@ -242,6 +242,14 @@ function formatImpactPercent(
   return formatSignedPercent(value)
 }
 
+function formatBenchmarkPercent(
+  value: number | null,
+): string {
+  return value === null
+    ? '—'
+    : formatSignedPercent(value)
+}
+
 function getImpactValueClassName(
   value: number | null,
 ): string {
@@ -252,6 +260,56 @@ function getImpactValueClassName(
   return value > 0
     ? 'impact-positive'
     : 'impact-negative'
+}
+
+interface ImpactComparisonRow {
+  label: string
+  stockReturnPercent: number | null
+  benchmarkReturnPercent: number | null
+  excessReturnPercent: number | null
+}
+
+function getImpactComparisonRows(
+  impact: GtaEventImpact,
+): ImpactComparisonRow[] {
+  return [
+    {
+      label: 'Mesmo pregão',
+      stockReturnPercent:
+        impact.sameDayReturnPercent,
+      benchmarkReturnPercent:
+        impact.benchmarkSameDayReturnPercent,
+      excessReturnPercent:
+        impact.sameDayExcessReturnPercent,
+    },
+    {
+      label: 'Após 1 pregão',
+      stockReturnPercent:
+        impact.day1ReturnPercent,
+      benchmarkReturnPercent:
+        impact.benchmarkDay1ReturnPercent,
+      excessReturnPercent:
+        impact.day1ExcessReturnPercent,
+    },
+    {
+      label: 'Após 5 pregões',
+      stockReturnPercent:
+        impact.day5ReturnPercent,
+      benchmarkReturnPercent:
+        impact.benchmarkDay5ReturnPercent,
+      excessReturnPercent:
+        impact.day5ExcessReturnPercent,
+    },
+    {
+      label: 'Após 30 pregões',
+      stockReturnPercent:
+        impact.day30ReturnPercent,
+      benchmarkReturnPercent:
+        impact.benchmarkDay30ReturnPercent,
+      excessReturnPercent:
+        impact.day30ExcessReturnPercent,
+    },
+  ]
 }
 
 function formatTradingDate(
@@ -1189,6 +1247,7 @@ function App() {
         await getGtaEventImpact(
           gtaEvent.id,
           dashboard?.symbol ?? 'TTWO',
+          'QQQ',
         )
 
       setEventImpacts(
@@ -1852,6 +1911,13 @@ function App() {
                           )
                         : null
 
+                    const impactComparisonRows =
+                      eventImpact
+                        ? getImpactComparisonRows(
+                            eventImpact,
+                          )
+                        : []
+
                     const cardClassName = [
                       'event-card',
                       isSelected
@@ -2069,59 +2135,9 @@ function App() {
 
                                   <div className="event-impact-metrics">
                                     <div>
-                                      <span>No mesmo pregão</span>
-                                      <strong
-                                        className={getImpactValueClassName(
-                                          eventImpact.sameDayReturnPercent,
-                                        )}
-                                      >
-                                        {formatImpactPercent(
-                                          eventImpact.sameDayReturnPercent,
-                                        )}
-                                      </strong>
-                                    </div>
-
-                                    <div>
-                                      <span>Após 1 pregão</span>
-                                      <strong
-                                        className={getImpactValueClassName(
-                                          eventImpact.day1ReturnPercent,
-                                        )}
-                                      >
-                                        {formatImpactPercent(
-                                          eventImpact.day1ReturnPercent,
-                                        )}
-                                      </strong>
-                                    </div>
-
-                                    <div>
-                                      <span>Após 5 pregões</span>
-                                      <strong
-                                        className={getImpactValueClassName(
-                                          eventImpact.day5ReturnPercent,
-                                        )}
-                                      >
-                                        {formatImpactPercent(
-                                          eventImpact.day5ReturnPercent,
-                                        )}
-                                      </strong>
-                                    </div>
-
-                                    <div>
-                                      <span>Após 30 pregões</span>
-                                      <strong
-                                        className={getImpactValueClassName(
-                                          eventImpact.day30ReturnPercent,
-                                        )}
-                                      >
-                                        {formatImpactPercent(
-                                          eventImpact.day30ReturnPercent,
-                                        )}
-                                      </strong>
-                                    </div>
-
-                                    <div>
-                                      <span>Volume contra média</span>
+                                      <span>
+                                        Volume no pregão contra média anterior
+                                      </span>
                                       <strong
                                         className={getImpactValueClassName(
                                           eventImpact.volumeChangePercent,
@@ -2134,6 +2150,93 @@ function App() {
                                     </div>
                                   </div>
 
+                                  <section className="event-benchmark-section">
+                                    <div className="event-benchmark-heading">
+                                      <div>
+                                        <span className="event-benchmark-eyebrow">
+                                          Comparação com benchmark
+                                        </span>
+
+                                        <strong>
+                                          {eventImpact.symbol} ×{' '}
+                                          {eventImpact.benchmarkSymbol ||
+                                            'QQQ'}
+                                        </strong>
+                                      </div>
+
+                                      <span>
+                                        Retorno excedente ={' '}
+                                        {eventImpact.symbol} −{' '}
+                                        {eventImpact.benchmarkSymbol ||
+                                          'QQQ'}
+                                      </span>
+                                    </div>
+
+                                    {eventImpact.benchmarkIsAvailable ? (
+                                      <div className="event-benchmark-table">
+                                        <div className="event-benchmark-row event-benchmark-row-header">
+                                          <span>Período</span>
+                                          <span>
+                                            {eventImpact.symbol}
+                                          </span>
+                                          <span>
+                                            {eventImpact.benchmarkSymbol ||
+                                              'QQQ'}
+                                          </span>
+                                          <span>Excedente</span>
+                                        </div>
+
+                                        {impactComparisonRows.map(
+                                          (comparisonRow) => (
+                                            <div
+                                              className="event-benchmark-row"
+                                              key={comparisonRow.label}
+                                            >
+                                              <span>
+                                                {comparisonRow.label}
+                                              </span>
+
+                                              <strong
+                                                className={getImpactValueClassName(
+                                                  comparisonRow.stockReturnPercent,
+                                                )}
+                                              >
+                                                {formatBenchmarkPercent(
+                                                  comparisonRow.stockReturnPercent,
+                                                )}
+                                              </strong>
+
+                                              <strong
+                                                className={getImpactValueClassName(
+                                                  comparisonRow.benchmarkReturnPercent,
+                                                )}
+                                              >
+                                                {formatBenchmarkPercent(
+                                                  comparisonRow.benchmarkReturnPercent,
+                                                )}
+                                              </strong>
+
+                                              <strong
+                                                className={getImpactValueClassName(
+                                                  comparisonRow.excessReturnPercent,
+                                                )}
+                                              >
+                                                {formatBenchmarkPercent(
+                                                  comparisonRow.excessReturnPercent,
+                                                )}
+                                              </strong>
+                                            </div>
+                                          ),
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <p className="event-benchmark-status">
+                                        {eventImpact.benchmarkUnavailableReason ??
+                                          'Não existem dados suficientes do benchmark para este evento.'}
+                                      </p>
+                                    )}
+                                  </section>
+
                                   {tradingDateExplanation && (
                                     <p className="event-impact-explanation">
                                       {tradingDateExplanation}
@@ -2141,7 +2244,7 @@ function App() {
                                   )}
 
                                   <p className="event-impact-disclaimer">
-                                    Os valores representam movimentos observados nas ações da Take-Two após o evento. Eles não comprovam que o evento foi a única causa das variações.
+                                    O retorno excedente representa o movimento da {eventImpact.symbol} menos o movimento do {eventImpact.benchmarkSymbol || 'QQQ'} no mesmo intervalo. Os valores mostram movimentos observados e não comprovam que o evento foi a causa das variações.
                                   </p>
                                 </>
                               ) : (

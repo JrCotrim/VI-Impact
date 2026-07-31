@@ -58,6 +58,24 @@ export interface GtaEventImpact {
   averageVolumeBefore30Sessions: number | null
   previousVolumeSessionsUsed: number
   volumeChangePercent: number | null
+  benchmarkSymbol: string
+  benchmarkIsAvailable: boolean
+  benchmarkUnavailableReason: string | null
+  benchmarkExchange: string
+  benchmarkExchangeTimezone: string
+  benchmarkPreviousClose: number | null
+  benchmarkEventDayClose: number | null
+  benchmarkSameDayReturnPercent: number | null
+  benchmarkDay1Close: number | null
+  benchmarkDay1ReturnPercent: number | null
+  benchmarkDay5Close: number | null
+  benchmarkDay5ReturnPercent: number | null
+  benchmarkDay30Close: number | null
+  benchmarkDay30ReturnPercent: number | null
+  sameDayExcessReturnPercent: number | null
+  day1ExcessReturnPercent: number | null
+  day5ExcessReturnPercent: number | null
+  day30ExcessReturnPercent: number | null
   priceBefore: number | null
   priceBeforeRecordedAtUtc: string | null
   priceAfter: number | null

@@ -32,11 +32,15 @@ async function getErrorMessage(
 export async function getGtaEventImpact(
   eventId: string,
   symbol = 'TTWO',
+  benchmarkSymbol = 'QQQ',
   signal?: AbortSignal,
 ): Promise<GtaEventImpact> {
   const normalizedEventId = eventId.trim()
   const normalizedSymbol =
     symbol.trim().toUpperCase()
+
+  const normalizedBenchmarkSymbol =
+    benchmarkSymbol.trim().toUpperCase()
 
   if (!normalizedEventId) {
     throw new Error(
@@ -50,9 +54,17 @@ export async function getGtaEventImpact(
     )
   }
 
+  if (!normalizedBenchmarkSymbol) {
+    throw new Error(
+      'O símbolo do benchmark é obrigatório.',
+    )
+  }
+
   const searchParameters =
     new URLSearchParams({
       symbol: normalizedSymbol,
+      benchmarkSymbol:
+        normalizedBenchmarkSymbol,
     })
 
   const endpoint =
