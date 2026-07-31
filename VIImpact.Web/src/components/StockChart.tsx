@@ -1,15 +1,20 @@
 import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
 } from 'react'
+import { createPortal } from 'react-dom'
 import {
-  Area,
-  AreaChart,
   CartesianGrid,
+  Line,
+  LineChart,
   ReferenceArea,
   ReferenceDot,
-  ReferenceLine,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -37,6 +42,10 @@ interface StockChartProps {
 }
 
 interface ChartPoint {
+  open: number
+  high: number
+  low: number
+  close: number
   price: number
   volume: number
   timestamp: number
@@ -57,13 +66,14 @@ interface EventMarker {
   price: number
   labelSide: 'left' | 'right'
   horizontalOffset: number
+  lane: number
   isSelected: boolean
 }
 
 interface EventTooltipState {
   marker: EventMarker
-  x: number
-  y: number
+  anchorClientX: number
+  anchorClientY: number
 }
 
 interface EventMarkerShapeProps {
@@ -87,18 +97,299 @@ interface ImpactWindow {
   endTimestamp: number
 }
 
-function calculateChartRangeInDays(
-  points: ChartPoint[],
+interface ChartViewport {
+  startIndex: number
+  endIndex: number
+}
+
+const EVENT_MARKER_LANE_COUNT = 3
+const EVENT_MARKER_LANE_GAP = 34
+const EVENT_MARKER_RAIL_TOP = 24
+const EVENT_MARKER_MIN_HORIZONTAL_GAP = 40
+const EVENT_MARKER_CHART_TOP_MARGIN = 126
+
+interface ChartDragState {
+  pointerId: number
+  startClientX: number
+  viewport: ChartViewport
+}
+
+interface ChartSize {
+  width: number
+  height: number
+}
+
+interface StockPointTooltipProps {
+  active?: boolean
+  payload?: Array<{
+    payload?: ChartPoint
+  }>
+}
+
+const minimumVisiblePointCount = 3
+const maximumWheelDelta = 240
+const wheelZoomIntensity = 0.0018
+
+function clamp(
+  value: number,
+  minimum: number,
+  maximum: number,
 ): number {
-  if (points.length < 2) {
+  return Math.max(
+    minimum,
+    Math.min(value, maximum),
+  )
+}
+
+function getMinimumViewportSpan(
+  totalPointCount: number,
+): number {
+  return Math.max(
+    0,
+    Math.min(
+      minimumVisiblePointCount,
+      totalPointCount,
+    ) - 1,
+  )
+}
+
+function normalizeViewport(
+  viewport: ChartViewport,
+  totalPointCount: number,
+): ChartViewport {
+  if (totalPointCount <= 1) {
+    return {
+      startIndex: 0,
+      endIndex: 0,
+    }
+  }
+
+  const lastIndex = totalPointCount - 1
+  const requestedSpan =
+    viewport.endIndex - viewport.startIndex
+  const span = clamp(
+    Number.isFinite(requestedSpan)
+      ? requestedSpan
+      : lastIndex,
+    getMinimumViewportSpan(totalPointCount),
+    lastIndex,
+  )
+  const startIndex = clamp(
+    Number.isFinite(viewport.startIndex)
+      ? viewport.startIndex
+      : 0,
+    0,
+    lastIndex - span,
+  )
+
+  return {
+    startIndex,
+    endIndex: startIndex + span,
+  }
+}
+
+function areViewportsEqual(
+  firstViewport: ChartViewport,
+  secondViewport: ChartViewport,
+): boolean {
+  const tolerance = 0.0001
+
+  return (
+    Math.abs(
+      firstViewport.startIndex -
+        secondViewport.startIndex,
+    ) < tolerance &&
+    Math.abs(
+      firstViewport.endIndex -
+        secondViewport.endIndex,
+    ) < tolerance
+  )
+}
+
+function getViewportPointCount(
+  viewport: ChartViewport,
+): number {
+  return viewport.endIndex - viewport.startIndex + 1
+}
+
+function createCenteredViewport(
+  centerIndex: number,
+  pointCount: number,
+  totalPointCount: number,
+): ChartViewport {
+  if (totalPointCount <= 1) {
+    return {
+      startIndex: 0,
+      endIndex: 0,
+    }
+  }
+
+  const lastIndex = totalPointCount - 1
+  const span = clamp(
+    pointCount - 1,
+    getMinimumViewportSpan(totalPointCount),
+    lastIndex,
+  )
+  const startIndex = clamp(
+    centerIndex - span / 2,
+    0,
+    lastIndex - span,
+  )
+
+  return {
+    startIndex,
+    endIndex: startIndex + span,
+  }
+}
+
+function panViewport(
+  viewport: ChartViewport,
+  indexShift: number,
+  totalPointCount: number,
+): ChartViewport {
+  const normalizedViewport = normalizeViewport(
+    viewport,
+    totalPointCount,
+  )
+
+  if (totalPointCount <= 1) {
+    return normalizedViewport
+  }
+
+  const lastIndex = totalPointCount - 1
+  const span =
+    normalizedViewport.endIndex -
+    normalizedViewport.startIndex
+  const startIndex = clamp(
+    normalizedViewport.startIndex + indexShift,
+    0,
+    lastIndex - span,
+  )
+
+  return {
+    startIndex,
+    endIndex: startIndex + span,
+  }
+}
+
+function zoomViewport(
+  viewport: ChartViewport,
+  totalPointCount: number,
+  wheelDelta: number,
+  anchorRatio: number,
+): ChartViewport {
+  const normalizedViewport = normalizeViewport(
+    viewport,
+    totalPointCount,
+  )
+
+  if (totalPointCount <= 1) {
+    return normalizedViewport
+  }
+
+  const lastIndex = totalPointCount - 1
+  const currentSpan =
+    normalizedViewport.endIndex -
+    normalizedViewport.startIndex
+  const normalizedWheelDelta = clamp(
+    wheelDelta,
+    -maximumWheelDelta,
+    maximumWheelDelta,
+  )
+  const zoomFactor = Math.exp(
+    normalizedWheelDelta * wheelZoomIntensity,
+  )
+  const targetSpan = clamp(
+    currentSpan * zoomFactor,
+    getMinimumViewportSpan(totalPointCount),
+    lastIndex,
+  )
+  const normalizedAnchorRatio = clamp(
+    anchorRatio,
+    0,
+    1,
+  )
+  const anchorIndex =
+    normalizedViewport.startIndex +
+    currentSpan * normalizedAnchorRatio
+  const startIndex = clamp(
+    anchorIndex -
+      targetSpan * normalizedAnchorRatio,
+    0,
+    lastIndex - targetSpan,
+  )
+
+  return {
+    startIndex,
+    endIndex: startIndex + targetSpan,
+  }
+}
+
+function getTimestampAtIndex(
+  points: ChartPoint[],
+  index: number,
+): number {
+  if (points.length === 0) {
     return 0
   }
 
-  const range =
-    points[points.length - 1].timestamp -
-    points[0].timestamp
+  const normalizedIndex = clamp(
+    index,
+    0,
+    points.length - 1,
+  )
+  const lowerIndex = Math.floor(normalizedIndex)
+  const upperIndex = Math.ceil(normalizedIndex)
 
-  return range / (24 * 60 * 60 * 1000)
+  if (lowerIndex === upperIndex) {
+    return points[lowerIndex].timestamp
+  }
+
+  const ratio = normalizedIndex - lowerIndex
+
+  return (
+    points[lowerIndex].timestamp +
+    (points[upperIndex].timestamp -
+      points[lowerIndex].timestamp) *
+      ratio
+  )
+}
+
+function getViewportPoints(
+  points: ChartPoint[],
+  viewport: ChartViewport,
+): ChartPoint[] {
+  if (points.length === 0) {
+    return []
+  }
+
+  const startIndex = Math.max(
+    0,
+    Math.floor(viewport.startIndex),
+  )
+  const endIndex = Math.min(
+    points.length - 1,
+    Math.ceil(viewport.endIndex),
+  )
+
+  return points.slice(startIndex, endIndex + 1)
+}
+
+function calculateChartRangeInDays(
+  startTimestamp: number,
+  endTimestamp: number,
+): number {
+  if (
+    !Number.isFinite(startTimestamp) ||
+    !Number.isFinite(endTimestamp)
+  ) {
+    return 0
+  }
+
+  return (
+    Math.max(0, endTimestamp - startTimestamp) /
+    (24 * 60 * 60 * 1000)
+  )
 }
 
 function formatAxisDate(
@@ -167,6 +458,16 @@ function formatTooltipDate(
   ).format(date)
 }
 
+function formatCurrency(value: number): string {
+  return `US$ ${value.toLocaleString(
+    'pt-BR',
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    },
+  )}`
+}
+
 function shortenDescription(
   description: string,
 ): string {
@@ -192,14 +493,23 @@ function createChartData(
 ): ChartPoint[] {
   return values
     .map((value) => ({
+      open: value.open,
+      high: value.high,
+      low: value.low,
+      close: value.close,
       price: value.close,
       volume: value.volume,
       timestamp: parseGtaEventDate(
         value.dateTimeUtc,
       ).getTime(),
     }))
-    .filter((point) =>
-      Number.isFinite(point.timestamp),
+    .filter(
+      (point) =>
+        Number.isFinite(point.timestamp) &&
+        Number.isFinite(point.open) &&
+        Number.isFinite(point.high) &&
+        Number.isFinite(point.low) &&
+        Number.isFinite(point.close),
     )
     .sort(
       (firstPoint, secondPoint) =>
@@ -210,40 +520,42 @@ function createChartData(
 
 function createAxisTicks(
   points: ChartPoint[],
+  startTimestamp: number,
+  endTimestamp: number,
   numberOfTicks = 7,
 ): number[] {
-  if (points.length === 0) {
+  const visiblePoints = points.filter(
+    (point) =>
+      point.timestamp >= startTimestamp &&
+      point.timestamp <= endTimestamp,
+  )
+
+  if (visiblePoints.length === 0) {
     return []
   }
 
-  const minimumTimestamp =
-    points[0].timestamp
-
-  const maximumTimestamp =
-    points[points.length - 1].timestamp
-
-  if (
-    minimumTimestamp === maximumTimestamp
-  ) {
-    return [minimumTimestamp]
+  if (visiblePoints.length <= numberOfTicks) {
+    return visiblePoints.map(
+      (point) => point.timestamp,
+    )
   }
 
-  const range =
-    maximumTimestamp - minimumTimestamp
+  const tickIndexes = Array.from(
+    { length: numberOfTicks },
+    (_, index) =>
+      Math.round(
+        (index * (visiblePoints.length - 1)) /
+          (numberOfTicks - 1),
+      ),
+  )
 
   return Array.from(
-    {
-      length: numberOfTicks,
-    },
-    (_, index) => {
-      const position =
-        index / (numberOfTicks - 1)
-
-      return Math.round(
-        minimumTimestamp +
-          range * position,
-      )
-    },
+    new Set(
+      tickIndexes.map(
+        (index) =>
+          visiblePoints[index].timestamp,
+      ),
+    ),
   )
 }
 
@@ -257,15 +569,13 @@ function createPriceDomain(
   const prices = points.map(
     (point) => point.price,
   )
-
   const minimumPrice = Math.min(...prices)
   const maximumPrice = Math.max(...prices)
   const priceRange =
     maximumPrice - minimumPrice
-
   const padding =
     priceRange > 0
-      ? priceRange * 0.08
+      ? priceRange * 0.1
       : Math.max(minimumPrice * 0.02, 1)
 
   return [
@@ -315,7 +625,6 @@ function createEligibleEvents(
 
   const minimumTimestamp =
     chartData[0].timestamp
-
   const maximumTimestamp =
     chartData[chartData.length - 1].timestamp
 
@@ -333,13 +642,13 @@ function createEligibleEvents(
       const eventDate = parseGtaEventDate(
         gtaEvent.occurredAtUtc,
       )
-
-      const timestamp = eventDate.getTime()
+      const eventTimestamp =
+        eventDate.getTime()
 
       if (
-        !Number.isFinite(timestamp) ||
-        timestamp < minimumTimestamp ||
-        timestamp > maximumTimestamp
+        !Number.isFinite(eventTimestamp) ||
+        eventTimestamp < minimumTimestamp ||
+        eventTimestamp > maximumTimestamp
       ) {
         return null
       }
@@ -347,7 +656,7 @@ function createEligibleEvents(
       const nearestPointIndex =
         findNearestPointIndex(
           chartData,
-          timestamp,
+          eventTimestamp,
         )
 
       if (nearestPointIndex < 0) {
@@ -356,7 +665,8 @@ function createEligibleEvents(
 
       return {
         event: gtaEvent as RichGtaEvent,
-        timestamp,
+        timestamp:
+          chartData[nearestPointIndex].timestamp,
         price:
           chartData[nearestPointIndex].price,
         dateKey: eventDate
@@ -376,37 +686,42 @@ function createEventMarkers(
   events: GtaEvent[],
   chartData: ChartPoint[],
   selectedEventId: string | null,
+  startTimestamp: number,
+  endTimestamp: number,
+  chartWidth: number,
 ): EventMarker[] {
-  if (chartData.length === 0) {
-    return []
-  }
-
-  const minimumTimestamp =
-    chartData[0].timestamp
-
-  const maximumTimestamp =
-    chartData[chartData.length - 1].timestamp
-
   const groupsByDate =
     new Map<string, EligibleEvent[]>()
 
   createEligibleEvents(
     events,
     chartData,
-  ).forEach((eligibleEvent) => {
-    const currentGroup =
-      groupsByDate.get(
-        eligibleEvent.dateKey,
-      ) ?? []
-
-    currentGroup.push(eligibleEvent)
-    groupsByDate.set(
-      eligibleEvent.dateKey,
-      currentGroup,
+  )
+    .filter(
+      (eligibleEvent) =>
+        eligibleEvent.timestamp >=
+          startTimestamp &&
+        eligibleEvent.timestamp <=
+          endTimestamp,
     )
-  })
+    .forEach((eligibleEvent) => {
+      const currentGroup =
+        groupsByDate.get(
+          eligibleEvent.dateKey,
+        ) ?? []
+
+      currentGroup.push(eligibleEvent)
+      groupsByDate.set(
+        eligibleEvent.dateKey,
+        currentGroup,
+      )
+    })
 
   const markers: EventMarker[] = []
+  const timestampRange = Math.max(
+    endTimestamp - startTimestamp,
+    1,
+  )
 
   groupsByDate.forEach((group) => {
     const selectedEvent = group.find(
@@ -422,7 +737,6 @@ function createEventMarkers(
         const isSelected =
           eligibleEvent.event.id ===
           selectedEventId
-
         let horizontalOffset = 0
 
         if (selectedEvent) {
@@ -431,7 +745,6 @@ function createEventMarkers(
               Math.floor(
                 unselectedOffsetIndex / 2,
               ) + 1
-
             const direction =
               unselectedOffsetIndex % 2 === 0
                 ? -1
@@ -439,7 +752,6 @@ function createEventMarkers(
 
             horizontalOffset =
               direction * distance * 18
-
             unselectedOffsetIndex += 1
           }
         } else {
@@ -450,13 +762,9 @@ function createEventMarkers(
         }
 
         const chartPosition =
-          maximumTimestamp ===
-          minimumTimestamp
-            ? 0
-            : (eligibleEvent.timestamp -
-                minimumTimestamp) /
-              (maximumTimestamp -
-                minimumTimestamp)
+          (eligibleEvent.timestamp -
+            startTimestamp) /
+          timestampRange
 
         markers.push({
           id: eligibleEvent.event.id,
@@ -473,11 +781,56 @@ function createEventMarkers(
               ? 'left'
               : 'right',
           horizontalOffset,
+          lane: 0,
           isSelected,
         })
       },
     )
   })
+
+  const plotWidth = Math.max(
+    chartWidth - 104,
+    1,
+  )
+  const laneLastPositions = Array.from(
+    { length: EVENT_MARKER_LANE_COUNT },
+    () => Number.NEGATIVE_INFINITY,
+  )
+
+  ;[...markers]
+    .sort(
+      (firstMarker, secondMarker) =>
+        firstMarker.timestamp -
+          secondMarker.timestamp ||
+        firstMarker.horizontalOffset -
+          secondMarker.horizontalOffset,
+    )
+    .forEach((marker) => {
+      const normalizedPosition =
+        (marker.timestamp - startTimestamp) /
+        timestampRange
+      const xPosition =
+        normalizedPosition * plotWidth +
+        marker.horizontalOffset
+
+      let availableLane =
+        laneLastPositions.findIndex(
+          (lastPosition) =>
+            xPosition - lastPosition >=
+            EVENT_MARKER_MIN_HORIZONTAL_GAP,
+        )
+
+      if (availableLane < 0) {
+        availableLane =
+          laneLastPositions.indexOf(
+            Math.min(...laneLastPositions),
+          )
+      }
+
+      marker.lane = availableLane
+      laneLastPositions[availableLane] =
+        xPosition
+    })
 
   return markers
 }
@@ -504,7 +857,6 @@ function createImpactWindow(
     0,
     selectedPointIndex - 5,
   )
-
   const endIndex = Math.min(
     chartData.length - 1,
     selectedPointIndex + 5,
@@ -516,6 +868,46 @@ function createImpactWindow(
     endTimestamp:
       chartData[endIndex].timestamp,
   }
+}
+
+function StockPointTooltip({
+  active,
+  payload,
+}: StockPointTooltipProps) {
+  const point = payload?.[0]?.payload
+
+  if (!active || !point) {
+    return null
+  }
+
+  const priceChange = point.close - point.open
+  const changeClassName =
+    priceChange >= 0
+      ? 'positive-value'
+      : 'negative-value'
+
+  return (
+    <div className="stock-point-tooltip stock-point-tooltip-compact">
+      <strong className="stock-point-tooltip-date">
+        {formatTooltipDate(
+          point.timestamp,
+          14,
+        )}
+      </strong>
+
+      <div className="stock-point-tooltip-grid stock-point-tooltip-grid-compact">
+        <span>Fechamento</span>
+        <strong className={changeClassName}>
+          {formatCurrency(point.close)}
+        </strong>
+
+        <span>Volume</span>
+        <strong>
+          {point.volume.toLocaleString('pt-BR')}
+        </strong>
+      </div>
+    </div>
+  )
 }
 
 function EventIconGlyph({
@@ -865,21 +1257,57 @@ function EventTooltipCard({
   const sourceLabel =
     getGtaEventSourceLabel(marker.event)
 
-  const tooltipHeight = 236
+  const popupWidth = 318
+  const popupHeight = 236
+  const popupGap = 18
+  const viewportPadding = 12
+  const viewportWidth =
+    typeof window === 'undefined'
+      ? 1280
+      : window.innerWidth
+  const viewportHeight =
+    typeof window === 'undefined'
+      ? 720
+      : window.innerHeight
+
+  const hasRoomOnRight =
+    tooltip.anchorClientX +
+      popupGap +
+      popupWidth +
+      viewportPadding <=
+    viewportWidth
+
+  const horizontalPosition = hasRoomOnRight
+    ? tooltip.anchorClientX + popupGap
+    : tooltip.anchorClientX -
+      popupWidth -
+      popupGap
+
   const verticalPosition = Math.max(
-    8,
+    viewportPadding,
     Math.min(
-      tooltip.y - tooltipHeight / 2,
-      450 - tooltipHeight - 8,
+      tooltip.anchorClientY -
+        popupHeight / 2,
+      viewportHeight -
+        popupHeight -
+        viewportPadding,
     ),
   )
 
-  return (
+  const popup = (
     <div
-      className={`event-chart-popup ${marker.labelSide}`}
+      className="event-chart-popup event-chart-popup-portal"
       role="tooltip"
       style={{
-        left: tooltip.x,
+        left: Math.max(
+          viewportPadding,
+          Math.min(
+            horizontalPosition,
+            viewportWidth -
+              popupWidth -
+              viewportPadding,
+          ),
+        ),
         top: verticalPosition,
         borderColor: marker.presentation.color,
       }}
@@ -944,6 +1372,11 @@ function EventTooltipCard({
       </div>
     </div>
   )
+
+  return createPortal(
+    popup,
+    document.body,
+  )
 }
 
 function EventMarkerShape({
@@ -956,11 +1389,11 @@ function EventMarkerShape({
   const [isHovered, setIsHovered] =
     useState(false)
 
-  const [isFocused, setIsFocused] =
-    useState(false)
-
   const iconX =
     cx + marker.horizontalOffset
+  const iconY =
+    EVENT_MARKER_RAIL_TOP +
+    marker.lane * EVENT_MARKER_LANE_GAP
 
   const iconSize = marker.isSelected
     ? 32
@@ -974,38 +1407,20 @@ function EventMarkerShape({
     `Categoria: ${marker.presentation.label}`,
   ].join('\n')
 
-  function showTooltip() {
+  function handleMouseEnter(
+    event: ReactMouseEvent<SVGGElement>,
+  ) {
+    setIsHovered(true)
     onTooltipChange({
       marker,
-      x: iconX,
-      y: cy,
+      anchorClientX: event.clientX,
+      anchorClientY: event.clientY,
     })
-  }
-
-  function handleMouseEnter() {
-    setIsHovered(true)
-    showTooltip()
   }
 
   function handleMouseLeave() {
     setIsHovered(false)
-
-    if (!isFocused) {
-      onTooltipChange(null)
-    }
-  }
-
-  function handleFocus() {
-    setIsFocused(true)
-    showTooltip()
-  }
-
-  function handleBlur() {
-    setIsFocused(false)
-
-    if (!isHovered) {
-      onTooltipChange(null)
-    }
+    onTooltipChange(null)
   }
 
   function handleKeyDown(
@@ -1019,11 +1434,13 @@ function EventMarkerShape({
     }
 
     event.preventDefault()
+    onTooltipChange(null)
     onSelect(marker.event)
   }
 
   return (
     <g
+      data-event-marker="true"
       role="button"
       aria-label={markerLabel}
       tabIndex={0}
@@ -1033,35 +1450,61 @@ function EventMarkerShape({
         event: { preventDefault: () => void },
       ) => event.preventDefault()
       }
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      onClick={() =>
+      onClick={(event) => {
+        onTooltipChange(null)
+        event.currentTarget.blur()
         onSelect(marker.event)
-      }
+      }}
       onKeyDown={handleKeyDown}
       style={{
         cursor: 'pointer',
         outline: 'none',
       }}
     >
+      <line
+        x1={iconX}
+        y1={iconY + iconSize / 2}
+        x2={iconX}
+        y2={cy}
+        stroke={marker.presentation.color}
+        strokeWidth={
+          marker.isSelected ? 1.8 : 1.15
+        }
+        strokeOpacity={
+          marker.isSelected ? 0.78 : 0.34
+        }
+        strokeDasharray="3 4"
+        pointerEvents="none"
+      />
+
       {marker.horizontalOffset !== 0 && (
         <line
-          x1={cx}
+          x1={iconX}
           y1={cy}
-          x2={iconX}
+          x2={cx}
           y2={cy}
           stroke={marker.presentation.color}
-          strokeWidth="1.5"
-          strokeOpacity="0.72"
-          strokeDasharray="2 2"
+          strokeWidth="1.15"
+          strokeOpacity="0.42"
+          strokeDasharray="3 4"
           pointerEvents="none"
         />
       )}
 
+      <circle
+        cx={cx}
+        cy={cy}
+        r={marker.isSelected ? 4.5 : 3}
+        fill={marker.presentation.color}
+        stroke="var(--panel-background)"
+        strokeWidth={marker.isSelected ? 2.2 : 1.5}
+        pointerEvents="none"
+      />
+
       {marker.isSelected && (
         <rect
           x={iconX - iconSize / 2 - 5}
-          y={cy - iconSize / 2 - 5}
+          y={iconY - iconSize / 2 - 5}
           width={iconSize + 10}
           height={iconSize + 10}
           rx="12"
@@ -1073,7 +1516,7 @@ function EventMarkerShape({
 
       <rect
         x={iconX - iconSize / 2}
-        y={cy - iconSize / 2}
+        y={iconY - iconSize / 2}
         width={iconSize}
         height={iconSize}
         rx={marker.isSelected ? 10 : 8}
@@ -1096,7 +1539,7 @@ function EventMarkerShape({
             marker.presentation.iconKey
           }
           x={iconX}
-          y={cy}
+          y={iconY}
         />
       </g>
     </g>
@@ -1109,107 +1552,576 @@ export function StockChart({
   selectedEventId,
   onEventSelect,
 }: StockChartProps) {
+  const chartContainerRef =
+    useRef<HTMLDivElement | null>(null)
+  const dragStateRef =
+    useRef<ChartDragState | null>(null)
+  const viewportRef =
+    useRef<ChartViewport>({
+      startIndex: 0,
+      endIndex: Number.MAX_SAFE_INTEGER,
+    })
+  const pendingViewportRef =
+    useRef<ChartViewport | null>(null)
+  const animationFrameRef =
+    useRef<number | null>(null)
+
   const [
     activeEventTooltip,
     setActiveEventTooltip,
   ] = useState<EventTooltipState | null>(null)
+  const [isDragging, setIsDragging] =
+    useState(false)
+  const [viewport, setViewport] =
+    useState<ChartViewport>({
+      startIndex: 0,
+      endIndex: Number.MAX_SAFE_INTEGER,
+    })
+  const [chartSize, setChartSize] =
+    useState<ChartSize>({
+      width: 0,
+      height: 0,
+    })
 
-  const chartData = createChartData(values)
-  const chartRangeInDays =
-    calculateChartRangeInDays(
+  const chartData = useMemo(
+    () => createChartData(values),
+    [values],
+  )
+  const totalPointCount = chartData.length
+  const normalizedViewport = useMemo(
+    () =>
+      normalizeViewport(
+        viewport,
+        totalPointCount,
+      ),
+    [viewport, totalPointCount],
+  )
+  const visiblePointCount =
+    totalPointCount > 0
+      ? getViewportPointCount(
+          normalizedViewport,
+        )
+      : 0
+  const isZoomed =
+    visiblePointCount > 0 &&
+    visiblePointCount < totalPointCount - 0.001
+  const startTimestamp =
+    getTimestampAtIndex(
       chartData,
+      normalizedViewport.startIndex,
     )
-
-  const axisTicks = createAxisTicks(
-    chartData,
-    7,
+  const endTimestamp =
+    getTimestampAtIndex(
+      chartData,
+      normalizedViewport.endIndex,
+    )
+  const viewportPoints = useMemo(
+    () =>
+      getViewportPoints(
+        chartData,
+        normalizedViewport,
+      ),
+    [chartData, normalizedViewport],
   )
 
-  const priceDomain =
-    createPriceDomain(chartData)
+  useEffect(() => {
+    viewportRef.current = normalizedViewport
+  }, [normalizedViewport])
 
-  const eventMarkers =
-    createEventMarkers(
-      events,
-      chartData,
-      selectedEventId,
+  useEffect(() => {
+    const chartContainer =
+      chartContainerRef.current
+
+    if (!chartContainer) {
+      return
+    }
+
+    let animationFrameId: number | null = null
+
+    const measureChart = () => {
+      const bounds =
+        chartContainer.getBoundingClientRect()
+      const parentBounds =
+        chartContainer.parentElement
+          ?.getBoundingClientRect()
+
+      const measuredWidth = Math.max(
+        1,
+        Math.floor(bounds.width),
+      )
+      const measuredHeight = Math.max(
+        240,
+        Math.floor(
+          bounds.height > 40
+            ? bounds.height
+            : parentBounds?.height ?? 0,
+        ),
+      )
+
+      setChartSize((currentSize) => {
+        if (
+          currentSize.width === measuredWidth &&
+          currentSize.height === measuredHeight
+        ) {
+          return currentSize
+        }
+
+        return {
+          width: measuredWidth,
+          height: measuredHeight,
+        }
+      })
+    }
+
+    const scheduleMeasurement = () => {
+      if (animationFrameId !== null) {
+        window.cancelAnimationFrame(
+          animationFrameId,
+        )
+      }
+
+      animationFrameId =
+        window.requestAnimationFrame(() => {
+          animationFrameId = null
+          measureChart()
+        })
+    }
+
+    const resizeObserver =
+      new ResizeObserver(scheduleMeasurement)
+
+    resizeObserver.observe(chartContainer)
+    scheduleMeasurement()
+
+    return () => {
+      resizeObserver.disconnect()
+
+      if (animationFrameId !== null) {
+        window.cancelAnimationFrame(
+          animationFrameId,
+        )
+      }
+    }
+  }, [])
+
+  const scheduleViewportUpdate = useCallback(
+    (nextViewport: ChartViewport) => {
+      const normalizedNextViewport =
+        normalizeViewport(
+          nextViewport,
+          totalPointCount,
+        )
+
+      pendingViewportRef.current =
+        normalizedNextViewport
+
+      if (animationFrameRef.current !== null) {
+        return
+      }
+
+      animationFrameRef.current =
+        window.requestAnimationFrame(() => {
+          const pendingViewport =
+            pendingViewportRef.current
+
+          animationFrameRef.current = null
+          pendingViewportRef.current = null
+
+          if (!pendingViewport) {
+            return
+          }
+
+          viewportRef.current = pendingViewport
+          setViewport((currentViewport) =>
+            areViewportsEqual(
+              currentViewport,
+              pendingViewport,
+            )
+              ? currentViewport
+              : pendingViewport,
+          )
+        })
+    },
+    [totalPointCount],
+  )
+
+  useEffect(() => {
+    const animationFrameId =
+      window.requestAnimationFrame(() => {
+        const completeViewport = {
+          startIndex: 0,
+          endIndex: Math.max(
+            chartData.length - 1,
+            0,
+          ),
+        }
+
+        viewportRef.current = completeViewport
+        pendingViewportRef.current = null
+        setViewport(completeViewport)
+        setActiveEventTooltip(null)
+        setIsDragging(false)
+        dragStateRef.current = null
+      })
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId)
+    }
+  }, [chartData])
+
+  useEffect(
+    () => () => {
+      if (animationFrameRef.current !== null) {
+        window.cancelAnimationFrame(
+          animationFrameRef.current,
+        )
+      }
+    },
+    [],
+  )
+
+  useEffect(() => {
+    if (
+      !selectedEventId ||
+      chartData.length === 0
+    ) {
+      return
+    }
+
+    const selectedEvent = events.find(
+      (gtaEvent) =>
+        gtaEvent.id === selectedEventId,
     )
 
-  const selectedMarker =
-    eventMarkers.find(
-      (marker) => marker.isSelected,
+    if (!selectedEvent) {
+      return
+    }
+
+    const selectedTimestamp =
+      parseGtaEventDate(
+        selectedEvent.occurredAtUtc,
+      ).getTime()
+    const selectedPointIndex =
+      findNearestPointIndex(
+        chartData,
+        selectedTimestamp,
+      )
+
+    if (selectedPointIndex < 0) {
+      return
+    }
+
+    const currentViewport =
+      pendingViewportRef.current ??
+      viewportRef.current
+    const currentNormalizedViewport =
+      normalizeViewport(
+        currentViewport,
+        chartData.length,
+      )
+
+    if (
+      selectedPointIndex >=
+        currentNormalizedViewport.startIndex &&
+      selectedPointIndex <=
+        currentNormalizedViewport.endIndex
+    ) {
+      return
+    }
+
+    scheduleViewportUpdate(
+      createCenteredViewport(
+        selectedPointIndex,
+        getViewportPointCount(
+          currentNormalizedViewport,
+        ),
+        chartData.length,
+      ),
+    )
+  }, [
+    chartData,
+    events,
+    scheduleViewportUpdate,
+    selectedEventId,
+  ])
+
+  const chartRangeInDays =
+    calculateChartRangeInDays(
+      startTimestamp,
+      endTimestamp,
+    )
+  const axisTicks = createAxisTicks(
+    viewportPoints,
+    startTimestamp,
+    endTimestamp,
+    7,
+  )
+  const priceDomain = createPriceDomain(
+    viewportPoints,
+  )
+  const eventMarkers = createEventMarkers(
+    events,
+    chartData,
+    selectedEventId,
+    startTimestamp,
+    endTimestamp,
+    chartSize.width,
+  )
+  const chartTopMargin =
+    eventMarkers.length > 0
+      ? EVENT_MARKER_CHART_TOP_MARGIN
+      : 30
+  const selectedMarker = eventMarkers.find(
+    (marker) => marker.isSelected,
+  )
+  const impactWindow = createImpactWindow(
+    selectedMarker,
+    chartData,
+  )
+
+  useEffect(() => {
+    const chartContainer =
+      chartContainerRef.current
+
+    if (!chartContainer) {
+      return
+    }
+
+    const chartElement: HTMLDivElement =
+      chartContainer
+
+    function handleNativeWheel(
+      event: WheelEvent,
+    ) {
+      if (totalPointCount <= 1) {
+        return
+      }
+
+      event.preventDefault()
+      setActiveEventTooltip(null)
+
+      const containerBounds =
+        chartElement.getBoundingClientRect()
+      const anchorRatio =
+        containerBounds.width > 0
+          ? (event.clientX -
+              containerBounds.left) /
+            containerBounds.width
+          : 0.5
+      const currentViewport =
+        pendingViewportRef.current ??
+        viewportRef.current
+
+      scheduleViewportUpdate(
+        zoomViewport(
+          currentViewport,
+          totalPointCount,
+          event.deltaY,
+          anchorRatio,
+        ),
+      )
+    }
+
+    chartElement.addEventListener(
+      'wheel',
+      handleNativeWheel,
+      { passive: false },
     )
 
-  const impactWindow =
-    createImpactWindow(
-      selectedMarker,
-      chartData,
+    return () => {
+      chartElement.removeEventListener(
+        'wheel',
+        handleNativeWheel,
+      )
+    }
+  }, [
+    scheduleViewportUpdate,
+    totalPointCount,
+  ])
+
+  function clearChartInteractionState() {
+    setActiveEventTooltip(null)
+  }
+
+  function handlePointerDown(
+    event: ReactPointerEvent<HTMLDivElement>,
+  ) {
+    if (!isZoomed || event.button !== 0) {
+      return
+    }
+
+    const target = event.target
+
+    if (
+      target instanceof Element &&
+      target.closest(
+        '[data-event-marker="true"]',
+      )
+    ) {
+      return
+    }
+
+    clearChartInteractionState()
+    dragStateRef.current = {
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      viewport:
+        pendingViewportRef.current ??
+        viewportRef.current,
+    }
+    event.currentTarget.setPointerCapture(
+      event.pointerId,
     )
+    setIsDragging(true)
+  }
 
+  function handlePointerMove(
+    event: ReactPointerEvent<HTMLDivElement>,
+  ) {
+    const dragState = dragStateRef.current
 
+    if (
+      !dragState ||
+      dragState.pointerId !== event.pointerId
+    ) {
+      return
+    }
+
+    const containerWidth =
+      chartContainerRef.current
+        ?.getBoundingClientRect().width ?? 0
+
+    if (containerWidth <= 0) {
+      return
+    }
+
+    event.preventDefault()
+
+    const viewportSpan =
+      dragState.viewport.endIndex -
+      dragState.viewport.startIndex
+    const horizontalMovement =
+      event.clientX - dragState.startClientX
+    const indexShift =
+      (-horizontalMovement / containerWidth) *
+      viewportSpan
+
+    scheduleViewportUpdate(
+      panViewport(
+        dragState.viewport,
+        indexShift,
+        totalPointCount,
+      ),
+    )
+  }
+
+  function finishDragging(
+    event: ReactPointerEvent<HTMLDivElement>,
+  ) {
+    const dragState = dragStateRef.current
+
+    if (
+      !dragState ||
+      dragState.pointerId !== event.pointerId
+    ) {
+      return
+    }
+
+    if (
+      event.currentTarget.hasPointerCapture(
+        event.pointerId,
+      )
+    ) {
+      event.currentTarget.releasePointerCapture(
+        event.pointerId,
+      )
+    }
+
+    dragStateRef.current = null
+    setIsDragging(false)
+  }
+
+  function handleKeyDown(
+    event: ReactKeyboardEvent<HTMLDivElement>,
+  ) {
+    if (
+      !isZoomed ||
+      (event.key !== 'ArrowLeft' &&
+        event.key !== 'ArrowRight')
+    ) {
+      return
+    }
+
+    event.preventDefault()
+
+    const currentViewport =
+      pendingViewportRef.current ??
+      viewportRef.current
+    const viewportSpan =
+      currentViewport.endIndex -
+      currentViewport.startIndex
+    const direction =
+      event.key === 'ArrowLeft' ? -1 : 1
+
+    scheduleViewportUpdate(
+      panViewport(
+        currentViewport,
+        direction *
+          Math.max(viewportSpan * 0.08, 1),
+        totalPointCount,
+      ),
+    )
+  }
 
   return (
     <div
-      className="stock-chart-container"
+      ref={chartContainerRef}
+      className={`stock-chart-container trading-chart-container${
+        isZoomed ? ' zoomed' : ''
+      }${isDragging ? ' dragging' : ''}`}
       style={{
         width: '100%',
-        height: 450,
+        height: '100%',
+        minHeight: 0,
       }}
+      tabIndex={0}
+      aria-label="Gráfico de linha interativo. Use o scroll para aproximar ou afastar e arraste para navegar pelas datas."
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={finishDragging}
+      onPointerCancel={finishDragging}
+      onKeyDown={handleKeyDown}
     >
-      <ResponsiveContainer
-        width="100%"
-        height="100%"
-      >
-        <AreaChart
-          data={chartData}
+      {chartSize.width > 0 &&
+      chartSize.height > 0 ? (
+        <LineChart
+          width={chartSize.width}
+          height={chartSize.height}
+          data={viewportPoints}
           margin={{
-            top: 34,
-            right: 34,
+            top: chartTopMargin,
+            right: 14,
             bottom: 26,
-            left: 18,
+            left: 12,
           }}
         >
-          <defs>
-            <linearGradient
-              id="stockPriceGradient"
-              x1="0"
-              y1="0"
-              x2="0"
-              y2="1"
-            >
-              <stop
-                offset="0%"
-                stopColor="var(--accent-pink)"
-                stopOpacity={0.42}
-              />
-
-              <stop
-                offset="100%"
-                stopColor="var(--accent-pink)"
-                stopOpacity={0.03}
-              />
-            </linearGradient>
-          </defs>
-
           <CartesianGrid
             stroke="var(--border-color)"
-            strokeDasharray="4 4"
-            vertical={false}
+            strokeDasharray="2 4"
+            strokeOpacity={0.72}
+            vertical
+            horizontal
           />
 
           {impactWindow && (
             <ReferenceArea
-              x1={
-                impactWindow.startTimestamp
-              }
-              x2={
-                impactWindow.endTimestamp
-              }
+              x1={impactWindow.startTimestamp}
+              x2={impactWindow.endTimestamp}
               fill="var(--accent-pink)"
-              fillOpacity={0.07}
+              fillOpacity={0.06}
               stroke="var(--accent-pink)"
-              strokeOpacity={0.2}
-              ifOverflow="extendDomain"
+              strokeOpacity={0.18}
+              ifOverflow="hidden"
             />
           )}
 
@@ -1218,9 +2130,10 @@ export function StockChart({
             type="number"
             scale="time"
             domain={[
-              'dataMin',
-              'dataMax',
+              startTimestamp,
+              endTimestamp,
             ]}
+            allowDataOverflow
             ticks={axisTicks}
             interval={0}
             tickFormatter={(timestamp: unknown) =>
@@ -1246,7 +2159,8 @@ export function StockChart({
           <YAxis
             dataKey="price"
             domain={priceDomain}
-            width={76}
+            orientation="right"
+            width={78}
             tickMargin={10}
             tickFormatter={(price: unknown) =>
               Number(price).toFixed(2)
@@ -1260,82 +2174,41 @@ export function StockChart({
             tickLine={false}
           />
 
-          <Tooltip
-            labelFormatter={(timestamp: unknown) =>
-              formatTooltipDate(
-                Number(timestamp),
-                chartRangeInDays,
-              )
-            }
-            formatter={(value: unknown) => [
-              `US$ ${Number(
-                value,
-              ).toFixed(2)}`,
-              'Fechamento',
-            ]}
-            contentStyle={{
-              color:
-                'var(--primary-text)',
-              background:
-                'var(--panel-background)',
-              border:
-                '1px solid var(--border-color)',
-              borderRadius: '12px',
-              boxShadow:
-                'var(--card-shadow)',
-            }}
-            wrapperStyle={{
-              visibility:
-                activeEventTooltip
-                  ? 'hidden'
-                  : 'visible',
-              pointerEvents: 'none',
-            }}
-          />
-
-          {eventMarkers.map((marker) => (
-            <ReferenceLine
-              key={`event-line-${marker.id}`}
-              segment={[
-                {
-                  x: marker.timestamp,
-                  y: marker.price,
-                },
-                {
-                  x: marker.timestamp,
-                  y: priceDomain[0],
-                },
-              ]}
-              stroke={
-                marker.presentation.color
-              }
-              strokeDasharray={
-                marker.isSelected
-                  ? '4 3'
-                  : '3 5'
-              }
-              strokeWidth={
-                marker.isSelected ? 2.4 : 1.25
-              }
-              strokeOpacity={
-                marker.isSelected ? 0.92 : 0.36
-              }
-              ifOverflow="visible"
+          {!activeEventTooltip && (
+            <Tooltip
+              content={<StockPointTooltip />}
+              cursor={{
+                stroke:
+                  'var(--secondary-text)',
+                strokeDasharray: '3 3',
+                strokeOpacity: 0.55,
+                strokeWidth: 1,
+              }}
+              wrapperStyle={{
+                visibility:
+                  activeEventTooltip || isDragging
+                    ? 'hidden'
+                    : 'visible',
+                pointerEvents: 'none',
+                zIndex: 30,
+              }}
             />
-          ))}
+          )}
 
-          <Area
-            type="monotone"
+          <Line
+            type="linear"
             dataKey="price"
             name="Fechamento"
             stroke="var(--accent-pink)"
-            strokeWidth={3}
-            fill="url(#stockPriceGradient)"
+            strokeWidth={2.4}
             dot={false}
             activeDot={{
-              r: 5,
+              r: 4,
               fill:
                 'var(--accent-pink)',
+              stroke:
+                'var(--panel-background)',
+              strokeWidth: 2,
             }}
             isAnimationActive={false}
           />
@@ -1372,8 +2245,12 @@ export function StockChart({
               }}
             />
           ))}
-        </AreaChart>
-      </ResponsiveContainer>
+        </LineChart>
+      ) : (
+        <div className="chart-render-state">
+          Preparando gráfico...
+        </div>
+      )}
 
       {activeEventTooltip && (
         <EventTooltipCard

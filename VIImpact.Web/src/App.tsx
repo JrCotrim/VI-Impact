@@ -1850,22 +1850,6 @@ function App() {
           </aside>
         </section>
       </main>
-
-      <footer
-        className="site-footer"
-        id="about"
-      >
-
-        <p>
-          Monitorando possíveis relações entre
-          notícias do GTA 6 e o mercado financeiro.
-        </p>
-
-        <span>
-          Dados de mercado fornecidos por{' '}
-          <strong>Twelve Data</strong>
-        </span>
-      </footer>
     </div>
   )
 }
