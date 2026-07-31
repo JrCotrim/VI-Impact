@@ -65,6 +65,42 @@ public sealed class GtaEventImpactResponse
 
     public decimal? VolumeChangePercent { get; set; }
 
+    public string BenchmarkSymbol { get; set; } = string.Empty;
+
+    public bool BenchmarkIsAvailable { get; set; }
+
+    public string? BenchmarkUnavailableReason { get; set; }
+
+    public string BenchmarkExchange { get; set; } = string.Empty;
+
+    public string BenchmarkExchangeTimezone { get; set; } = string.Empty;
+
+    public decimal? BenchmarkPreviousClose { get; set; }
+
+    public decimal? BenchmarkEventDayClose { get; set; }
+
+    public decimal? BenchmarkSameDayReturnPercent { get; set; }
+
+    public decimal? BenchmarkDay1Close { get; set; }
+
+    public decimal? BenchmarkDay1ReturnPercent { get; set; }
+
+    public decimal? BenchmarkDay5Close { get; set; }
+
+    public decimal? BenchmarkDay5ReturnPercent { get; set; }
+
+    public decimal? BenchmarkDay30Close { get; set; }
+
+    public decimal? BenchmarkDay30ReturnPercent { get; set; }
+
+    public decimal? SameDayExcessReturnPercent { get; set; }
+
+    public decimal? Day1ExcessReturnPercent { get; set; }
+
+    public decimal? Day5ExcessReturnPercent { get; set; }
+
+    public decimal? Day30ExcessReturnPercent { get; set; }
+
     public decimal? PriceBefore { get; set; }
 
     public DateTime? PriceBeforeRecordedAtUtc { get; set; }

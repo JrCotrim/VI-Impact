@@ -93,11 +93,13 @@ public sealed class GtaEventsController : ControllerBase
     /// <summary>
     /// Calculates the observed market reaction around a GTA VI event.
     /// D+1, D+5 and D+30 are cumulative from the previous close.
+    /// The stock returns are also compared with a market benchmark.
     /// </summary>
     [HttpGet("{eventId:guid}/impact")]
     public async Task<ActionResult<GtaEventImpactResponse>> GetImpact(
         Guid eventId,
         [FromQuery] string symbol = "TTWO",
+        [FromQuery] string benchmarkSymbol = "QQQ",
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(symbol))
@@ -108,10 +110,19 @@ public sealed class GtaEventsController : ControllerBase
             });
         }
 
+        if (string.IsNullOrWhiteSpace(benchmarkSymbol))
+        {
+            return BadRequest(new
+            {
+                Message = "The benchmark symbol is required."
+            });
+        }
+
         GtaEventImpactResult? result =
             await _gtaEventImpactService.CalculateAsync(
                 eventId,
                 symbol,
+                benchmarkSymbol,
                 cancellationToken);
 
         if (result is null)
@@ -163,6 +174,36 @@ public sealed class GtaEventsController : ControllerBase
             PreviousVolumeSessionsUsed =
                 result.PreviousVolumeSessionsUsed,
             VolumeChangePercent = result.VolumeChangePercent,
+            BenchmarkSymbol = result.BenchmarkSymbol,
+            BenchmarkIsAvailable = result.BenchmarkIsAvailable,
+            BenchmarkUnavailableReason =
+                result.BenchmarkUnavailableReason,
+            BenchmarkExchange = result.BenchmarkExchange,
+            BenchmarkExchangeTimezone =
+                result.BenchmarkExchangeTimezone,
+            BenchmarkPreviousClose =
+                result.BenchmarkPreviousClose,
+            BenchmarkEventDayClose =
+                result.BenchmarkEventDayClose,
+            BenchmarkSameDayReturnPercent =
+                result.BenchmarkSameDayReturnPercent,
+            BenchmarkDay1Close = result.BenchmarkDay1Close,
+            BenchmarkDay1ReturnPercent =
+                result.BenchmarkDay1ReturnPercent,
+            BenchmarkDay5Close = result.BenchmarkDay5Close,
+            BenchmarkDay5ReturnPercent =
+                result.BenchmarkDay5ReturnPercent,
+            BenchmarkDay30Close = result.BenchmarkDay30Close,
+            BenchmarkDay30ReturnPercent =
+                result.BenchmarkDay30ReturnPercent,
+            SameDayExcessReturnPercent =
+                result.SameDayExcessReturnPercent,
+            Day1ExcessReturnPercent =
+                result.Day1ExcessReturnPercent,
+            Day5ExcessReturnPercent =
+                result.Day5ExcessReturnPercent,
+            Day30ExcessReturnPercent =
+                result.Day30ExcessReturnPercent,
             PriceBefore = result.PriceBefore,
             PriceBeforeRecordedAtUtc =
                 result.PriceBeforeRecordedAtUtc,

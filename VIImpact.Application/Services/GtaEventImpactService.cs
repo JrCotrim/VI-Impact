@@ -10,6 +10,7 @@ namespace VIImpact.Application.Services;
 /// </summary>
 public sealed class GtaEventImpactService : IGtaEventImpactService
 {
+    private const string DefaultBenchmarkSymbol = "QQQ";
     private const int MarketCloseHour = 16;
     private const int HistoricalWindowInDays = 120;
     private const int VolumeAverageSessionCount = 30;
@@ -25,13 +26,27 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
         _stockMarketService = stockMarketService;
     }
 
+    public Task<GtaEventImpactResult?> CalculateAsync(
+        Guid eventId,
+        string symbol,
+        CancellationToken cancellationToken = default)
+    {
+        return CalculateAsync(
+            eventId,
+            symbol,
+            DefaultBenchmarkSymbol,
+            cancellationToken);
+    }
+
     /// <summary>
     /// Calculates cumulative returns from the close immediately before
-    /// the event through D0, D+1, D+5 and D+30 trading sessions.
+    /// the event through D0, D+1, D+5 and D+30 trading sessions, then
+    /// compares those returns with the selected market benchmark.
     /// </summary>
     public async Task<GtaEventImpactResult?> CalculateAsync(
         Guid eventId,
         string symbol,
+        string benchmarkSymbol,
         CancellationToken cancellationToken = default)
     {
         GtaEvent? gtaEvent =
@@ -44,7 +59,11 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
             return null;
         }
 
-        string normalizedSymbol = symbol.Trim().ToUpperInvariant();
+        string normalizedSymbol = NormalizeSymbol(symbol, "TTWO");
+        string normalizedBenchmarkSymbol = NormalizeSymbol(
+            benchmarkSymbol,
+            DefaultBenchmarkSymbol);
+
         DateTime analysisTimestampUtc =
             gtaEvent.PublishedAtUtc ?? gtaEvent.OccurredAtUtc;
 
@@ -53,6 +72,7 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
             EventId = gtaEvent.Id,
             EventTitle = gtaEvent.Title,
             Symbol = normalizedSymbol,
+            BenchmarkSymbol = normalizedBenchmarkSymbol,
             OccurredAtUtc = gtaEvent.OccurredAtUtc,
             AnalysisTimestampUtc = analysisTimestampUtc,
             UsedPublishedAtUtc = gtaEvent.PublishedAtUtc.HasValue
@@ -150,7 +170,7 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
             previousSession.Close,
             eventSession.Close);
 
-        decimal? priceChange =
+        decimal priceChange =
             eventSession.Close - previousSession.Close;
 
         result.IsAvailable = true;
@@ -194,7 +214,153 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
         result.PriceChange = priceChange;
         result.PriceChangePercent = sameDayReturn;
 
+        await PopulateBenchmarkComparisonAsync(
+            result,
+            normalizedSymbol,
+            normalizedBenchmarkSymbol,
+            query,
+            timeSeries,
+            previousSession,
+            eventSession,
+            day1Session,
+            day5Session,
+            day30Session,
+            cancellationToken);
+
         return result;
+    }
+
+    private async Task PopulateBenchmarkComparisonAsync(
+        GtaEventImpactResult result,
+        string symbol,
+        string benchmarkSymbol,
+        StockTimeSeriesQuery query,
+        StockTimeSeries primaryTimeSeries,
+        StockTimeSeriesPoint previousSession,
+        StockTimeSeriesPoint eventSession,
+        StockTimeSeriesPoint? day1Session,
+        StockTimeSeriesPoint? day5Session,
+        StockTimeSeriesPoint? day30Session,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            StockTimeSeries benchmarkTimeSeries =
+                string.Equals(
+                    symbol,
+                    benchmarkSymbol,
+                    StringComparison.OrdinalIgnoreCase)
+                    ? primaryTimeSeries
+                    : await _stockMarketService.GetTimeSeriesAsync(
+                        benchmarkSymbol,
+                        query,
+                        cancellationToken);
+
+            result.BenchmarkExchange = benchmarkTimeSeries.Exchange;
+            result.BenchmarkExchangeTimezone =
+                benchmarkTimeSeries.ExchangeTimezone;
+
+            IReadOnlyDictionary<DateTime, StockTimeSeriesPoint>
+                benchmarkSessionsByDate = NormalizeTradingSessions(
+                    benchmarkTimeSeries.Values)
+                .ToDictionary(
+                    session => session.DateTime.Date);
+
+            if (!TryGetSessionByDate(
+                    benchmarkSessionsByDate,
+                    previousSession.DateTime,
+                    out StockTimeSeriesPoint benchmarkPreviousSession) ||
+                !TryGetSessionByDate(
+                    benchmarkSessionsByDate,
+                    eventSession.DateTime,
+                    out StockTimeSeriesPoint benchmarkEventSession))
+            {
+                MarkBenchmarkUnavailable(
+                    result,
+                    "Não existem dados suficientes do benchmark para os pregões analisados.");
+                return;
+            }
+
+            StockTimeSeriesPoint? benchmarkDay1Session =
+                GetSessionByDate(
+                    benchmarkSessionsByDate,
+                    day1Session?.DateTime);
+
+            StockTimeSeriesPoint? benchmarkDay5Session =
+                GetSessionByDate(
+                    benchmarkSessionsByDate,
+                    day5Session?.DateTime);
+
+            StockTimeSeriesPoint? benchmarkDay30Session =
+                GetSessionByDate(
+                    benchmarkSessionsByDate,
+                    day30Session?.DateTime);
+
+            result.BenchmarkIsAvailable = true;
+            result.BenchmarkUnavailableReason = null;
+            result.BenchmarkPreviousClose =
+                benchmarkPreviousSession.Close;
+            result.BenchmarkEventDayClose =
+                benchmarkEventSession.Close;
+            result.BenchmarkSameDayReturnPercent =
+                CalculateReturnPercent(
+                    benchmarkPreviousSession.Close,
+                    benchmarkEventSession.Close);
+
+            result.BenchmarkDay1Close = benchmarkDay1Session?.Close;
+            result.BenchmarkDay1ReturnPercent =
+                CalculateReturnPercent(
+                    benchmarkPreviousSession.Close,
+                    benchmarkDay1Session?.Close);
+
+            result.BenchmarkDay5Close = benchmarkDay5Session?.Close;
+            result.BenchmarkDay5ReturnPercent =
+                CalculateReturnPercent(
+                    benchmarkPreviousSession.Close,
+                    benchmarkDay5Session?.Close);
+
+            result.BenchmarkDay30Close = benchmarkDay30Session?.Close;
+            result.BenchmarkDay30ReturnPercent =
+                CalculateReturnPercent(
+                    benchmarkPreviousSession.Close,
+                    benchmarkDay30Session?.Close);
+
+            result.SameDayExcessReturnPercent = SubtractPercentages(
+                result.SameDayReturnPercent,
+                result.BenchmarkSameDayReturnPercent);
+
+            result.Day1ExcessReturnPercent = SubtractPercentages(
+                result.Day1ReturnPercent,
+                result.BenchmarkDay1ReturnPercent);
+
+            result.Day5ExcessReturnPercent = SubtractPercentages(
+                result.Day5ReturnPercent,
+                result.BenchmarkDay5ReturnPercent);
+
+            result.Day30ExcessReturnPercent = SubtractPercentages(
+                result.Day30ReturnPercent,
+                result.BenchmarkDay30ReturnPercent);
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            MarkBenchmarkUnavailable(
+                result,
+                "Não foi possível carregar os dados do benchmark neste momento.");
+        }
+    }
+
+    private static string NormalizeSymbol(
+        string symbol,
+        string fallbackSymbol)
+    {
+        return string.IsNullOrWhiteSpace(symbol)
+            ? fallbackSymbol
+            : symbol.Trim().ToUpperInvariant();
     }
 
     private static GtaEventImpactResult MarkUnavailable(
@@ -204,6 +370,14 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
         result.IsAvailable = false;
         result.UnavailableReason = reason;
         return result;
+    }
+
+    private static void MarkBenchmarkUnavailable(
+        GtaEventImpactResult result,
+        string reason)
+    {
+        result.BenchmarkIsAvailable = false;
+        result.BenchmarkUnavailableReason = reason;
     }
 
     private static DateTime GetQueryEndDate(DateTime eventDate)
@@ -375,6 +549,38 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
             : null;
     }
 
+    private static bool TryGetSessionByDate(
+        IReadOnlyDictionary<DateTime, StockTimeSeriesPoint> sessions,
+        DateTime date,
+        out StockTimeSeriesPoint session)
+    {
+        if (
+            sessions.TryGetValue(
+                date.Date,
+                out StockTimeSeriesPoint? matchedSession) &&
+            matchedSession is not null)
+        {
+            session = matchedSession;
+            return true;
+        }
+
+        session = null!;
+        return false;
+    }
+
+    private static StockTimeSeriesPoint? GetSessionByDate(
+        IReadOnlyDictionary<DateTime, StockTimeSeriesPoint> sessions,
+        DateTime? date)
+    {
+        if (!date.HasValue)
+        {
+            return null;
+        }
+
+        sessions.TryGetValue(date.Value.Date, out StockTimeSeriesPoint? session);
+        return session;
+    }
+
     private static IReadOnlyList<StockTimeSeriesPoint>
         GetPreviousSessions(
             IReadOnlyList<StockTimeSeriesPoint> sessions,
@@ -431,6 +637,18 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
         return (eventVolume - averageVolume.Value)
             / averageVolume.Value
             * 100;
+    }
+
+    private static decimal? SubtractPercentages(
+        decimal? stockReturn,
+        decimal? benchmarkReturn)
+    {
+        if (!stockReturn.HasValue || !benchmarkReturn.HasValue)
+        {
+            return null;
+        }
+
+        return stockReturn.Value - benchmarkReturn.Value;
     }
 
     private sealed record EventMarketReference(

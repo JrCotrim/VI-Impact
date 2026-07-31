@@ -12,7 +12,7 @@ namespace VIImpact.Tests.Services;
 public sealed class GtaEventImpactServiceTests
 {
     [Fact]
-    public async Task CalculateAsync_WhenTimeSeriesExists_ReturnsCalculatedImpact()
+    public async Task CalculateAsync_WhenTimeSeriesExists_ReturnsImpactAndBenchmarkComparison()
     {
         Guid eventId = Guid.NewGuid();
 
@@ -37,38 +37,35 @@ public sealed class GtaEventImpactServiceTests
             IsImpactAnalysisEligible = true
         };
 
-        var previousSession = new StockTimeSeriesPoint
-        {
-            DateTime = eventDateUtc.Date.AddDays(-1),
-            Open = 99m,
-            Close = 100m,
-            Volume = 1000
-        };
+        DateTime previousDate = eventDateUtc.Date.AddDays(-1);
 
-        var eventSession = new StockTimeSeriesPoint
-        {
-            DateTime = eventDateUtc.Date,
-            Open = 101m,
-            Close = 110m,
-            Volume = 2000
-        };
+        StockTimeSeries stockTimeSeries = CreateTimeSeries(
+            previousDate,
+            previousClose: 100m,
+            eventClose: 110m,
+            day1Close: 112m,
+            day5Close: 120m,
+            day30Close: 130m);
 
-        var timeSeries = new StockTimeSeries
-        {
-            Exchange = "NASDAQ",
-            ExchangeTimezone = "America/New_York",
-            Values =
-            [
-                previousSession,
-                eventSession
-            ]
-        };
+        StockTimeSeries benchmarkTimeSeries = CreateTimeSeries(
+            previousDate,
+            previousClose: 200m,
+            eventClose: 204m,
+            day1Close: 206m,
+            day5Close: 210m,
+            day30Close: 220m);
 
         var gtaEventRepository =
             new FakeGtaEventRepository(gtaEvent);
 
         var stockMarketService =
-            new FakeStockMarketService(timeSeries);
+            new FakeStockMarketService(
+                new Dictionary<string, StockTimeSeries>(
+                    StringComparer.OrdinalIgnoreCase)
+                {
+                    ["TTWO"] = stockTimeSeries,
+                    ["QQQ"] = benchmarkTimeSeries
+                });
 
         var service = new GtaEventImpactService(
             gtaEventRepository,
@@ -77,7 +74,8 @@ public sealed class GtaEventImpactServiceTests
         GtaEventImpactResult? result =
             await service.CalculateAsync(
                 eventId,
-                "TTWO");
+                "TTWO",
+                "QQQ");
 
         Assert.NotNull(result);
         Assert.True(result.IsAvailable);
@@ -87,6 +85,92 @@ public sealed class GtaEventImpactServiceTests
         Assert.Equal(110m, result.PriceAfter);
         Assert.Equal(10m, result.PriceChange);
         Assert.Equal(10m, result.PriceChangePercent);
+
+        Assert.True(result.BenchmarkIsAvailable);
+        Assert.Equal("QQQ", result.BenchmarkSymbol);
+        Assert.Equal(2m, result.BenchmarkSameDayReturnPercent);
+        Assert.Equal(3m, result.BenchmarkDay1ReturnPercent);
+        Assert.Equal(5m, result.BenchmarkDay5ReturnPercent);
+        Assert.Equal(10m, result.BenchmarkDay30ReturnPercent);
+
+        Assert.Equal(8m, result.SameDayExcessReturnPercent);
+        Assert.Equal(9m, result.Day1ExcessReturnPercent);
+        Assert.Equal(15m, result.Day5ExcessReturnPercent);
+        Assert.Equal(20m, result.Day30ExcessReturnPercent);
+    }
+
+    [Fact]
+    public async Task CalculateAsync_WhenBenchmarkDataIsIncomplete_KeepsStockImpactAvailable()
+    {
+        Guid eventId = Guid.NewGuid();
+        DateTime eventDateUtc = new(
+            2026,
+            7,
+            28,
+            18,
+            0,
+            0,
+            DateTimeKind.Utc);
+
+        var gtaEvent = new GtaEvent
+        {
+            Id = eventId,
+            Title = "GTA VI event",
+            Description = "Test event.",
+            SourceUrl = "https://example.com",
+            OccurredAtUtc = eventDateUtc,
+            DatePrecision = GtaEventDatePrecision.ExactTime,
+            Status = GtaEventStatus.Occurred,
+            IsImpactAnalysisEligible = true
+        };
+
+        StockTimeSeries stockTimeSeries = CreateTimeSeries(
+            eventDateUtc.Date.AddDays(-1),
+            previousClose: 100m,
+            eventClose: 110m,
+            day1Close: 112m,
+            day5Close: 120m,
+            day30Close: 130m);
+
+        var incompleteBenchmark = new StockTimeSeries
+        {
+            Exchange = "NASDAQ",
+            ExchangeTimezone = "America/New_York",
+            Values =
+            [
+                new StockTimeSeriesPoint
+                {
+                    DateTime = eventDateUtc.Date,
+                    Open = 203m,
+                    Close = 204m,
+                    Volume = 1000
+                }
+            ]
+        };
+
+        var stockMarketService =
+            new FakeStockMarketService(
+                new Dictionary<string, StockTimeSeries>(
+                    StringComparer.OrdinalIgnoreCase)
+                {
+                    ["TTWO"] = stockTimeSeries,
+                    ["QQQ"] = incompleteBenchmark
+                });
+
+        var service = new GtaEventImpactService(
+            new FakeGtaEventRepository(gtaEvent),
+            stockMarketService);
+
+        GtaEventImpactResult? result =
+            await service.CalculateAsync(
+                eventId,
+                "TTWO");
+
+        Assert.NotNull(result);
+        Assert.True(result.IsAvailable);
+        Assert.False(result.BenchmarkIsAvailable);
+        Assert.NotNull(result.BenchmarkUnavailableReason);
+        Assert.Null(result.SameDayExcessReturnPercent);
     }
 
     [Fact]
@@ -96,7 +180,9 @@ public sealed class GtaEventImpactServiceTests
             new FakeGtaEventRepository(null);
 
         var stockMarketService =
-            new FakeStockMarketService(null);
+            new FakeStockMarketService(
+                new Dictionary<string, StockTimeSeries>(
+                    StringComparer.OrdinalIgnoreCase));
 
         var service = new GtaEventImpactService(
             gtaEventRepository,
@@ -108,6 +194,54 @@ public sealed class GtaEventImpactServiceTests
                 "TTWO");
 
         Assert.Null(result);
+    }
+
+    private static StockTimeSeries CreateTimeSeries(
+        DateTime previousDate,
+        decimal previousClose,
+        decimal eventClose,
+        decimal day1Close,
+        decimal day5Close,
+        decimal day30Close)
+    {
+        var values = new List<StockTimeSeriesPoint>();
+
+        for (int index = 0; index <= 31; index++)
+        {
+            decimal close = previousClose + index;
+
+            if (index == 1)
+            {
+                close = eventClose;
+            }
+            else if (index == 2)
+            {
+                close = day1Close;
+            }
+            else if (index == 6)
+            {
+                close = day5Close;
+            }
+            else if (index == 31)
+            {
+                close = day30Close;
+            }
+
+            values.Add(new StockTimeSeriesPoint
+            {
+                DateTime = previousDate.AddDays(index),
+                Open = close,
+                Close = close,
+                Volume = 1000 + index
+            });
+        }
+
+        return new StockTimeSeries
+        {
+            Exchange = "NASDAQ",
+            ExchangeTimezone = "America/New_York",
+            Values = values
+        };
     }
 
     private sealed class FakeGtaEventRepository
@@ -155,12 +289,14 @@ public sealed class GtaEventImpactServiceTests
     private sealed class FakeStockMarketService
         : IStockMarketService
     {
-        private readonly StockTimeSeries? _timeSeries;
+        private readonly IReadOnlyDictionary<string, StockTimeSeries>
+            _timeSeriesBySymbol;
 
         public FakeStockMarketService(
-            StockTimeSeries? timeSeries)
+            IReadOnlyDictionary<string, StockTimeSeries>
+                timeSeriesBySymbol)
         {
-            _timeSeries = timeSeries;
+            _timeSeriesBySymbol = timeSeriesBySymbol;
         }
 
         public Task<StockQuote> GetLatestQuoteAsync(
@@ -176,10 +312,13 @@ public sealed class GtaEventImpactServiceTests
             StockTimeSeriesQuery query,
             CancellationToken cancellationToken = default)
         {
-            StockTimeSeries timeSeries =
-                _timeSeries ??
+            if (!_timeSeriesBySymbol.TryGetValue(
+                    symbol,
+                    out StockTimeSeries? timeSeries))
+            {
                 throw new InvalidOperationException(
-                    "The time series was not configured for this test.");
+                    $"No time series was configured for {symbol}.");
+            }
 
             return Task.FromResult(timeSeries);
         }

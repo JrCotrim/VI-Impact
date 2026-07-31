@@ -9,10 +9,21 @@ namespace VIImpact.Application.Interfaces;
 public interface IGtaEventImpactService
 {
     /// <summary>
-    /// Calculates the stock-price movement before and after an event.
+    /// Calculates the stock-price movement using QQQ as the
+    /// default market benchmark.
     /// </summary>
     Task<GtaEventImpactResult?> CalculateAsync(
         Guid eventId,
         string symbol,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Calculates the stock-price movement and compares it with
+    /// the informed market benchmark.
+    /// </summary>
+    Task<GtaEventImpactResult?> CalculateAsync(
+        Guid eventId,
+        string symbol,
+        string benchmarkSymbol,
         CancellationToken cancellationToken = default);
 }
