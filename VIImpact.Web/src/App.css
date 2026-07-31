@@ -7688,3 +7688,811 @@ a {
   }
 }
 
+/* =========================================================
+   Ranking, timeline and summary-card refinements
+   ========================================================= */
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Ranking title and data-availability transparency. */
+.impact-ranking-result-count {
+  display: grid;
+  gap: 2px;
+  max-width: 340px;
+  font-size: 0.64rem;
+  line-height: 1.3;
+}
+
+.impact-ranking-result-count span:first-child {
+  color: var(--dark-panel-secondary);
+  font-weight: 750;
+}
+
+.impact-ranking-result-count span:not(:first-child) {
+  color: #8490a8;
+}
+
+.impact-ranking-panel.date-ordered
+  .impact-ranking-title-row h2 {
+  color: var(--dark-panel-primary);
+}
+
+.impact-ranking-panel.date-ordered
+  .impact-ranking-item {
+  grid-template-columns:
+    48px 46px minmax(0, 1fr) auto;
+}
+
+.impact-ranking-date-order {
+  display: inline-grid;
+  min-width: 44px;
+  height: 28px;
+  place-items: center;
+  padding: 0 5px;
+  border: 1px solid rgba(131, 153, 199, 0.22);
+  border-radius: 7px;
+  color: #cbd4e7;
+  background: rgba(25, 35, 61, 0.78);
+  font-size: 0.61rem;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.impact-ranking-copy > strong {
+  display: -webkit-box;
+  margin-bottom: 6px;
+  overflow: hidden;
+  line-height: 1.23;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.impact-ranking-note {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.impact-ranking-note > span:last-child {
+  display: grid;
+  gap: 4px;
+}
+
+.impact-ranking-note strong {
+  color: #f0b6d6;
+  font-size: 0.67rem;
+  font-weight: 750;
+}
+
+.impact-ranking-note-icon {
+  display: inline-grid;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  border: 1px solid rgba(255, 93, 177, 0.34);
+  border-radius: 50%;
+  color: #ff78bd;
+  background: rgba(242, 49, 147, 0.1);
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+/* Timeline can follow the chart range or show the full catalog. */
+.timeline-mode-selector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  margin: -3px 0 11px;
+  padding: 4px;
+  border: 1px solid rgba(132, 153, 199, 0.18);
+  border-radius: 9px;
+  background: rgba(7, 16, 34, 0.48);
+}
+
+.timeline-mode-selector button {
+  min-height: 31px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--dark-panel-secondary);
+  background: transparent;
+  font-size: 0.62rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.timeline-mode-selector button:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.timeline-mode-selector button.active {
+  color: #ff7fbe;
+  border-color: rgba(255, 73, 166, 0.4);
+  background: rgba(242, 49, 147, 0.12);
+}
+
+/* Volume average reference line. */
+.volume-bars {
+  overflow: visible;
+}
+
+.volume-average-marker {
+  position: absolute;
+  z-index: 4;
+  right: -3px;
+  left: -3px;
+  height: 0;
+  border-top: 1px dashed rgba(255, 238, 151, 0.92);
+  pointer-events: none;
+}
+
+.volume-average-marker em {
+  position: absolute;
+  right: 0;
+  bottom: 3px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  color: #fff0a8;
+  background: rgba(21, 26, 48, 0.84);
+  font-size: 0.48rem;
+  font-style: normal;
+  font-weight: 850;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Market-closed update card. */
+.update-card .market-closed-summary {
+  display: grid !important;
+  align-content: center;
+  align-items: initial;
+  gap: 6px;
+}
+
+.update-card .market-closed-value {
+  padding-left: 58px;
+  font-size: clamp(1.25rem, 1.65vw, 1.72rem);
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+}
+
+.update-session-details {
+  display: grid;
+  max-width: none;
+  gap: 3px;
+  margin: 0;
+  padding-left: 58px;
+  font-size: 0.66rem;
+  line-height: 1.15;
+}
+
+.update-session-details span {
+  display: block;
+  white-space: nowrap;
+}
+
+/* Light theme variants. */
+:root:not([data-theme='night'])
+  .impact-ranking-date-order {
+  color: #344158;
+  border-color: rgba(51, 65, 85, 0.18);
+  background: #e8edf5;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-result-count span:first-child {
+  color: #526078;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-result-count span:not(:first-child) {
+  color: #76839a;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-note strong {
+  color: #a21c5d;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-note-icon {
+  color: #d91173;
+  border-color: rgba(230, 0, 122, 0.28);
+  background: rgba(230, 0, 122, 0.06);
+}
+
+:root:not([data-theme='night'])
+  .timeline-mode-selector {
+  border-color: rgba(11, 19, 43, 0.12);
+  background: rgba(255, 255, 255, 0.76);
+}
+
+:root:not([data-theme='night'])
+  .timeline-mode-selector button {
+  color: #65728c;
+}
+
+:root:not([data-theme='night'])
+  .timeline-mode-selector button:hover {
+  color: #15213a;
+  background: rgba(11, 19, 43, 0.04);
+}
+
+:root:not([data-theme='night'])
+  .timeline-mode-selector button.active {
+  color: #d91173;
+  border-color: rgba(230, 0, 122, 0.28);
+  background: rgba(230, 0, 122, 0.07);
+}
+
+:root:not([data-theme='night'])
+  .volume-average-marker {
+  border-top-color: rgba(164, 113, 0, 0.75);
+}
+
+:root:not([data-theme='night'])
+  .volume-average-marker em {
+  color: #775100;
+  background: rgba(255, 248, 214, 0.94);
+}
+
+/* Keep the new controls usable at narrower widths. */
+@media (max-width: 1450px) {
+  .impact-ranking-result-count {
+    max-width: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .impact-ranking-panel.date-ordered
+    .impact-ranking-item {
+    grid-template-columns:
+      45px 42px minmax(0, 1fr);
+  }
+
+  .impact-ranking-date-order {
+    min-width: 42px;
+  }
+
+  .timeline-mode-selector button {
+    padding: 0 5px;
+    font-size: 0.58rem;
+  }
+
+  .update-card .market-closed-value,
+  .update-session-details {
+    padding-left: 46px;
+  }
+}
+
+/* =========================================================
+   Final layout, ranking footer and light-theme contrast fixes
+   ========================================================= */
+
+/* The dashboard grid owns the floating collapsed launcher. */
+.dashboard-content {
+  position: relative;
+}
+
+/* Open ranking: fixed header/filter rows, scrollable results and
+   a separate methodological footer that never covers the list. */
+.impact-ranking-panel.complete {
+  display: grid;
+  grid-template-rows:
+    auto
+    auto
+    auto
+    auto
+    auto
+    minmax(0, 1fr)
+    auto;
+  overflow: hidden;
+}
+
+.impact-ranking-panel.complete
+  .impact-ranking-list {
+  min-height: 0;
+  padding-right: 5px;
+  padding-bottom: 18px;
+  scroll-padding-bottom: 18px;
+  overflow-y: auto;
+}
+
+.impact-ranking-panel.complete
+  .impact-ranking-note {
+  position: static;
+  z-index: 2;
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 1px solid rgba(131, 153, 199, 0.16);
+  background: transparent;
+}
+
+/* Collapsed state: remove the third grid column and float a
+   horizontal launcher over the far-right application edge. */
+@media (min-width: 1451px) {
+  .dashboard-content.ranking-collapsed,
+  .dashboard-content.ranking-collapsed.has-expanded-event {
+    --collapsed-ranking-right-gutter:
+      max(
+        28px,
+        calc((100vw - 1660px) / 2 + 28px)
+      );
+
+    width:
+      calc(
+        100% +
+        var(--collapsed-ranking-right-gutter)
+      );
+    margin-right:
+      calc(
+        -1 *
+        var(--collapsed-ranking-right-gutter)
+      );
+    padding-right: 138px;
+    grid-template-columns:
+      minmax(0, 1.65fr)
+      minmax(380px, 0.88fr);
+  }
+
+  .dashboard-content.ranking-collapsed
+    .impact-ranking-panel.collapsed {
+    position: absolute;
+    z-index: 12;
+    top: 50%;
+    right: 0;
+    display: block;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    transform: translateY(-50%);
+  }
+
+  .dashboard-content.ranking-collapsed
+    .impact-ranking-expand-button {
+    display: inline-flex;
+    width: auto;
+    min-width: 122px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 14px;
+    border-radius: 12px 0 0 12px;
+    writing-mode: initial;
+    transform: none;
+    box-shadow:
+      -8px 8px 22px rgba(4, 9, 22, 0.2);
+  }
+
+  .dashboard-content.ranking-collapsed
+    .impact-ranking-expand-button strong {
+    font-size: 0.68rem;
+    letter-spacing: 0.035em;
+    text-transform: none;
+    writing-mode: initial;
+    transform: none;
+  }
+
+  .dashboard-content.ranking-collapsed
+    .impact-ranking-expand-button > span {
+    font-size: 0.95rem;
+  }
+}
+
+/* Keep a regular in-flow launcher in stacked layouts. */
+@media (max-width: 1450px) {
+  .dashboard-content.ranking-collapsed,
+  .dashboard-content.ranking-collapsed.has-expanded-event {
+    width: auto;
+    margin-right: 0;
+    padding-right: 0;
+  }
+
+  .impact-ranking-panel.collapsed {
+    position: static;
+    transform: none;
+  }
+
+  .impact-ranking-panel.collapsed
+    .impact-ranking-expand-button {
+    display: inline-flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .impact-ranking-panel.collapsed
+    .impact-ranking-expand-button strong {
+    writing-mode: initial;
+    transform: none;
+  }
+}
+
+/* Stronger small-text and divider contrast in the light theme. */
+:root:not([data-theme='night'])
+  .impact-ranking-note {
+  color: #526078;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-panel.complete
+    .impact-ranking-note {
+  border-top-color: rgba(51, 65, 85, 0.16);
+}
+
+:root:not([data-theme='night'])
+  .events-count,
+:root:not([data-theme='night'])
+  .event-metadata,
+:root:not([data-theme='night'])
+  .impact-ranking-copy small,
+:root:not([data-theme='night'])
+  .impact-ranking-result-count {
+  color: #58677f;
+}
+
+:root:not([data-theme='night'])
+  .chart-panel
+    .recharts-cartesian-axis-tick-value {
+  fill: #536178;
+}
+
+:root:not([data-theme='night'])
+  .chart-panel
+    .recharts-cartesian-grid line {
+  stroke: rgba(74, 89, 121, 0.16);
+}
+
+/* =========================================================
+   Ajustes do card de volume e do card de atualização
+   ========================================================= */
+
+.volume-average-marker em {
+  display: none;
+}
+
+.update-card .market-closed-summary {
+  display: grid !important;
+  justify-items: start;
+  align-content: center;
+  gap: 10px;
+}
+
+.update-card .market-closed-value {
+  padding-left: 58px;
+  line-height: 1.05;
+}
+
+.update-session-details {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 58px;
+  font-size: 0.68rem;
+}
+
+.update-session-row {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: baseline;
+  column-gap: 10px;
+}
+
+.update-session-label {
+  color: var(--dark-panel-secondary);
+  font-weight: 700;
+}
+
+.update-session-value {
+  color: var(--dark-panel-primary);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+:root:not([data-theme='night']) .update-session-label {
+  color: #61708a;
+}
+
+:root:not([data-theme='night']) .update-session-value {
+  color: #16233f;
+}
+
+/* =========================================================
+   Volta da aba lateral vertical do ranking
+   ========================================================= */
+
+@media (min-width: 1451px) {
+  .dashboard-content.ranking-collapsed
+    .impact-ranking-panel.collapsed {
+    position: absolute;
+    z-index: 12;
+    top: 50%;
+    right: 0;
+    display: flex;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    transform: translateY(-50%);
+  }
+
+  .dashboard-content.ranking-collapsed
+    .impact-ranking-expand-button {
+    display: inline-flex;
+    min-width: 58px;
+    min-height: 250px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 18px 10px;
+    border-radius: 16px 0 0 16px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    box-shadow:
+      -8px 8px 22px rgba(4, 9, 22, 0.2);
+  }
+
+  .dashboard-content.ranking-collapsed
+    .impact-ranking-expand-button strong {
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  .dashboard-content.ranking-collapsed
+    .impact-ranking-expand-button > span {
+    font-size: 0.95rem;
+    transform: rotate(180deg);
+  }
+}
+
+@media (max-width: 1450px) {
+  .impact-ranking-panel.collapsed
+    .impact-ranking-expand-button {
+    writing-mode: initial;
+    text-orientation: initial;
+  }
+
+  .impact-ranking-panel.collapsed
+    .impact-ranking-expand-button strong,
+  .impact-ranking-panel.collapsed
+    .impact-ranking-expand-button > span {
+    transform: none;
+  }
+}
+
+/* =========================================================
+   Refino final: card de atualização e volume negociado
+   ========================================================= */
+
+/* Remove totalmente a linha de média do card de volume. */
+.volume-average-marker {
+  display: none !important;
+}
+
+/* Reorganiza o estado de mercado fechado para uma hierarquia limpa. */
+.update-card .market-closed-summary {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.update-card .market-closed-value {
+  padding-left: 0;
+  font-size: clamp(1.05rem, 1.9vw, 1.7rem);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  white-space: normal;
+}
+
+.update-session-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding-left: 0;
+  font-size: 0.74rem;
+}
+
+.update-session-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.update-session-label {
+  color: var(--dark-panel-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.update-session-inline-value {
+  color: var(--dark-panel-primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+:root:not([data-theme='night']) .update-session-label {
+  color: #61708a;
+}
+
+:root:not([data-theme='night']) .update-session-inline-value {
+  color: #16233f;
+}
+
+/* =========================================================
+   Ranking — refinamentos finais de texto e legibilidade
+   ========================================================= */
+
+.impact-ranking-result-count {
+  display: grid;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.impact-ranking-eligible-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.impact-ranking-eligible-summary strong {
+  color: var(--dark-panel-primary);
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.impact-ranking-eligible-summary > span {
+  color: var(--dark-panel-secondary);
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.impact-ranking-unavailable-count {
+  width: fit-content;
+  color: #aeb8ce;
+  border-bottom: 1px dotted rgba(174, 184, 206, 0.55);
+  font-size: 0.58rem;
+  font-weight: 750;
+  cursor: help;
+}
+
+.impact-ranking-unavailable-count:focus-visible {
+  color: #ffffff;
+  border-bottom-color: #ff69b4;
+  outline: none;
+}
+
+.impact-ranking-filtered-count {
+  color: #ff8ac6;
+  font-size: 0.6rem;
+  font-weight: 750;
+}
+
+.impact-ranking-filtered-count strong {
+  font-weight: 950;
+}
+
+/* Keep every result fully scrollable above the methodological footer. */
+.impact-ranking-panel.complete
+  .impact-ranking-list {
+  padding-bottom: 44px;
+  scroll-padding-bottom: 44px;
+}
+
+.impact-ranking-panel.complete
+  .impact-ranking-note {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding-top: 9px;
+  font-size: 0.59rem;
+  line-height: 1.35;
+}
+
+.impact-ranking-note strong {
+  display: block;
+  margin-top: 3px;
+}
+
+/* Slightly stronger category/date contrast. */
+.impact-ranking-category {
+  color: #ffacd5;
+  border-color: rgba(255, 112, 187, 0.34);
+  background: rgba(237, 54, 148, 0.16);
+}
+
+.impact-ranking-metadata small {
+  color: #b4bfd3;
+  font-weight: 750;
+}
+
+/* Preserve the selected-item treatment and make the left indicator clearer. */
+.impact-ranking-item.selected {
+  border-color: rgba(255, 67, 163, 0.88) !important;
+  box-shadow:
+    inset 4px 0 0 #ff43a3,
+    0 8px 20px rgba(226, 31, 132, 0.18);
+}
+
+/* Light theme */
+:root:not([data-theme='night'])
+  .impact-ranking-eligible-summary strong {
+  color: #15213a;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-eligible-summary > span {
+  color: #596880;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-unavailable-count {
+  color: #66758c;
+  border-bottom-color: rgba(83, 97, 120, 0.55);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-unavailable-count:focus-visible {
+  color: #c51168;
+  border-bottom-color: #e6007a;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-filtered-count {
+  color: #c51168;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-category {
+  color: #9d174d;
+  border-color: rgba(190, 24, 93, 0.26);
+  background: rgba(219, 39, 119, 0.09);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-metadata small {
+  color: #5d6b82;
+}
+

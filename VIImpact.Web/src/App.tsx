@@ -44,8 +44,14 @@ type ImpactRankingDirection =
   | 'DOWN'
 
 type ImpactRankingSort =
-  | 'ABSOLUTE'
+  | 'IMPACT_DESC'
+  | 'IMPACT_ASC'
   | 'RECENT'
+  | 'OLDEST'
+
+type TimelineMode =
+  | 'PERIOD'
+  | 'ALL'
 
 const impactRankingPeriodOptions: Array<{
   value: ImpactRankingPeriod
@@ -300,6 +306,163 @@ function normalizeRankingSearchText(
     .trim()
 }
 
+function formatRankingOrderDate(
+  dateText: string,
+): string {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: 'UTC',
+  }).format(parseUtcDate(dateText))
+}
+
+interface TimeZoneDateParts {
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+}
+
+function getTimeZoneDateParts(
+  date: Date,
+  timeZone: string,
+): TimeZoneDateParts {
+  const parts =
+    new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+      timeZone,
+    }).formatToParts(date)
+
+  const values = new Map(
+    parts.map((part) => [
+      part.type,
+      part.value,
+    ]),
+  )
+
+  return {
+    year: Number(values.get('year')),
+    month: Number(values.get('month')),
+    day: Number(values.get('day')),
+    hour: Number(values.get('hour')),
+    minute: Number(values.get('minute')),
+  }
+}
+
+function createDateInTimeZone(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  timeZone: string,
+): Date {
+  const expectedTimestamp = Date.UTC(
+    year,
+    month - 1,
+    day,
+    hour,
+    minute,
+  )
+
+  let resolvedTimestamp =
+    expectedTimestamp
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const resolvedParts =
+      getTimeZoneDateParts(
+        new Date(resolvedTimestamp),
+        timeZone,
+      )
+
+    const resolvedWallTimestamp =
+      Date.UTC(
+        resolvedParts.year,
+        resolvedParts.month - 1,
+        resolvedParts.day,
+        resolvedParts.hour,
+        resolvedParts.minute,
+      )
+
+    resolvedTimestamp +=
+      expectedTimestamp -
+      resolvedWallTimestamp
+  }
+
+  return new Date(resolvedTimestamp)
+}
+
+function getNextRegularSessionLabel(
+  referenceTimestamp: number,
+  timeZone: string,
+): string {
+  const referenceParts =
+    getTimeZoneDateParts(
+      new Date(referenceTimestamp),
+      timeZone,
+    )
+
+  const minutesSinceMidnight =
+    referenceParts.hour * 60 +
+    referenceParts.minute
+
+  const candidateDate = new Date(
+    Date.UTC(
+      referenceParts.year,
+      referenceParts.month - 1,
+      referenceParts.day,
+    ),
+  )
+
+  const isWeekend =
+    candidateDate.getUTCDay() === 0 ||
+    candidateDate.getUTCDay() === 6
+
+  if (
+    isWeekend ||
+    minutesSinceMidnight >=
+      9 * 60 + 30
+  ) {
+    candidateDate.setUTCDate(
+      candidateDate.getUTCDate() + 1,
+    )
+  }
+
+  while (
+    candidateDate.getUTCDay() === 0 ||
+    candidateDate.getUTCDay() === 6
+  ) {
+    candidateDate.setUTCDate(
+      candidateDate.getUTCDate() + 1,
+    )
+  }
+
+  const nextSession =
+    createDateInTimeZone(
+      candidateDate.getUTCFullYear(),
+      candidateDate.getUTCMonth() + 1,
+      candidateDate.getUTCDate(),
+      9,
+      30,
+      timeZone,
+    )
+
+  return new Intl.DateTimeFormat(
+    'pt-BR',
+    {
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    },
+  ).format(nextSession)
+}
+
 function getImpactValueClassName(
   value: number | null,
 ): string {
@@ -528,29 +691,70 @@ function createSparklinePoints(
     .join(' ')
 }
 
-function createVolumeBars(
+interface VolumeVisualization {
+  bars: number[]
+  averageHeight: number | null
+}
+
+function createVolumeVisualization(
   quotes: StockQuote[],
-): number[] {
+  averageVolume: number | null,
+): VolumeVisualization {
   const volumes = getSortedQuotes(quotes)
     .slice(-13)
     .map((quote) => quote.volume)
 
   if (volumes.length === 0) {
-    return [20, 34, 26, 42, 30, 48, 36]
+    return {
+      bars: [
+        20,
+        34,
+        26,
+        42,
+        30,
+        48,
+        36,
+      ],
+      averageHeight: null,
+    }
   }
 
   const maximumVolume =
-    Math.max(...volumes) || 1
+    Math.max(
+      ...volumes,
+      averageVolume ?? 0,
+    ) || 1
 
-  return volumes.map(
+  const bars = volumes.map(
     (volume) =>
       Math.max(
-        10,
+        7,
         Math.round(
           (volume / maximumVolume) * 48,
         ),
       ),
   )
+
+  const averageHeight =
+    averageVolume &&
+    averageVolume > 0
+      ? Math.max(
+          5,
+          Math.min(
+            48,
+            Math.round(
+              (averageVolume /
+                maximumVolume) *
+                48,
+            ),
+          ),
+        )
+      : null
+
+  return {
+    bars,
+    averageHeight,
+  }
 }
 
 function formatUpdatedAgo(
@@ -905,7 +1109,14 @@ function App() {
   const [
     impactRankingSort,
     setImpactRankingSort,
-  ] = useState<ImpactRankingSort>('ABSOLUTE')
+  ] = useState<ImpactRankingSort>(
+    'IMPACT_DESC',
+  )
+
+  const [
+    timelineMode,
+    setTimelineMode,
+  ] = useState<TimelineMode>('PERIOD')
 
   const [
     isImpactRankingLoading,
@@ -1581,9 +1792,10 @@ function App() {
       dashboard.quotes,
     )
 
-  const volumeBars =
-    createVolumeBars(
+  const volumeVisualization =
+    createVolumeVisualization(
       dashboard.quotes,
+      averageVolume30Sessions,
     )
 
   const exchangeName =
@@ -1596,6 +1808,12 @@ function App() {
   const marketStatus =
     getMarketStatus(
       latestQuote,
+      currentTimestamp,
+      exchangeTimezone,
+    )
+
+  const nextRegularSessionLabel =
+    getNextRegularSessionLabel(
       currentTimestamp,
       exchangeTimezone,
     )
@@ -1623,6 +1841,44 @@ function App() {
             firstEvent.occurredAtUtc,
           ).getTime(),
       )
+
+  const chartTimestamps =
+    timeSeries?.values.map((value) =>
+      parseUtcDate(
+        value.dateTimeUtc,
+      ).getTime(),
+    ) ?? []
+
+  const chartStartTimestamp =
+    chartTimestamps.length > 0
+      ? Math.min(...chartTimestamps)
+      : null
+
+  const chartEndTimestamp =
+    chartTimestamps.length > 0
+      ? Math.max(...chartTimestamps)
+      : null
+
+  const timelineEvents =
+    timelineMode === 'ALL' ||
+    chartStartTimestamp === null ||
+    chartEndTimestamp === null
+      ? occurredEvents
+      : occurredEvents.filter(
+          (gtaEvent) => {
+            const eventTimestamp =
+              parseUtcDate(
+                gtaEvent.occurredAtUtc,
+              ).getTime()
+
+            return (
+              eventTimestamp >=
+                chartStartTimestamp &&
+              eventTimestamp <=
+                chartEndTimestamp
+            )
+          },
+        )
 
   const rankingEntries = impactRanking
     .flatMap((impact) => {
@@ -1662,19 +1918,34 @@ function App() {
       ]
     })
 
+  const impactRankingCategoryCounts =
+    rankingEntries.reduce(
+      (counts, entry) => {
+        counts.set(
+          entry.categoryLabel,
+          (counts.get(
+            entry.categoryLabel,
+          ) ?? 0) + 1,
+        )
+
+        return counts
+      },
+      new Map<string, number>(),
+    )
+
   const impactRankingCategories =
     Array.from(
-      new Set<string>(
-        rankingEntries.map(
-          (entry) => entry.categoryLabel,
+      impactRankingCategoryCounts.keys(),
+    ).sort(
+      (
+        firstCategory,
+        secondCategory,
+      ) =>
+        firstCategory.localeCompare(
+          secondCategory,
+          'pt-BR',
         ),
-      ),
-    ).sort((firstCategory, secondCategory) =>
-    firstCategory.localeCompare(
-      secondCategory,
-      'pt-BR',
-    ),
-  )
+    )
 
   const normalizedRankingSearch =
     normalizeRankingSearchText(
@@ -1735,15 +2006,57 @@ function App() {
         )
       }
 
-      return (
+      if (impactRankingSort === 'OLDEST') {
+        return (
+          parseUtcDate(
+            firstEntry.gtaEvent.occurredAtUtc,
+          ).getTime() -
+          parseUtcDate(
+            secondEntry.gtaEvent.occurredAtUtc,
+          ).getTime()
+        )
+      }
+
+      const impactDifference =
         Math.abs(
           secondEntry.impactValue,
         ) -
         Math.abs(
           firstEntry.impactValue,
         )
-      )
+
+      return impactRankingSort ===
+        'IMPACT_ASC'
+        ? -impactDifference
+        : impactDifference
     })
+
+  const isImpactRankingOrder =
+    impactRankingSort ===
+      'IMPACT_DESC' ||
+    impactRankingSort ===
+      'IMPACT_ASC'
+
+  const rankingPeriodLabel =
+    impactRankingPeriodOptions.find(
+      (periodOption) =>
+        periodOption.value ===
+        selectedRankingPeriod,
+    )?.label.toLowerCase() ??
+    'período selecionado'
+
+  const unavailableRankingEventCount =
+    Math.max(
+      0,
+      occurredEvents.length -
+        rankingEntries.length,
+    )
+
+  const hasActiveRankingFilters =
+    impactRankingDirection !== 'ALL' ||
+    impactRankingCategory !== 'ALL' ||
+    normalizedRankingSearch.length > 0
+
 
   return (
     <div className="app-shell">
@@ -2016,7 +2329,7 @@ function App() {
               className="volume-bars"
               aria-hidden="true"
             >
-              {volumeBars.map(
+              {volumeVisualization.bars.map(
                 (height, index) => (
                   <span
                     key={`${height}-${index}`}
@@ -2025,6 +2338,17 @@ function App() {
                     }}
                   />
                 ),
+              )}
+
+              {volumeVisualization
+                .averageHeight !== null && (
+                <div
+                  className="volume-average-marker"
+                  style={{
+                    bottom:
+                      `${volumeVisualization.averageHeight}px`,
+                  }}
+                />
               )}
             </div>
 
@@ -2051,24 +2375,73 @@ function App() {
               </span>
             </div>
 
-            <div className="summary-card-main summary-card-main-stacked">
-              <strong className="time-value">
-                {formatTime(
-                  latestQuote.recordedAtUtc,
-                )}
-              </strong>
+            <div
+              className={[
+                'summary-card-main',
+                'summary-card-main-stacked',
+                marketStatus ===
+                'Mercado fechado'
+                  ? 'market-closed-summary'
+                  : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
+              {marketStatus ===
+              'Mercado fechado' ? (
+                <>
+                  <strong className="market-closed-value">
+                    Mercado fechado
+                  </strong>
 
-              <span className="summary-card-context update-age">
-                {formatUpdatedAgo(
-                  latestQuote.recordedAtUtc,
-                  currentTimestamp,
-                )}
-              </span>
+                  <div className="summary-card-context update-session-details">
+                    <div className="update-session-row">
+                      <span className="update-session-label">
+                        Último dado:
+                      </span>
+
+                      <span className="update-session-inline-value">
+                        {formatTime(
+                          latestQuote.recordedAtUtc,
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="update-session-row">
+                      <span className="update-session-label">
+                        Próxima sessão:
+                      </span>
+
+                      <span className="update-session-inline-value">
+                        {nextRegularSessionLabel}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <strong className="time-value">
+                    {formatTime(
+                      latestQuote.recordedAtUtc,
+                    )}
+                  </strong>
+
+                  <span className="summary-card-context update-age">
+                    {formatUpdatedAgo(
+                      latestQuote.recordedAtUtc,
+                      currentTimestamp,
+                    )}
+                  </span>
+                </>
+              )}
             </div>
 
             <small>
               <span className="live-dot" />
-              Horário local
+              {marketStatus ===
+              'Mercado fechado'
+                ? 'Sessão regular da Nasdaq'
+                : 'Horário local'}
             </small>
           </article>
         </section>
@@ -2188,12 +2561,56 @@ function App() {
                 </h2>
               </div>
 
-              <span className="events-count">
-                {occurredEvents.length}{' '}
-                {occurredEvents.length === 1
+              <span
+                className="events-count"
+                title={
+                  timelineMode === 'PERIOD'
+                    ? `${timelineEvents.length} de ${occurredEvents.length} eventos estão no período exibido pelo gráfico.`
+                    : `${occurredEvents.length} eventos cadastrados.`
+                }
+              >
+                {timelineEvents.length}{' '}
+                {timelineEvents.length === 1
                   ? 'evento'
                   : 'eventos'}
+                {timelineMode === 'PERIOD'
+                  ? ' no período'
+                  : ''}
               </span>
+            </div>
+
+            <div
+              className="timeline-mode-selector"
+              role="group"
+              aria-label="Eventos exibidos na linha do tempo"
+            >
+              <button
+                className={
+                  timelineMode === 'PERIOD'
+                    ? 'active'
+                    : ''
+                }
+                type="button"
+                onClick={() =>
+                  setTimelineMode('PERIOD')
+                }
+              >
+                No período do gráfico
+              </button>
+
+              <button
+                className={
+                  timelineMode === 'ALL'
+                    ? 'active'
+                    : ''
+                }
+                type="button"
+                onClick={() =>
+                  setTimelineMode('ALL')
+                }
+              >
+                Todos os eventos
+              </button>
             </div>
 
             <div
@@ -2202,8 +2619,8 @@ function App() {
               onPointerDown={cancelTimelineReturn}
               onWheel={cancelTimelineReturn}
             >
-              {occurredEvents.length > 0 ? (
-                occurredEvents.map(
+              {timelineEvents.length > 0 ? (
+                timelineEvents.map(
                   (gtaEvent) => {
                     const eventStyle =
                       getGtaEventPresentation(
@@ -2590,12 +3007,15 @@ function App() {
               ) : (
                 <article className="empty-event-card">
                   <h3>
-                    Nenhum evento cadastrado
+                    {timelineMode === 'PERIOD'
+                      ? 'Nenhum evento neste período'
+                      : 'Nenhum evento cadastrado'}
                   </h3>
 
                   <p>
-                    Ainda não existem eventos
-                    relacionados ao GTA VI.
+                    {timelineMode === 'PERIOD'
+                      ? 'Altere o período do gráfico ou selecione “Todos os eventos”.'
+                      : 'Ainda não existem eventos relacionados ao GTA VI.'}
                   </p>
                 </article>
               )}
@@ -2609,6 +3029,11 @@ function App() {
               isImpactRankingCollapsed
                 ? 'collapsed'
                 : 'complete',
+              !isImpactRankingCollapsed
+                ? isImpactRankingOrder
+                  ? 'impact-ordered'
+                  : 'date-ordered'
+                : '',
             ]
               .filter(Boolean)
               .join(' ')}
@@ -2625,36 +3050,70 @@ function App() {
                 title="Abrir ranking completo de impacto"
               >
                 <span aria-hidden="true">↗</span>
-                <strong>Ranking</strong>
+                <strong>Abrir ranking</strong>
               </button>
             ) : (
               <>
                 <div className="panel-header impact-ranking-header">
                   <div>
                     <p className="panel-eyebrow">
-                      Ranking completo
+                      {isImpactRankingOrder
+                        ? 'Ranking completo'
+                        : 'Eventos analisados'}
                     </p>
 
                     <div className="impact-ranking-title-row">
                       <h2>
-                        Impactos dos eventos na TTWO
+                        {isImpactRankingOrder
+                          ? 'Ranking de impacto'
+                          : 'Eventos analisados'}
                       </h2>
 
-                      <span
-                        className="impact-ranking-info"
-                        tabIndex={0}
-                        title="A posição considera o tamanho absoluto da variação, independentemente de alta ou queda."
-                        aria-label="Como as posições do ranking são calculadas"
-                      >
-                        i
-                      </span>
+                      {isImpactRankingOrder && (
+                        <span
+                          className="impact-ranking-info"
+                          tabIndex={0}
+                          title="A posição considera o tamanho absoluto da variação, independentemente de alta ou queda."
+                          aria-label="Como as posições do ranking são calculadas"
+                        >
+                          i
+                        </span>
+                      )}
                     </div>
 
                     <p className="impact-ranking-result-count">
-                      {rankedEvents.length}{' '}
-                      {rankedEvents.length === 1
-                        ? 'evento encontrado'
-                        : 'eventos encontrados'}
+                      <span className="impact-ranking-eligible-summary">
+                        <strong>
+                          {rankingEntries.length} eventos elegíveis
+                        </strong>
+
+                        <span>
+                          de {occurredEvents.length} cadastrados para{' '}
+                          {rankingPeriodLabel}
+                        </span>
+                      </span>
+
+                      {unavailableRankingEventCount > 0 && (
+                        <span
+                          className="impact-ranking-unavailable-count"
+                          tabIndex={0}
+                          title="Um evento pode ficar fora do ranking quando não é elegível para análise, não possui pregões suficientes após a data ou não há cotações completas para o período selecionado."
+                        >
+                          {unavailableRankingEventCount}{' '}
+                          {unavailableRankingEventCount === 1
+                            ? 'evento sem dados suficientes'
+                            : 'eventos sem dados suficientes'}
+                        </span>
+                      )}
+
+                      {hasActiveRankingFilters && (
+                        <span className="impact-ranking-filtered-count">
+                          <strong>{rankedEvents.length}</strong>{' '}
+                          {rankedEvents.length === 1
+                            ? 'evento encontrado'
+                            : 'eventos encontrados'}
+                        </span>
+                      )}
                     </p>
                   </div>
 
@@ -2784,7 +3243,9 @@ function App() {
                             key={category}
                             value={category}
                           >
-                            {category}
+                            {category} ({impactRankingCategoryCounts.get(
+                              category,
+                            ) ?? 0})
                           </option>
                         ),
                       )}
@@ -2802,11 +3263,17 @@ function App() {
                         )
                       }
                     >
-                      <option value="ABSOLUTE">
-                        Maior impacto absoluto
+                      <option value="IMPACT_DESC">
+                        Maior variação absoluta
+                      </option>
+                      <option value="IMPACT_ASC">
+                        Menor variação absoluta
                       </option>
                       <option value="RECENT">
                         Mais recentes
+                      </option>
+                      <option value="OLDEST">
+                        Mais antigos
                       </option>
                     </select>
                   </label>
@@ -2892,17 +3359,35 @@ function App() {
                               )
                             }
                             aria-label={
-                              `Abrir ${gtaEvent.title} no gráfico`
+                              `Abrir ${gtaEvent.title} no gráfico. ${gtaEvent.description}`
+                            }
+                            aria-describedby={
+                              `ranking-description-${gtaEvent.id}`
                             }
                             aria-pressed={isSelected}
-                            title={gtaEvent.title}
+                            title={
+                              `${gtaEvent.title}\n\n${gtaEvent.description}`
+                            }
                           >
-                            <span
-                              className={`impact-ranking-position position-${index + 1}`}
-                              title="A posição considera o tamanho absoluto da variação, independentemente de alta ou queda."
-                            >
-                              {index + 1}
-                            </span>
+                            {isImpactRankingOrder ? (
+                              <span
+                                className={`impact-ranking-position position-${index + 1}`}
+                                title="A posição considera o tamanho absoluto da variação, independentemente de alta ou queda."
+                              >
+                                {index + 1}
+                              </span>
+                            ) : (
+                              <span
+                                className="impact-ranking-date-order"
+                                title={formatGtaEventDate(
+                                  gtaEvent.occurredAtUtc,
+                                )}
+                              >
+                                {formatRankingOrderDate(
+                                  gtaEvent.occurredAtUtc,
+                                )}
+                              </span>
+                            )}
 
                             <span
                               className={`impact-ranking-icon ${eventStyle.className}`}
@@ -2930,6 +3415,12 @@ function App() {
                                 </small>
                               </span>
 
+                              <span
+                                className="visually-hidden"
+                                id={`ranking-description-${gtaEvent.id}`}
+                              >
+                                {gtaEvent.description}
+                              </span>
                             </span>
 
                             <strong
@@ -2948,13 +3439,24 @@ function App() {
                 </div>
 
                 <p className="impact-ranking-note">
-                  A posição considera a maior variação absoluta da TTWO em{' '}
-                  {impactRankingPeriodOptions.find(
-                    (periodOption) =>
-                      periodOption.value ===
-                      selectedRankingPeriod,
-                  )?.label.toLowerCase()}
-                  , independentemente de alta ou queda.
+                  <span
+                    className="impact-ranking-note-icon"
+                    aria-hidden="true"
+                  >
+                    i
+                  </span>
+
+                  <span>
+                    {isImpactRankingOrder
+                      ? `Ordenado pela maior variação absoluta da TTWO em ${rankingPeriodLabel}.`
+                      : impactRankingSort === 'RECENT'
+                        ? 'Ordenado do evento mais recente para o mais antigo.'
+                        : 'Ordenado do evento mais antigo para o mais recente.'}
+
+                    <strong>
+                      Movimentos observados não comprovam causalidade.
+                    </strong>
+                  </span>
                 </p>
               </>
             )}

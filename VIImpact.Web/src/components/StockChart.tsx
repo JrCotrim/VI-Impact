@@ -608,13 +608,21 @@ function formatAxisDate(
   }
 
   if (rangeInDays <= 45) {
-    return new Intl.DateTimeFormat(
+    const date = new Date(timestamp)
+    const day = new Intl.DateTimeFormat(
       'pt-BR',
       {
         day: '2-digit',
+      },
+    ).format(date)
+    const month = new Intl.DateTimeFormat(
+      'pt-BR',
+      {
         month: 'short',
       },
-    ).format(new Date(timestamp))
+    ).format(date)
+
+    return `${day} ${month}`
   }
 
   if (rangeInDays <= 200) {
@@ -633,6 +641,64 @@ function formatAxisDate(
       year: '2-digit',
     },
   ).format(new Date(timestamp))
+}
+
+interface AxisDateTickProps {
+  x?: number
+  y?: number
+  index?: number
+  payload?: {
+    value?: number
+  }
+  rangeInDays: number
+  totalTicks: number
+}
+
+function AxisDateTick({
+  x = 0,
+  y = 0,
+  index = 0,
+  payload,
+  rangeInDays,
+  totalTicks,
+}: AxisDateTickProps) {
+  const timestamp = Number(payload?.value)
+
+  if (!Number.isFinite(timestamp)) {
+    return null
+  }
+
+  const isFirstTick = index === 0
+  const isLastTick =
+    index === totalTicks - 1
+
+  const textAnchor = isFirstTick
+    ? 'start'
+    : isLastTick
+      ? 'end'
+      : 'middle'
+
+  const adjustedX = isFirstTick
+    ? x + 4
+    : isLastTick
+      ? x - 4
+      : x
+
+  return (
+    <text
+      x={adjustedX}
+      y={y + 4}
+      fill="var(--secondary-text)"
+      fontSize={11}
+      fontWeight={600}
+      textAnchor={textAnchor}
+    >
+      {formatAxisDate(
+        timestamp,
+        rangeInDays,
+      )}
+    </text>
+  )
 }
 
 function formatTooltipDate(
@@ -2380,15 +2446,28 @@ export function StockChart({
       ),
     [endTimestamp, startTimestamp],
   )
+  const axisTickCount = Math.max(
+    3,
+    Math.min(
+      6,
+      Math.floor(
+        Math.max(
+          chartSize.width - 110,
+          300,
+        ) / 125,
+      ),
+    ),
+  )
   const axisTicks = useMemo(
     () =>
       createAxisTicks(
         viewportPoints,
         startTimestamp,
         endTimestamp,
-        7,
+        axisTickCount,
       ),
     [
+      axisTickCount,
       endTimestamp,
       startTimestamp,
       viewportPoints,
@@ -2998,9 +3077,9 @@ export function StockChart({
           data={renderPoints}
           margin={{
             top: chartTopMargin,
-            right: 14,
+            right: 24,
             bottom: 26,
-            left: 12,
+            left: 22,
           }}
         >
           <CartesianGrid
@@ -3033,19 +3112,22 @@ export function StockChart({
             ]}
             allowDataOverflow
             ticks={axisTicks}
-            interval={0}
-            tickFormatter={(timestamp: unknown) =>
-              formatAxisDate(
-                Number(timestamp),
-                chartRangeInDays,
-              )
-            }
-            tick={{
-              fill:
-                'var(--secondary-text)',
-              fontSize: 12,
-              fontWeight: 600,
+            interval="preserveStartEnd"
+            minTickGap={28}
+            padding={{
+              left: 8,
+              right: 8,
             }}
+            tick={
+              <AxisDateTick
+                rangeInDays={
+                  chartRangeInDays
+                }
+                totalTicks={
+                  axisTicks.length
+                }
+              />
+            }
             axisLine={{
               stroke:
                 'var(--border-color)',
