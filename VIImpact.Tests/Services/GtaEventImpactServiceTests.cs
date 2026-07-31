@@ -2,6 +2,7 @@
 using VIImpact.Application.Models;
 using VIImpact.Application.Services;
 using VIImpact.Domain.Entities;
+using VIImpact.Domain.Enums;
 
 namespace VIImpact.Tests.Services;
 
@@ -11,7 +12,7 @@ namespace VIImpact.Tests.Services;
 public sealed class GtaEventImpactServiceTests
 {
     [Fact]
-    public async Task CalculateAsync_WhenQuotesExist_ReturnsCalculatedImpact()
+    public async Task CalculateAsync_WhenTimeSeriesExists_ReturnsCalculatedImpact()
     {
         Guid eventId = Guid.NewGuid();
 
@@ -30,40 +31,48 @@ public sealed class GtaEventImpactServiceTests
             Title = "GTA VI trailer announced",
             Description = "Test event.",
             SourceUrl = "https://example.com",
-            OccurredAtUtc = eventDateUtc
+            OccurredAtUtc = eventDateUtc,
+            DatePrecision = GtaEventDatePrecision.ExactTime,
+            Status = GtaEventStatus.Occurred,
+            IsImpactAnalysisEligible = true
         };
 
-        var quoteBefore = new StockQuote
+        var previousSession = new StockTimeSeriesPoint
         {
-            Id = Guid.NewGuid(),
-            Symbol = "TTWO",
-            Price = 100m,
-            ChangePercent = 0m,
-            Volume = 1000,
-            RecordedAtUtc = eventDateUtc.AddMinutes(-5)
+            DateTime = eventDateUtc.Date.AddDays(-1),
+            Open = 99m,
+            Close = 100m,
+            Volume = 1000
         };
 
-        var quoteAfter = new StockQuote
+        var eventSession = new StockTimeSeriesPoint
         {
-            Id = Guid.NewGuid(),
-            Symbol = "TTWO",
-            Price = 110m,
-            ChangePercent = 10m,
-            Volume = 2000,
-            RecordedAtUtc = eventDateUtc.AddMinutes(5)
+            DateTime = eventDateUtc.Date,
+            Open = 101m,
+            Close = 110m,
+            Volume = 2000
+        };
+
+        var timeSeries = new StockTimeSeries
+        {
+            Exchange = "NASDAQ",
+            ExchangeTimezone = "America/New_York",
+            Values =
+            [
+                previousSession,
+                eventSession
+            ]
         };
 
         var gtaEventRepository =
             new FakeGtaEventRepository(gtaEvent);
 
-        var stockQuoteRepository =
-            new FakeStockQuoteRepository(
-                quoteBefore,
-                quoteAfter);
+        var stockMarketService =
+            new FakeStockMarketService(timeSeries);
 
         var service = new GtaEventImpactService(
             gtaEventRepository,
-            stockQuoteRepository);
+            stockMarketService);
 
         GtaEventImpactResult? result =
             await service.CalculateAsync(
@@ -71,6 +80,7 @@ public sealed class GtaEventImpactServiceTests
                 "TTWO");
 
         Assert.NotNull(result);
+        Assert.True(result.IsAvailable);
         Assert.Equal(eventId, result.EventId);
         Assert.Equal("GTA VI trailer announced", result.EventTitle);
         Assert.Equal(100m, result.PriceBefore);
@@ -85,14 +95,12 @@ public sealed class GtaEventImpactServiceTests
         var gtaEventRepository =
             new FakeGtaEventRepository(null);
 
-        var stockQuoteRepository =
-            new FakeStockQuoteRepository(
-                null,
-                null);
+        var stockMarketService =
+            new FakeStockMarketService(null);
 
         var service = new GtaEventImpactService(
             gtaEventRepository,
-            stockQuoteRepository);
+            stockMarketService);
 
         GtaEventImpactResult? result =
             await service.CalculateAsync(
@@ -144,52 +152,36 @@ public sealed class GtaEventImpactServiceTests
         }
     }
 
-    private sealed class FakeStockQuoteRepository
-        : IStockQuoteRepository
+    private sealed class FakeStockMarketService
+        : IStockMarketService
     {
-        private readonly StockQuote? _quoteBefore;
-        private readonly StockQuote? _quoteAfter;
+        private readonly StockTimeSeries? _timeSeries;
 
-        public FakeStockQuoteRepository(
-            StockQuote? quoteBefore,
-            StockQuote? quoteAfter)
+        public FakeStockMarketService(
+            StockTimeSeries? timeSeries)
         {
-            _quoteBefore = quoteBefore;
-            _quoteAfter = quoteAfter;
+            _timeSeries = timeSeries;
         }
 
-        public Task<bool> AddIfNewAsync(
-            StockQuote stockQuote,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(true);
-        }
-
-        public Task<IReadOnlyList<StockQuote>> GetHistoryAsync(
+        public Task<StockQuote> GetLatestQuoteAsync(
             string symbol,
-            int limit,
             CancellationToken cancellationToken = default)
         {
-            IReadOnlyList<StockQuote> quotes =
-                Array.Empty<StockQuote>();
-
-            return Task.FromResult(quotes);
+            throw new NotSupportedException(
+                "This test does not use the latest-quote operation.");
         }
 
-        public Task<StockQuote?> GetNearestBeforeAsync(
+        public Task<StockTimeSeries> GetTimeSeriesAsync(
             string symbol,
-            DateTime dateUtc,
+            StockTimeSeriesQuery query,
             CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(_quoteBefore);
-        }
+            StockTimeSeries timeSeries =
+                _timeSeries ??
+                throw new InvalidOperationException(
+                    "The time series was not configured for this test.");
 
-        public Task<StockQuote?> GetNearestAfterAsync(
-            string symbol,
-            DateTime dateUtc,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(_quoteAfter);
+            return Task.FromResult(timeSeries);
         }
     }
 }
