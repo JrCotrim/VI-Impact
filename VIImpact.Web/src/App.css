@@ -7366,3 +7366,325 @@ a {
   }
 }
 
+/* =========================================================
+   Complete impact ranking
+   ========================================================= */
+
+.impact-ranking-panel.complete {
+  min-width: 360px;
+}
+
+.impact-ranking-panel.complete
+  .impact-ranking-header {
+  flex: 0 0 auto;
+}
+
+.impact-ranking-result-count {
+  margin: 5px 0 0;
+  color: var(--dark-panel-secondary);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.impact-ranking-direction {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.impact-ranking-direction button {
+  min-height: 31px;
+  padding: 0 8px;
+  border: 1px solid rgba(132, 153, 199, 0.2);
+  border-radius: 8px;
+  color: var(--dark-panel-secondary);
+  background: rgba(7, 16, 34, 0.52);
+  font-size: 0.64rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.impact-ranking-direction button:hover,
+.impact-ranking-direction button.active {
+  color: #ff82c2;
+  border-color: rgba(255, 82, 170, 0.42);
+  background: rgba(242, 49, 147, 0.12);
+}
+
+.impact-ranking-direction button.positive {
+  color: #45e1a0;
+  border-color: rgba(69, 225, 160, 0.26);
+  background: rgba(25, 170, 109, 0.05);
+}
+
+.impact-ranking-direction button.positive:hover,
+.impact-ranking-direction button.positive.active {
+  color: #45e1a0;
+  border-color: rgba(69, 225, 160, 0.4);
+  background: rgba(25, 170, 109, 0.12);
+}
+
+.impact-ranking-direction button.negative {
+  color: #ff718f;
+  border-color: rgba(255, 113, 143, 0.28);
+  background: rgba(221, 49, 93, 0.05);
+}
+
+.impact-ranking-direction button.negative:hover,
+.impact-ranking-direction button.negative.active {
+  color: #ff718f;
+  border-color: rgba(255, 113, 143, 0.42);
+  background: rgba(221, 49, 93, 0.12);
+}
+
+.impact-ranking-filter-row {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.impact-ranking-select {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.impact-ranking-select > span {
+  color: var(--dark-panel-secondary);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.impact-ranking-select select {
+  width: 100%;
+  min-width: 0;
+  height: 35px;
+  padding: 0 28px 0 9px;
+  border: 1px solid rgba(132, 153, 199, 0.2);
+  border-radius: 8px;
+  color: var(--dark-panel-primary);
+  background: #0b172e;
+  font-size: 0.63rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.impact-ranking-search {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  min-height: 38px;
+  margin-bottom: 10px;
+  padding: 0 9px;
+  border: 1px solid rgba(132, 153, 199, 0.2);
+  border-radius: 9px;
+  color: var(--dark-panel-secondary);
+  background: rgba(7, 16, 34, 0.58);
+}
+
+.impact-ranking-search > span {
+  font-size: 1rem;
+}
+
+.impact-ranking-search input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: var(--dark-panel-primary);
+  background: transparent;
+  font-size: 0.67rem;
+}
+
+.impact-ranking-search input::placeholder {
+  color: #77839d;
+}
+
+.impact-ranking-panel.complete
+  .impact-ranking-list {
+  padding-right: 3px;
+}
+
+.impact-ranking-panel.complete
+  .impact-ranking-item {
+  min-height: 78px;
+}
+
+.impact-ranking-position[class*='position-'] {
+  flex: 0 0 auto;
+}
+
+/* Only the first three positions use medal styling. */
+.impact-ranking-position:not(.position-1):not(.position-2):not(.position-3) {
+  color: #dce2f1;
+  border-color: rgba(137, 153, 194, 0.22);
+  background: rgba(29, 39, 68, 0.85);
+  background-image: none;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-result-count {
+  color: #65728c;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-direction button,
+:root:not([data-theme='night'])
+  .impact-ranking-select select,
+:root:not([data-theme='night'])
+  .impact-ranking-search {
+  color: #52607a;
+  border-color: rgba(11, 19, 43, 0.13);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-direction button:hover,
+:root:not([data-theme='night'])
+  .impact-ranking-direction button.active {
+  color: #d91173;
+  border-color: rgba(230, 0, 122, 0.28);
+  background: rgba(230, 0, 122, 0.06);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-direction button.positive {
+  color: #07894f;
+  border-color: rgba(7, 137, 79, 0.22);
+  background: rgba(7, 137, 79, 0.04);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-direction
+    button.positive:hover,
+:root:not([data-theme='night'])
+  .impact-ranking-direction
+    button.positive.active {
+  color: #07894f;
+  border-color: rgba(7, 137, 79, 0.28);
+  background: rgba(7, 137, 79, 0.07);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-direction button.negative {
+  color: #dc264f;
+  border-color: rgba(220, 38, 79, 0.22);
+  background: rgba(220, 38, 79, 0.04);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-direction
+    button.negative:hover,
+:root:not([data-theme='night'])
+  .impact-ranking-direction
+    button.negative.active {
+  color: #dc264f;
+  border-color: rgba(220, 38, 79, 0.28);
+  background: rgba(220, 38, 79, 0.07);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-select > span {
+  color: #65728c;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-select select,
+:root:not([data-theme='night'])
+  .impact-ranking-search input {
+  color: #0b132b;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-search input::placeholder {
+  color: #7c879c;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-position:not(.position-1):not(.position-2):not(.position-3) {
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+  border-color: #bcc7d6 !important;
+  background: #e5eaf2 !important;
+  background-image: none !important;
+}
+
+/* The collapsed launcher only contains the icon and the word Ranking. */
+.impact-ranking-expand-button {
+  grid-template-rows: auto auto;
+}
+
+.impact-ranking-expand-button small {
+  display: none !important;
+}
+
+/* Wide screens: the complete ranking uses the right sidebar space. */
+@media (min-width: 1451px) {
+  .impact-ranking-panel.complete {
+    min-width: 390px;
+  }
+
+  .dashboard-content:not(.ranking-collapsed) {
+    grid-template-columns:
+      minmax(0, 1.44fr)
+      minmax(400px, 0.82fr)
+      minmax(390px, 0.72fr);
+  }
+
+  .dashboard-content:not(.ranking-collapsed)
+    .impact-ranking-panel.complete {
+    --impact-ranking-right-gutter:
+      max(
+        28px,
+        calc((100vw - 1660px) / 2 + 28px)
+      );
+
+    width:
+      calc(
+        100% +
+        var(--impact-ranking-right-gutter)
+      );
+  }
+}
+
+/* Laptop layouts: ranking remains complete, but moves below
+   instead of compressing the timeline. */
+@media (max-width: 1450px) and (min-width: 1081px) {
+  .impact-ranking-panel.complete {
+    min-width: 0;
+  }
+
+  .impact-ranking-panel.complete
+    .impact-ranking-list {
+    max-height: 560px;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .impact-ranking-panel.complete
+    .impact-ranking-item {
+    min-height: 82px;
+  }
+}
+
+@media (max-width: 700px) {
+  .impact-ranking-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .impact-ranking-panel.complete {
+    min-width: 0;
+  }
+
+  .impact-ranking-panel.complete
+    .impact-ranking-list {
+    max-height: 600px;
+  }
+}
+

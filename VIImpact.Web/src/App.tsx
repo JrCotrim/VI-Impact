@@ -38,6 +38,15 @@ type ImpactRankingPeriod =
   | '5D'
   | '30D'
 
+type ImpactRankingDirection =
+  | 'ALL'
+  | 'UP'
+  | 'DOWN'
+
+type ImpactRankingSort =
+  | 'ABSOLUTE'
+  | 'RECENT'
+
 const impactRankingPeriodOptions: Array<{
   value: ImpactRankingPeriod
   label: string
@@ -279,6 +288,16 @@ function getRankingImpactValue(
   }
 
   return impact.day30ReturnPercent
+}
+
+function normalizeRankingSearchText(
+  value: string,
+): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+    .trim()
 }
 
 function getImpactValueClassName(
@@ -866,7 +885,27 @@ function App() {
   const [
     isImpactRankingCollapsed,
     setIsImpactRankingCollapsed,
-  ] = useState(false)
+  ] = useState(true)
+
+  const [
+    impactRankingSearch,
+    setImpactRankingSearch,
+  ] = useState('')
+
+  const [
+    impactRankingDirection,
+    setImpactRankingDirection,
+  ] = useState<ImpactRankingDirection>('ALL')
+
+  const [
+    impactRankingCategory,
+    setImpactRankingCategory,
+  ] = useState('ALL')
+
+  const [
+    impactRankingSort,
+    setImpactRankingSort,
+  ] = useState<ImpactRankingSort>('ABSOLUTE')
 
   const [
     isImpactRankingLoading,
@@ -1585,7 +1624,7 @@ function App() {
           ).getTime(),
       )
 
-  const rankedEvents = impactRanking
+  const rankingEntries = impactRanking
     .flatMap((impact) => {
       const gtaEvent =
         dashboard.gtaEvents.find(
@@ -1608,24 +1647,103 @@ function App() {
         return []
       }
 
+      const categoryLabel =
+        getGtaEventCategoryLabel(
+          gtaEvent,
+        ) ?? 'Não classificada'
+
       return [
         {
           gtaEvent,
           impact,
           impactValue,
+          categoryLabel,
         },
       ]
     })
-    .sort(
-      (firstEntry, secondEntry) =>
+
+  const impactRankingCategories =
+    Array.from(
+      new Set<string>(
+        rankingEntries.map(
+          (entry) => entry.categoryLabel,
+        ),
+      ),
+    ).sort((firstCategory, secondCategory) =>
+    firstCategory.localeCompare(
+      secondCategory,
+      'pt-BR',
+    ),
+  )
+
+  const normalizedRankingSearch =
+    normalizeRankingSearchText(
+      impactRankingSearch,
+    )
+
+  const rankedEvents = rankingEntries
+    .filter((entry) => {
+      if (
+        impactRankingDirection === 'UP' &&
+        entry.impactValue <= 0
+      ) {
+        return false
+      }
+
+      if (
+        impactRankingDirection === 'DOWN' &&
+        entry.impactValue >= 0
+      ) {
+        return false
+      }
+
+      if (
+        impactRankingCategory !== 'ALL' &&
+        entry.categoryLabel !==
+          impactRankingCategory
+      ) {
+        return false
+      }
+
+      if (!normalizedRankingSearch) {
+        return true
+      }
+
+      const searchableText =
+        normalizeRankingSearchText(
+          [
+            entry.gtaEvent.title,
+            entry.gtaEvent.description,
+            entry.gtaEvent.sourceName ?? '',
+            entry.categoryLabel,
+          ].join(' '),
+        )
+
+      return searchableText.includes(
+        normalizedRankingSearch,
+      )
+    })
+    .sort((firstEntry, secondEntry) => {
+      if (impactRankingSort === 'RECENT') {
+        return (
+          parseUtcDate(
+            secondEntry.gtaEvent.occurredAtUtc,
+          ).getTime() -
+          parseUtcDate(
+            firstEntry.gtaEvent.occurredAtUtc,
+          ).getTime()
+        )
+      }
+
+      return (
         Math.abs(
           secondEntry.impactValue,
         ) -
         Math.abs(
           firstEntry.impactValue,
-        ),
-    )
-    .slice(0, 5)
+        )
+      )
+    })
 
   return (
     <div className="app-shell">
@@ -2490,7 +2608,7 @@ function App() {
               'impact-ranking-panel',
               isImpactRankingCollapsed
                 ? 'collapsed'
-                : '',
+                : 'complete',
             ]
               .filter(Boolean)
               .join(' ')}
@@ -2503,24 +2621,23 @@ function App() {
                 onClick={() =>
                   setIsImpactRankingCollapsed(false)
                 }
-                aria-label="Abrir ranking de impacto"
-                title="Abrir ranking de impacto"
+                aria-label="Abrir ranking completo de impacto"
+                title="Abrir ranking completo de impacto"
               >
                 <span aria-hidden="true">↗</span>
                 <strong>Ranking</strong>
-                <small>Top 5</small>
               </button>
             ) : (
               <>
                 <div className="panel-header impact-ranking-header">
                   <div>
                     <p className="panel-eyebrow">
-                      Ranking de impacto
+                      Ranking completo
                     </p>
 
                     <div className="impact-ranking-title-row">
                       <h2>
-                        Maiores impactos na TTWO
+                        Impactos dos eventos na TTWO
                       </h2>
 
                       <span
@@ -2532,6 +2649,13 @@ function App() {
                         i
                       </span>
                     </div>
+
+                    <p className="impact-ranking-result-count">
+                      {rankedEvents.length}{' '}
+                      {rankedEvents.length === 1
+                        ? 'evento encontrado'
+                        : 'eventos encontrados'}
+                    </p>
                   </div>
 
                   <button
@@ -2576,6 +2700,133 @@ function App() {
                   )}
                 </div>
 
+                <div
+                  className="impact-ranking-direction"
+                  role="group"
+                  aria-label="Direção da variação"
+                >
+                  <button
+                    className={
+                      impactRankingDirection ===
+                      'ALL'
+                        ? 'active'
+                        : ''
+                    }
+                    type="button"
+                    onClick={() =>
+                      setImpactRankingDirection(
+                        'ALL',
+                      )
+                    }
+                  >
+                    Todos
+                  </button>
+
+                  <button
+                    className={[
+                      'positive',
+                      impactRankingDirection ===
+                      'UP'
+                        ? 'active'
+                        : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    type="button"
+                    onClick={() =>
+                      setImpactRankingDirection(
+                        'UP',
+                      )
+                    }
+                  >
+                    Altas
+                  </button>
+
+                  <button
+                    className={[
+                      'negative',
+                      impactRankingDirection ===
+                      'DOWN'
+                        ? 'active'
+                        : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    type="button"
+                    onClick={() =>
+                      setImpactRankingDirection(
+                        'DOWN',
+                      )
+                    }
+                  >
+                    Quedas
+                  </button>
+                </div>
+
+                <div className="impact-ranking-filter-row">
+                  <label className="impact-ranking-select">
+                    <span>Categoria</span>
+                    <select
+                      value={impactRankingCategory}
+                      onChange={(event) =>
+                        setImpactRankingCategory(
+                          event.target.value,
+                        )
+                      }
+                    >
+                      <option value="ALL">
+                        Todas as categorias
+                      </option>
+
+                      {impactRankingCategories.map(
+                        (category) => (
+                          <option
+                            key={category}
+                            value={category}
+                          >
+                            {category}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </label>
+
+                  <label className="impact-ranking-select">
+                    <span>Ordenar por</span>
+                    <select
+                      value={impactRankingSort}
+                      onChange={(event) =>
+                        setImpactRankingSort(
+                          event.target
+                            .value as ImpactRankingSort,
+                        )
+                      }
+                    >
+                      <option value="ABSOLUTE">
+                        Maior impacto absoluto
+                      </option>
+                      <option value="RECENT">
+                        Mais recentes
+                      </option>
+                    </select>
+                  </label>
+                </div>
+
+                <label className="impact-ranking-search">
+                  <span aria-hidden="true">⌕</span>
+                  <input
+                    type="search"
+                    value={impactRankingSearch}
+                    onChange={(event) =>
+                      setImpactRankingSearch(
+                        event.target.value,
+                      )
+                    }
+                    placeholder="Buscar evento, categoria ou fonte"
+                    aria-label="Buscar no ranking de impacto"
+                  />
+                </label>
+
                 <div className="impact-ranking-list">
                   {isImpactRankingLoading && (
                     <div className="impact-ranking-state">
@@ -2598,7 +2849,7 @@ function App() {
                     rankedEvents.length === 0 && (
                       <div className="impact-ranking-state">
                         <p>
-                          Nenhum impacto disponível para este período.
+                          Nenhum evento corresponde aos filtros selecionados.
                         </p>
                       </div>
                     )}
@@ -2610,6 +2861,7 @@ function App() {
                         {
                           gtaEvent,
                           impactValue,
+                          categoryLabel,
                         },
                         index,
                       ) => {
@@ -2617,11 +2869,6 @@ function App() {
                           getGtaEventPresentation(
                             gtaEvent,
                           )
-
-                        const categoryLabel =
-                          getGtaEventCategoryLabel(
-                            gtaEvent,
-                          ) ?? 'Não classificada'
 
                         const isSelected =
                           selectedEventId ===
@@ -2683,12 +2930,6 @@ function App() {
                                 </small>
                               </span>
 
-                              {isSelected && (
-                                <span className="impact-ranking-selected-label">
-                                  <span aria-hidden="true">●</span>
-                                  Selecionado
-                                </span>
-                              )}
                             </span>
 
                             <strong
@@ -2707,13 +2948,13 @@ function App() {
                 </div>
 
                 <p className="impact-ranking-note">
-                  Ranking pela maior variação absoluta da TTWO em{' '}
+                  A posição considera a maior variação absoluta da TTWO em{' '}
                   {impactRankingPeriodOptions.find(
                     (periodOption) =>
                       periodOption.value ===
                       selectedRankingPeriod,
                   )?.label.toLowerCase()}
-                  . Altas e quedas usam o mesmo critério de magnitude.
+                  , independentemente de alta ou queda.
                 </p>
               </>
             )}
