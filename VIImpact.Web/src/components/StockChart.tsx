@@ -36,6 +36,9 @@ import {
 
 interface StockChartProps {
   values: StockTimeSeriesPoint[]
+  benchmarkValues?: StockTimeSeriesPoint[]
+  primarySymbol?: string
+  benchmarkSymbol?: string
   events: GtaEvent[]
   selectedEventId: string | null
   onEventSelect: (gtaEvent: GtaEvent) => void
@@ -47,6 +50,9 @@ interface ChartPoint {
   low: number
   close: number
   price: number
+  primaryNormalized: number | null
+  benchmarkClose: number | null
+  benchmarkNormalized: number | null
   volume: number
   timestamp: number
 }
@@ -55,6 +61,7 @@ interface EligibleEvent {
   event: RichGtaEvent
   timestamp: number
   price: number
+  rawPrice: number
   dateKey: string
 }
 
@@ -64,6 +71,7 @@ interface EventMarker {
   presentation: GtaEventPresentation
   timestamp: number
   price: number
+  rawPrice: number
   labelSide: 'left' | 'right'
   horizontalOffset: number
   lane: number
@@ -124,6 +132,8 @@ interface StockPointTooltipProps {
   payload?: Array<{
     payload?: ChartPoint
   }>
+  primarySymbol: string
+  benchmarkSymbol: string
 }
 
 const minimumVisiblePointCount = 3
@@ -488,7 +498,7 @@ function shortenDescription(
   )}…`
 }
 
-function createChartData(
+function createRawChartData(
   values: StockTimeSeriesPoint[],
 ): ChartPoint[] {
   return values
@@ -498,6 +508,9 @@ function createChartData(
       low: value.low,
       close: value.close,
       price: value.close,
+      primaryNormalized: null,
+      benchmarkClose: null,
+      benchmarkNormalized: null,
       volume: value.volume,
       timestamp: parseGtaEventDate(
         value.dateTimeUtc,
@@ -517,6 +530,214 @@ function createChartData(
         secondPoint.timestamp,
     )
 }
+
+function getMedianTimestampInterval(
+  points: ChartPoint[],
+): number {
+  if (points.length < 2) {
+    return 24 * 60 * 60 * 1000
+  }
+
+  const intervals = points
+    .slice(1)
+    .map(
+      (point, index) =>
+        point.timestamp -
+        points[index].timestamp,
+    )
+    .filter(
+      (interval) =>
+        Number.isFinite(interval) &&
+        interval > 0,
+    )
+    .sort(
+      (firstInterval, secondInterval) =>
+        firstInterval - secondInterval,
+    )
+
+  if (intervals.length === 0) {
+    return 24 * 60 * 60 * 1000
+  }
+
+  return intervals[
+    Math.floor(intervals.length / 2)
+  ]
+}
+
+function getUtcDateKeyFromTimestamp(
+  timestamp: number,
+): string {
+  return new Date(timestamp)
+    .toISOString()
+    .slice(0, 10)
+}
+
+function findNearestBenchmarkPoint(
+  points: ChartPoint[],
+  timestamp: number,
+  maximumDistance: number,
+): ChartPoint | null {
+  if (points.length === 0) {
+    return null
+  }
+
+  let lowerIndex = 0
+  let upperIndex = points.length - 1
+
+  while (lowerIndex <= upperIndex) {
+    const middleIndex = Math.floor(
+      (lowerIndex + upperIndex) / 2,
+    )
+    const middleTimestamp =
+      points[middleIndex].timestamp
+
+    if (middleTimestamp === timestamp) {
+      return points[middleIndex]
+    }
+
+    if (middleTimestamp < timestamp) {
+      lowerIndex = middleIndex + 1
+    } else {
+      upperIndex = middleIndex - 1
+    }
+  }
+
+  const candidates = [
+    points[upperIndex],
+    points[lowerIndex],
+  ].filter(
+    (point): point is ChartPoint =>
+      point !== undefined,
+  )
+
+  const nearestPoint = candidates.sort(
+    (firstPoint, secondPoint) =>
+      Math.abs(
+        firstPoint.timestamp - timestamp,
+      ) -
+      Math.abs(
+        secondPoint.timestamp - timestamp,
+      ),
+  )[0]
+
+  if (
+    !nearestPoint ||
+    Math.abs(
+      nearestPoint.timestamp - timestamp,
+    ) > maximumDistance
+  ) {
+    return null
+  }
+
+  return nearestPoint
+}
+
+function createChartData(
+  values: StockTimeSeriesPoint[],
+  benchmarkValues: StockTimeSeriesPoint[],
+): ChartPoint[] {
+  const primaryPoints =
+    createRawChartData(values)
+  const benchmarkPoints =
+    createRawChartData(benchmarkValues)
+
+  if (
+    primaryPoints.length === 0 ||
+    benchmarkPoints.length === 0
+  ) {
+    return primaryPoints
+  }
+
+  const primaryBase = primaryPoints[0].close
+
+  if (
+    !Number.isFinite(primaryBase) ||
+    primaryBase <= 0
+  ) {
+    return primaryPoints
+  }
+
+  const primaryInterval =
+    getMedianTimestampInterval(primaryPoints)
+  const benchmarkInterval =
+    getMedianTimestampInterval(benchmarkPoints)
+  const usesDailyDates =
+    primaryInterval >= 12 * 60 * 60 * 1000
+
+  const benchmarkPointsByDate = new Map(
+    benchmarkPoints.map((point) => [
+      getUtcDateKeyFromTimestamp(
+        point.timestamp,
+      ),
+      point,
+    ]),
+  )
+
+  const maximumIntradayDistance = Math.max(
+    5 * 60 * 1000,
+    primaryInterval * 0.75,
+    benchmarkInterval * 0.75,
+  )
+
+  const matchedBenchmarkPoints =
+    primaryPoints.map((primaryPoint) => {
+      if (usesDailyDates) {
+        return (
+          benchmarkPointsByDate.get(
+            getUtcDateKeyFromTimestamp(
+              primaryPoint.timestamp,
+            ),
+          ) ?? null
+        )
+      }
+
+      return findNearestBenchmarkPoint(
+        benchmarkPoints,
+        primaryPoint.timestamp,
+        maximumIntradayDistance,
+      )
+    })
+
+  const firstMatchedBenchmarkPoint =
+    matchedBenchmarkPoints.find(
+      (point): point is ChartPoint =>
+        point !== null &&
+        point.close > 0,
+    )
+
+  if (!firstMatchedBenchmarkPoint) {
+    return primaryPoints
+  }
+
+  const benchmarkBase =
+    firstMatchedBenchmarkPoint.close
+
+  return primaryPoints.map(
+    (primaryPoint, index) => {
+      const benchmarkPoint =
+        matchedBenchmarkPoints[index]
+      const primaryNormalized =
+        (primaryPoint.close / primaryBase) * 100
+      const benchmarkNormalized =
+        benchmarkPoint &&
+        benchmarkPoint.close > 0
+          ? (benchmarkPoint.close /
+              benchmarkBase) *
+            100
+          : null
+
+      return {
+        ...primaryPoint,
+        price: primaryNormalized,
+        primaryNormalized,
+        benchmarkClose:
+          benchmarkPoint?.close ?? null,
+        benchmarkNormalized,
+      }
+    },
+  )
+}
+
 
 function createAxisTicks(
   points: ChartPoint[],
@@ -566,8 +787,14 @@ function createPriceDomain(
     return [0, 1]
   }
 
-  const prices = points.map(
-    (point) => point.price,
+  const prices = points.flatMap(
+    (point) =>
+      point.benchmarkNormalized === null
+        ? [point.price]
+        : [
+            point.price,
+            point.benchmarkNormalized,
+          ],
   )
   const minimumPrice = Math.min(...prices)
   const maximumPrice = Math.max(...prices)
@@ -669,6 +896,8 @@ function createEligibleEvents(
           chartData[nearestPointIndex].timestamp,
         price:
           chartData[nearestPointIndex].price,
+        rawPrice:
+          chartData[nearestPointIndex].close,
         dateKey: eventDate
           .toISOString()
           .slice(0, 10),
@@ -776,6 +1005,7 @@ function createEventMarkers(
           timestamp:
             eligibleEvent.timestamp,
           price: eligibleEvent.price,
+          rawPrice: eligibleEvent.rawPrice,
           labelSide:
             chartPosition >= 0.7
               ? 'left'
@@ -870,14 +1100,103 @@ function createImpactWindow(
   }
 }
 
+function formatNormalizedValue(
+  value: number,
+): string {
+  return value.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+function formatNormalizedChange(
+  value: number,
+): string {
+  const change = value - 100
+  const formattedChange = Math.abs(
+    change,
+  ).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+
+  if (change > 0) {
+    return `+${formattedChange}%`
+  }
+
+  if (change < 0) {
+    return `-${formattedChange}%`
+  }
+
+  return '0,00%'
+}
+
 function StockPointTooltip({
   active,
   payload,
+  primarySymbol,
+  benchmarkSymbol,
 }: StockPointTooltipProps) {
   const point = payload?.[0]?.payload
 
   if (!active || !point) {
     return null
+  }
+
+  const primaryNormalized =
+    point.primaryNormalized
+
+  if (primaryNormalized !== null) {
+    const primaryClassName =
+      primaryNormalized >= 100
+        ? 'positive-value'
+        : 'negative-value'
+    const benchmarkClassName =
+      point.benchmarkNormalized === null
+        ? ''
+        : point.benchmarkNormalized >= 100
+          ? 'positive-value'
+          : 'negative-value'
+
+    return (
+      <div className="stock-point-tooltip stock-point-tooltip-compact">
+        <strong className="stock-point-tooltip-date">
+          {formatTooltipDate(
+            point.timestamp,
+            14,
+          )}
+        </strong>
+
+        <div className="stock-point-tooltip-grid stock-point-tooltip-grid-compact">
+          <span>{primarySymbol}</span>
+          <strong className={primaryClassName}>
+            {formatNormalizedValue(
+              primaryNormalized,
+            )}{' '}
+            ·{' '}
+            {formatNormalizedChange(
+              primaryNormalized,
+            )}
+          </strong>
+
+          <span>{benchmarkSymbol}</span>
+          <strong className={benchmarkClassName}>
+            {point.benchmarkNormalized === null
+              ? 'Sem dado'
+              : `${formatNormalizedValue(
+                  point.benchmarkNormalized,
+                )} · ${formatNormalizedChange(
+                  point.benchmarkNormalized,
+                )}`}
+          </strong>
+
+          <span>Preço de {primarySymbol}</span>
+          <strong>
+            {formatCurrency(point.close)}
+          </strong>
+        </div>
+      </div>
+    )
   }
 
   const priceChange = point.close - point.open
@@ -909,6 +1228,7 @@ function StockPointTooltip({
     </div>
   )
 }
+
 
 function EventIconGlyph({
   iconKey,
@@ -1348,7 +1668,7 @@ function EventTooltipCard({
 
         <strong>
           US${' '}
-          {marker.price.toLocaleString(
+          {marker.rawPrice.toLocaleString(
             'pt-BR',
             {
               minimumFractionDigits: 2,
@@ -1548,6 +1868,9 @@ function EventMarkerShape({
 
 export function StockChart({
   values,
+  benchmarkValues = [],
+  primarySymbol = 'TTWO',
+  benchmarkSymbol = 'QQQ',
   events,
   selectedEventId,
   onEventSelect,
@@ -1584,9 +1907,18 @@ export function StockChart({
     })
 
   const chartData = useMemo(
-    () => createChartData(values),
-    [values],
+    () =>
+      createChartData(
+        values,
+        benchmarkValues,
+      ),
+    [benchmarkValues, values],
   )
+  const isComparisonMode =
+    chartData.some(
+      (point) =>
+        point.benchmarkNormalized !== null,
+    )
   const totalPointCount = chartData.length
   const normalizedViewport = useMemo(
     () =>
@@ -2085,7 +2417,11 @@ export function StockChart({
         minHeight: 0,
       }}
       tabIndex={0}
-      aria-label="Gráfico de linha interativo. Use o scroll para aproximar ou afastar e arraste para navegar pelas datas."
+      aria-label={
+        isComparisonMode
+          ? `Gráfico comparativo normalizado de ${primarySymbol} e ${benchmarkSymbol}. Use o scroll para aproximar ou afastar e arraste para navegar pelas datas.`
+          : 'Gráfico de linha interativo. Use o scroll para aproximar ou afastar e arraste para navegar pelas datas.'
+      }
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={finishDragging}
@@ -2176,7 +2512,12 @@ export function StockChart({
 
           {!activeEventTooltip && (
             <Tooltip
-              content={<StockPointTooltip />}
+              content={
+                <StockPointTooltip
+                  primarySymbol={primarySymbol}
+                  benchmarkSymbol={benchmarkSymbol}
+                />
+              }
               cursor={{
                 stroke:
                   'var(--secondary-text)',
@@ -2198,7 +2539,11 @@ export function StockChart({
           <Line
             type="linear"
             dataKey="price"
-            name="Fechamento"
+            name={
+              isComparisonMode
+                ? primarySymbol
+                : 'Fechamento'
+            }
             stroke="var(--accent-pink)"
             strokeWidth={2.4}
             dot={false}
@@ -2212,6 +2557,28 @@ export function StockChart({
             }}
             isAnimationActive={false}
           />
+
+          {isComparisonMode && (
+            <Line
+              type="linear"
+              dataKey="benchmarkNormalized"
+              name={benchmarkSymbol}
+              stroke="var(--accent-blue)"
+              strokeWidth={2.1}
+              strokeDasharray="7 4"
+              dot={false}
+              activeDot={{
+                r: 4,
+                fill:
+                  'var(--accent-blue)',
+                stroke:
+                  'var(--panel-background)',
+                strokeWidth: 2,
+              }}
+              connectNulls={false}
+              isAnimationActive={false}
+            />
+          )}
 
           {eventMarkers.map((marker) => (
             <ReferenceDot

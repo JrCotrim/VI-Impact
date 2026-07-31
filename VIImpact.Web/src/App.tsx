@@ -212,6 +212,48 @@ function formatSignedPercent(
   return `${formattedValue}%`
 }
 
+
+function calculateSeriesReturnPercent(
+  timeSeries: StockTimeSeries | null,
+): number | null {
+  if (
+    !timeSeries ||
+    timeSeries.values.length < 2
+  ) {
+    return null
+  }
+
+  const sortedValues = [
+    ...timeSeries.values,
+  ].sort(
+    (firstValue, secondValue) =>
+      parseUtcDate(
+        firstValue.dateTimeUtc,
+      ).getTime() -
+      parseUtcDate(
+        secondValue.dateTimeUtc,
+      ).getTime(),
+  )
+
+  const firstClose = sortedValues[0].close
+  const lastClose =
+    sortedValues[sortedValues.length - 1].close
+
+  if (
+    !Number.isFinite(firstClose) ||
+    !Number.isFinite(lastClose) ||
+    firstClose <= 0
+  ) {
+    return null
+  }
+
+  return (
+    ((lastClose - firstClose) /
+      firstClose) *
+    100
+  )
+}
+
 function formatCompactVolume(
   value: number,
 ): string {
@@ -786,6 +828,16 @@ function App() {
     useState<StockTimeSeries | null>(null)
 
   const [
+    benchmarkTimeSeries,
+    setBenchmarkTimeSeries,
+  ] = useState<StockTimeSeries | null>(null)
+
+  const [
+    benchmarkError,
+    setBenchmarkError,
+  ] = useState<string | null>(null)
+
+  const [
     periodPerformances,
     setPeriodPerformances,
   ] = useState<StockPeriodPerformance[]>([])
@@ -1032,55 +1084,87 @@ function App() {
     const timeoutId =
       window.setTimeout(() => {
         async function loadTimeSeries() {
-          try {
-            const timeSeriesData =
-              await getStockTimeSeries(
-                'TTWO',
-                {
-                  period:
-                    selectedPeriod,
+          const requestOptions = {
+            period: selectedPeriod,
 
-                  startDate:
-                    selectedPeriod ===
-                    'CUSTOM'
-                      ? appliedCustomStartDate
-                      : undefined,
+            startDate:
+              selectedPeriod === 'CUSTOM'
+                ? appliedCustomStartDate
+                : undefined,
 
-                  endDate:
-                    selectedPeriod ===
-                    'CUSTOM'
-                      ? appliedCustomEndDate
-                      : undefined,
-                },
-              )
-
-            if (isActive) {
-              setPeriodPerformances(
-                (currentPerformances) =>
-                  mergePeriodPerformances(
-                    currentPerformances,
-                    timeSeriesData.performances,
-                    selectedPeriod,
-                  ),
-              )
-
-              setTimeSeries(
-                timeSeriesData,
-              )
-            }
-          } catch (error) {
-            if (isActive) {
-              setChartError(
-                error instanceof Error
-                  ? error.message
-                  : 'Não foi possível carregar o histórico.',
-              )
-            }
-          } finally {
-            if (isActive) {
-              setIsChartLoading(false)
-            }
+            endDate:
+              selectedPeriod === 'CUSTOM'
+                ? appliedCustomEndDate
+                : undefined,
           }
+
+          const [
+            primaryResult,
+            benchmarkResult,
+          ] = await Promise.allSettled([
+            getStockTimeSeries(
+              'TTWO',
+              requestOptions,
+            ),
+            getStockTimeSeries(
+              'QQQ',
+              requestOptions,
+            ),
+          ])
+
+          if (!isActive) {
+            return
+          }
+
+          if (
+            primaryResult.status ===
+            'rejected'
+          ) {
+            setChartError(
+              primaryResult.reason instanceof Error
+                ? primaryResult.reason.message
+                : 'Não foi possível carregar o histórico.',
+            )
+            setTimeSeries(null)
+            setBenchmarkTimeSeries(null)
+            setBenchmarkError(null)
+            setIsChartLoading(false)
+            return
+          }
+
+          const timeSeriesData =
+            primaryResult.value
+
+          setPeriodPerformances(
+            (currentPerformances) =>
+              mergePeriodPerformances(
+                currentPerformances,
+                timeSeriesData.performances,
+                selectedPeriod,
+              ),
+          )
+
+          setTimeSeries(timeSeriesData)
+          setChartError(null)
+
+          if (
+            benchmarkResult.status ===
+            'fulfilled'
+          ) {
+            setBenchmarkTimeSeries(
+              benchmarkResult.value,
+            )
+            setBenchmarkError(null)
+          } else {
+            setBenchmarkTimeSeries(null)
+            setBenchmarkError(
+              benchmarkResult.reason instanceof Error
+                ? benchmarkResult.reason.message
+                : 'O histórico do QQQ não está disponível.',
+            )
+          }
+
+          setIsChartLoading(false)
         }
 
         void loadTimeSeries()
@@ -1099,7 +1183,9 @@ function App() {
   function prepareChartReload() {
     setIsChartLoading(true)
     setChartError(null)
+    setBenchmarkError(null)
     setTimeSeries(null)
+    setBenchmarkTimeSeries(null)
   }
 
   function handlePeriodChange(
@@ -1397,6 +1483,16 @@ function App() {
           averageVolume30Sessions) *
         100
       : null
+
+  const primaryPeriodReturn =
+    calculateSeriesReturnPercent(timeSeries)
+  const benchmarkPeriodReturn =
+    calculateSeriesReturnPercent(
+      benchmarkTimeSeries,
+    )
+  const hasBenchmarkComparison =
+    benchmarkTimeSeries !== null &&
+    benchmarkTimeSeries.values.length > 0
 
   const occurredEvents =
     [...dashboard.gtaEvents]
@@ -1749,17 +1845,67 @@ function App() {
             <div className="panel-header">
               <div>
                 <p className="panel-eyebrow">
-                  {timeSeries?.symbol ??
-                    dashboard.symbol}{' '}
-                  ·{' '}
-                  {timeSeries?.exchange ??
-                    'NASDAQ'}
+                  {hasBenchmarkComparison
+                    ? `${timeSeries?.symbol ?? dashboard.symbol} × ${benchmarkTimeSeries?.symbol ?? 'QQQ'}`
+                    : `${timeSeries?.symbol ?? dashboard.symbol} · ${timeSeries?.exchange ?? 'NASDAQ'}`}
                 </p>
 
-                <h2>Gráfico de cotações</h2>
+                <h2>
+                  {hasBenchmarkComparison
+                    ? 'Desempenho comparado (base 100)'
+                    : 'Gráfico de cotações'}
+                </h2>
               </div>
 
+              {hasBenchmarkComparison && (
+                <div
+                  className="chart-comparison-legend"
+                  aria-label="Legenda da comparação"
+                >
+                  <span className="chart-comparison-item">
+                    <i className="chart-comparison-swatch primary" />
+                    <span>
+                      {timeSeries?.symbol ?? 'TTWO'}
+                    </span>
+                    <strong
+                      className={getImpactValueClassName(
+                        primaryPeriodReturn,
+                      )}
+                    >
+                      {primaryPeriodReturn === null
+                        ? '—'
+                        : formatSignedPercent(
+                            primaryPeriodReturn,
+                          )}
+                    </strong>
+                  </span>
+
+                  <span className="chart-comparison-item">
+                    <i className="chart-comparison-swatch benchmark" />
+                    <span>
+                      {benchmarkTimeSeries?.symbol ?? 'QQQ'}
+                    </span>
+                    <strong
+                      className={getImpactValueClassName(
+                        benchmarkPeriodReturn,
+                      )}
+                    >
+                      {benchmarkPeriodReturn === null
+                        ? '—'
+                        : formatSignedPercent(
+                            benchmarkPeriodReturn,
+                          )}
+                    </strong>
+                  </span>
+                </div>
+              )}
             </div>
+
+            {benchmarkError && (
+              <p className="chart-benchmark-status">
+                QQQ indisponível no momento. O gráfico continua exibindo a TTWO.
+              </p>
+            )}
 
             <ChartPeriodSelector
               selectedPeriod={
@@ -1809,6 +1955,18 @@ function App() {
                     values={
                       timeSeries.values
                     }
+                    benchmarkValues={
+                      benchmarkTimeSeries?.values ??
+                      []
+                    }
+                    primarySymbol={
+                      timeSeries.symbol ||
+                      dashboard.symbol
+                    }
+                    benchmarkSymbol={
+                      benchmarkTimeSeries?.symbol ??
+                      'QQQ'
+                    }
                     events={
                       occurredEvents
                     }
@@ -1823,9 +1981,9 @@ function App() {
             </div>
 
             <p className="chart-footnote">
-              Dados referentes ao período selecionado.
-              Cotações em{' '}
-              {timeSeries?.currency ?? 'USD'}.
+              {hasBenchmarkComparison
+                ? 'TTWO e QQQ normalizados em base 100 no início do período selecionado. Os eventos permanecem posicionados sobre a linha da TTWO.'
+                : `Dados referentes ao período selecionado. Cotações em ${timeSeries?.currency ?? 'USD'}.`}
             </p>
           </article>
 
