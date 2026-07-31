@@ -5623,3 +5623,237 @@ a {
   .event-marker-tooltip-footer {
   text-shadow: none;
 }
+
+/* =========================================================
+   Informative dashboard summary cards
+   ========================================================= */
+
+.summary-card {
+  grid-template-rows:
+    42px minmax(58px, 1fr) 18px;
+  min-height: 152px;
+  padding: 14px 16px 12px;
+  transition:
+    border-color 170ms ease,
+    box-shadow 170ms ease,
+    transform 170ms ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-1px);
+}
+
+.summary-card-heading {
+  align-items: flex-start;
+}
+
+.summary-card-heading-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.summary-card-title {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summary-card-symbol {
+  overflow: hidden;
+  color: var(--muted-text);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  letter-spacing: 0.045em;
+}
+
+.summary-card-main-stacked {
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.summary-card-main-stacked strong {
+  flex: 0 0 auto;
+}
+
+.summary-card-context {
+  position: relative;
+  z-index: 2;
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--secondary-text);
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.18;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.volume-comparison-positive {
+  color: var(--positive);
+}
+
+.volume-comparison-negative {
+  color: var(--negative);
+}
+
+.update-age {
+  font-variant-numeric: tabular-nums;
+}
+
+.live-dot.market-closed {
+  background: #8b90a4;
+  box-shadow:
+    0 0 0 2px rgba(139, 144, 164, 0.14);
+}
+
+.variation-card {
+  grid-template-rows:
+    42px minmax(58px, 1fr) 18px;
+}
+
+.variation-content {
+  align-items: center;
+}
+
+.variation-values {
+  align-content: center;
+  gap: 4px;
+}
+
+.variation-percent {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px 5px;
+  max-width: 100%;
+}
+
+.variation-period-copy {
+  color: var(--secondary-text);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.18;
+  white-space: normal;
+}
+
+.volume-card .summary-card-main {
+  padding-right: 112px;
+}
+
+.volume-card .summary-card-context {
+  max-width: 190px;
+}
+
+.volume-bars {
+  bottom: 34px;
+}
+
+@media (max-width: 1280px) {
+  .summary-card {
+    min-height: 148px;
+  }
+
+  .volume-card .summary-card-main {
+    padding-right: 106px;
+  }
+}
+
+@media (max-width: 700px) {
+  .summary-card {
+    min-height: 146px;
+  }
+
+  .summary-card-title {
+    font-size: 0.76rem;
+  }
+
+  .summary-card-main-stacked {
+    align-items: flex-start;
+  }
+
+  .volume-card .summary-card-main {
+    padding-right: 102px;
+  }
+}
+
+@media (max-width: 460px) {
+  .summary-card {
+    min-height: 142px;
+  }
+
+  .summary-card-symbol,
+  .summary-card-context,
+  .variation-period-copy {
+    white-space: normal;
+  }
+
+  .volume-card .summary-card-main {
+    padding-right: 0;
+  }
+
+  .volume-card .summary-card-context {
+    max-width: calc(100% - 78px);
+  }
+
+  .volume-bars {
+    opacity: 0.58;
+  }
+}
+
+
+/* =========================================================
+   Summary card heading and daily variation refinements
+   ========================================================= */
+
+.summary-card-heading {
+  align-items: center;
+}
+
+.summary-card-title {
+  font-size: 0.88rem;
+  line-height: 1.1;
+}
+
+.variation-percent {
+  flex-wrap: nowrap;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.variation-period-copy {
+  color: inherit;
+  font-size: 0.68rem;
+  font-weight: 750;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .summary-card-title {
+    font-size: 0.84rem;
+  }
+
+  .variation-period-copy {
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 460px) {
+  .variation-percent {
+    flex-wrap: wrap;
+  }
+}

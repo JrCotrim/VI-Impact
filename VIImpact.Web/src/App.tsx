@@ -495,6 +495,231 @@ function createVolumeBars(
   )
 }
 
+function formatUpdatedAgo(
+  dateText: string,
+  referenceTimestamp: number,
+): string {
+  const elapsedSeconds = Math.max(
+    0,
+    Math.floor(
+      (referenceTimestamp -
+        parseUtcDate(dateText).getTime()) /
+        1000,
+    ),
+  )
+
+  if (elapsedSeconds < 5) {
+    return 'Atualizado agora'
+  }
+
+  if (elapsedSeconds < 60) {
+    return `Atualizado há ${elapsedSeconds} segundos`
+  }
+
+  const elapsedMinutes =
+    Math.floor(elapsedSeconds / 60)
+
+  if (elapsedMinutes < 60) {
+    return `Atualizado há ${elapsedMinutes} min`
+  }
+
+  const elapsedHours =
+    Math.floor(elapsedMinutes / 60)
+
+  if (elapsedHours < 24) {
+    return `Atualizado há ${elapsedHours} h`
+  }
+
+  const elapsedDays =
+    Math.floor(elapsedHours / 24)
+
+  return `Atualizado há ${elapsedDays} ${
+    elapsedDays === 1 ? 'dia' : 'dias'
+  }`
+}
+
+function getDateKeyInTimeZone(
+  date: Date,
+  timeZone: string,
+): string {
+  const dateParts =
+    new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone,
+    }).formatToParts(date)
+
+  const valuesByType = new Map(
+    dateParts.map((part) => [
+      part.type,
+      part.value,
+    ]),
+  )
+
+  return [
+    valuesByType.get('year'),
+    valuesByType.get('month'),
+    valuesByType.get('day'),
+  ].join('-')
+}
+
+function getMarketStatus(
+  quote: StockQuote,
+  referenceTimestamp: number,
+  exchangeTimezone: string,
+): 'Mercado aberto' | 'Mercado fechado' {
+  const referenceDate =
+    new Date(referenceTimestamp)
+
+  const marketParts =
+    new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+      timeZone: exchangeTimezone,
+    }).formatToParts(referenceDate)
+
+  const valuesByType = new Map(
+    marketParts.map((part) => [
+      part.type,
+      part.value,
+    ]),
+  )
+
+  const weekday = valuesByType.get('weekday')
+  const hour = Number(valuesByType.get('hour'))
+  const minute = Number(valuesByType.get('minute'))
+  const minutesSinceMidnight =
+    hour * 60 + minute
+
+  const isWeekday =
+    weekday !== 'Sat' &&
+    weekday !== 'Sun'
+
+  const isRegularSession =
+    minutesSinceMidnight >= 9 * 60 + 30 &&
+    minutesSinceMidnight < 16 * 60
+
+  const marketTimestamp =
+    quote.marketTimestampUtc ??
+    quote.recordedAtUtc
+
+  const quoteAgeInMinutes =
+    (referenceTimestamp -
+      parseUtcDate(marketTimestamp).getTime()) /
+    60_000
+
+  const hasFreshMarketData =
+    quoteAgeInMinutes >= -5 &&
+    quoteAgeInMinutes <= 20
+
+  return isWeekday &&
+    isRegularSession &&
+    hasFreshMarketData
+    ? 'Mercado aberto'
+    : 'Mercado fechado'
+}
+
+function calculateAverageVolumeForPreviousSessions(
+  timeSeries: StockTimeSeries,
+  latestQuote: StockQuote,
+): number | null {
+  if (
+    timeSeries.interval.toLowerCase() !==
+    '1day'
+  ) {
+    return null
+  }
+
+  const exchangeTimezone =
+    timeSeries.exchangeTimezone ||
+    'America/New_York'
+
+  const quoteTimestamp =
+    latestQuote.marketTimestampUtc ??
+    latestQuote.recordedAtUtc
+
+  const latestMarketDateKey =
+    getDateKeyInTimeZone(
+      parseUtcDate(quoteTimestamp),
+      exchangeTimezone,
+    )
+
+  const previousSessions = [
+    ...timeSeries.values,
+  ]
+    .filter(
+      (value) =>
+        value.volume > 0 &&
+        value.dateTimeUtc.slice(0, 10) <
+          latestMarketDateKey,
+    )
+    .sort(
+      (firstValue, secondValue) =>
+        parseUtcDate(
+          firstValue.dateTimeUtc,
+        ).getTime() -
+        parseUtcDate(
+          secondValue.dateTimeUtc,
+        ).getTime(),
+    )
+    .slice(-30)
+
+  if (previousSessions.length < 30) {
+    return null
+  }
+
+  return (
+    previousSessions.reduce(
+      (totalVolume, value) =>
+        totalVolume + value.volume,
+      0,
+    ) / previousSessions.length
+  )
+}
+
+function formatVolumeComparison(
+  changePercent: number | null,
+): string {
+  if (changePercent === null) {
+    return 'Calculando média de 30 dias'
+  }
+
+  if (Math.abs(changePercent) < 0.01) {
+    return 'Na média dos últimos 30 dias'
+  }
+
+  const formattedPercent =
+    Math.abs(changePercent).toLocaleString(
+      'pt-BR',
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      },
+    )
+
+  return changePercent > 0
+    ? `+${formattedPercent}% acima da média de 30 dias`
+    : `-${formattedPercent}% abaixo da média de 30 dias`
+}
+
+function getVolumeComparisonClassName(
+  changePercent: number | null,
+): string {
+  if (
+    changePercent === null ||
+    Math.abs(changePercent) < 0.01
+  ) {
+    return 'summary-card-context'
+  }
+
+  return changePercent > 0
+    ? 'summary-card-context volume-comparison-positive'
+    : 'summary-card-context volume-comparison-negative'
+}
+
 function App() {
   const [dashboard, setDashboard] =
     useState<DashboardData | null>(null)
@@ -563,6 +788,16 @@ function App() {
   const [theme, setTheme] =
     useState<Theme>(getInitialTheme)
 
+  const [
+    currentTimestamp,
+    setCurrentTimestamp,
+  ] = useState(() => Date.now())
+
+  const [
+    averageVolume30Sessions,
+    setAverageVolume30Sessions,
+  ] = useState<number | null>(null)
+
 
   const [
     selectedEventId,
@@ -609,6 +844,41 @@ function App() {
       theme,
     )
   }, [theme])
+
+  useEffect(() => {
+    const intervalId = window.setInterval(
+      () => {
+        setCurrentTimestamp(Date.now())
+      },
+      1000,
+    )
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (
+      !dashboard ||
+      dashboard.quotes.length === 0 ||
+      !timeSeries
+    ) {
+      return
+    }
+
+    const averageVolume =
+      calculateAverageVolumeForPreviousSessions(
+        timeSeries,
+        getLatestQuote(dashboard.quotes),
+      )
+
+    if (averageVolume !== null) {
+      setAverageVolume30Sessions(
+        averageVolume,
+      )
+    }
+  }, [dashboard, timeSeries])
 
   useEffect(() => {
     if (!expandedEventId) {
@@ -1046,6 +1316,29 @@ function App() {
       dashboard.quotes,
     )
 
+  const exchangeName =
+    timeSeries?.exchange ?? 'NASDAQ'
+
+  const exchangeTimezone =
+    timeSeries?.exchangeTimezone ||
+    'America/New_York'
+
+  const marketStatus =
+    getMarketStatus(
+      latestQuote,
+      currentTimestamp,
+      exchangeTimezone,
+    )
+
+  const volumeChangePercent =
+    averageVolume30Sessions &&
+    averageVolume30Sessions > 0
+      ? ((latestQuote.volume -
+          averageVolume30Sessions) /
+          averageVolume30Sessions) *
+        100
+      : null
+
   const occurredEvents =
     [...dashboard.gtaEvents]
       .filter((gtaEvent) =>
@@ -1188,21 +1481,38 @@ function App() {
                   <path d="M12 2v20M16.5 6.5H9.75a3.25 3.25 0 0 0 0 6.5h4.5a3.25 3.25 0 0 1 0 6.5H7.5" />
                 </svg>
               </span>
-              <span>Preço atual</span>
+
+              <div className="summary-card-heading-copy">
+                <span className="summary-card-title">
+                  Preço atual
+                </span>
+                <span className="summary-card-symbol">
+                  {dashboard.symbol} · {exchangeName}
+                </span>
+              </div>
             </div>
 
-            <div className="summary-card-main">
+            <div className="summary-card-main summary-card-main-stacked">
               <strong>
                 {formatCurrency(
                   latestQuote.price,
                 )}
               </strong>
 
+              <span className="summary-card-context">
+                Último preço registrado
+              </span>
             </div>
 
             <small>
-              <span className="live-dot" />
-              Cotação mais recente
+              <span
+                className={`live-dot ${
+                  marketStatus === 'Mercado aberto'
+                    ? ''
+                    : 'market-closed'
+                }`}
+              />
+              {marketStatus}
             </small>
           </article>
 
@@ -1217,7 +1527,10 @@ function App() {
                   <path d="M14 7h5v5" />
                 </svg>
               </span>
-              <span>Variação</span>
+
+              <span className="summary-card-title">
+                Variação diária
+              </span>
             </div>
 
             <div className="variation-content">
@@ -1244,6 +1557,9 @@ function App() {
                   {formatSignedPercent(
                     latestQuote.changePercent,
                   )}
+                  <span className="variation-period-copy">
+                    desde o fechamento anterior
+                  </span>
                 </span>
               </div>
 
@@ -1267,7 +1583,7 @@ function App() {
 
             <small>
               <span className="live-dot" />
-              Últimas cotações registradas
+              Últimos registros
             </small>
           </article>
 
@@ -1281,16 +1597,28 @@ function App() {
                   <path d="M5 20V11M12 20V5M19 20V8" />
                 </svg>
               </span>
-              <span>Volume</span>
+
+              <span className="summary-card-title">
+                Volume negociado
+              </span>
             </div>
 
-            <div className="summary-card-main">
+            <div className="summary-card-main summary-card-main-stacked">
               <strong>
                 {formatCompactVolume(
                   latestQuote.volume,
                 )}
               </strong>
 
+              <span
+                className={getVolumeComparisonClassName(
+                  volumeChangePercent,
+                )}
+              >
+                {formatVolumeComparison(
+                  volumeChangePercent,
+                )}
+              </span>
             </div>
 
             <div
@@ -1311,7 +1639,7 @@ function App() {
 
             <small>
               <span className="live-dot" />
-              Volume acumulado da cotação
+              Volume acumulado do pregão
             </small>
           </article>
 
@@ -1326,16 +1654,25 @@ function App() {
                   <path d="M12 7v5l3 2" />
                 </svg>
               </span>
-              <span>Última atualização</span>
+
+              <span className="summary-card-title">
+                Última atualização
+              </span>
             </div>
 
-            <div className="summary-card-main">
+            <div className="summary-card-main summary-card-main-stacked">
               <strong className="time-value">
                 {formatTime(
                   latestQuote.recordedAtUtc,
                 )}
               </strong>
 
+              <span className="summary-card-context update-age">
+                {formatUpdatedAgo(
+                  latestQuote.recordedAtUtc,
+                  currentTimestamp,
+                )}
+              </span>
             </div>
 
             <small>
