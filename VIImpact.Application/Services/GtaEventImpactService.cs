@@ -230,6 +230,427 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
         return result;
     }
 
+    /// <summary>
+    /// Calculates all eligible event impacts from one shared primary
+    /// series and one shared benchmark series. This avoids issuing a
+    /// separate market-data request for every event in the ranking.
+    /// </summary>
+    public async Task<IReadOnlyList<GtaEventImpactResult>>
+        CalculateRankingAsync(
+            string symbol,
+            string benchmarkSymbol,
+            CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<GtaEvent> storedEvents =
+            await _gtaEventRepository.GetAllAsync(
+                cancellationToken);
+
+        GtaEvent[] eligibleEvents = storedEvents
+            .Where(gtaEvent =>
+                gtaEvent.Status == GtaEventStatus.Occurred &&
+                gtaEvent.IsImpactAnalysisEligible)
+            .OrderBy(gtaEvent =>
+                gtaEvent.PublishedAtUtc ??
+                gtaEvent.OccurredAtUtc)
+            .ToArray();
+
+        if (eligibleEvents.Length == 0)
+        {
+            return Array.Empty<GtaEventImpactResult>();
+        }
+
+        string normalizedSymbol =
+            NormalizeSymbol(symbol, "TTWO");
+
+        string normalizedBenchmarkSymbol =
+            NormalizeSymbol(
+                benchmarkSymbol,
+                DefaultBenchmarkSymbol);
+
+        DateTime earliestAnalysisDate = eligibleEvents
+            .Min(gtaEvent =>
+                gtaEvent.PublishedAtUtc ??
+                gtaEvent.OccurredAtUtc)
+            .Date;
+
+        DateTime latestAnalysisDate = eligibleEvents
+            .Max(gtaEvent =>
+                gtaEvent.PublishedAtUtc ??
+                gtaEvent.OccurredAtUtc)
+            .Date;
+
+        var query = new StockTimeSeriesQuery
+        {
+            Interval = "1day",
+            OutputSize = 5000,
+            StartDate =
+                earliestAnalysisDate.AddDays(
+                    -HistoricalWindowInDays),
+            EndDate =
+                GetQueryEndDate(latestAnalysisDate)
+        };
+
+        StockTimeSeries primaryTimeSeries =
+            await _stockMarketService.GetTimeSeriesAsync(
+                normalizedSymbol,
+                query,
+                cancellationToken);
+
+        IReadOnlyList<StockTimeSeriesPoint> primarySessions =
+            NormalizeTradingSessions(
+                primaryTimeSeries.Values);
+
+        StockTimeSeries? benchmarkTimeSeries = null;
+        IReadOnlyDictionary<DateTime, StockTimeSeriesPoint>?
+            benchmarkSessionsByDate = null;
+
+        string? benchmarkUnavailableReason = null;
+
+        try
+        {
+            benchmarkTimeSeries =
+                string.Equals(
+                    normalizedSymbol,
+                    normalizedBenchmarkSymbol,
+                    StringComparison.OrdinalIgnoreCase)
+                    ? primaryTimeSeries
+                    : await _stockMarketService.GetTimeSeriesAsync(
+                        normalizedBenchmarkSymbol,
+                        query,
+                        cancellationToken);
+
+            benchmarkSessionsByDate =
+                NormalizeTradingSessions(
+                    benchmarkTimeSeries.Values)
+                .ToDictionary(
+                    session => session.DateTime.Date);
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            benchmarkUnavailableReason =
+                "Não foi possível carregar os dados do benchmark neste momento.";
+        }
+
+        var results =
+            new List<GtaEventImpactResult>(
+                eligibleEvents.Length);
+
+        foreach (GtaEvent gtaEvent in eligibleEvents)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            GtaEventImpactResult result =
+                CalculateFromLoadedSeries(
+                    gtaEvent,
+                    normalizedSymbol,
+                    normalizedBenchmarkSymbol,
+                    primaryTimeSeries,
+                    primarySessions);
+
+            if (!result.IsAvailable)
+            {
+                results.Add(result);
+                continue;
+            }
+
+            if (
+                benchmarkTimeSeries is null ||
+                benchmarkSessionsByDate is null)
+            {
+                MarkBenchmarkUnavailable(
+                    result,
+                    benchmarkUnavailableReason ??
+                    "Não existem dados suficientes do benchmark para os pregões analisados.");
+            }
+            else
+            {
+                PopulateBenchmarkComparison(
+                    result,
+                    benchmarkTimeSeries,
+                    benchmarkSessionsByDate);
+            }
+
+            results.Add(result);
+        }
+
+        return results;
+    }
+
+    private static GtaEventImpactResult CalculateFromLoadedSeries(
+        GtaEvent gtaEvent,
+        string symbol,
+        string benchmarkSymbol,
+        StockTimeSeries primaryTimeSeries,
+        IReadOnlyList<StockTimeSeriesPoint> tradingSessions)
+    {
+        DateTime analysisTimestampUtc =
+            gtaEvent.PublishedAtUtc ??
+            gtaEvent.OccurredAtUtc;
+
+        var result = new GtaEventImpactResult
+        {
+            EventId = gtaEvent.Id,
+            EventTitle = gtaEvent.Title,
+            Symbol = symbol,
+            BenchmarkSymbol = benchmarkSymbol,
+            OccurredAtUtc = gtaEvent.OccurredAtUtc,
+            AnalysisTimestampUtc = analysisTimestampUtc,
+            UsedPublishedAtUtc =
+                gtaEvent.PublishedAtUtc.HasValue,
+            Exchange = primaryTimeSeries.Exchange,
+            ExchangeTimezone =
+                primaryTimeSeries.ExchangeTimezone
+        };
+
+        if (tradingSessions.Count < 2)
+        {
+            return MarkUnavailable(
+                result,
+                "Não existem dados históricos de mercado suficientes para este evento.");
+        }
+
+        EventMarketReference marketReference =
+            ResolveEventMarketReference(
+                gtaEvent,
+                analysisTimestampUtc,
+                primaryTimeSeries.ExchangeTimezone);
+
+        result.WasPublishedAfterMarketClose =
+            marketReference.WasAfterMarketClose;
+
+        int eventSessionIndex = FindEventSessionIndex(
+            tradingSessions,
+            marketReference.MarketDate,
+            marketReference.WasAfterMarketClose == true);
+
+        if (eventSessionIndex <= 0)
+        {
+            return MarkUnavailable(
+                result,
+                "Não foi possível localizar um pregão anterior e um pregão efetivo completos.");
+        }
+
+        StockTimeSeriesPoint previousSession =
+            tradingSessions[eventSessionIndex - 1];
+
+        StockTimeSeriesPoint eventSession =
+            tradingSessions[eventSessionIndex];
+
+        StockTimeSeriesPoint? day1Session =
+            GetSession(
+                tradingSessions,
+                eventSessionIndex + 1);
+
+        StockTimeSeriesPoint? day5Session =
+            GetSession(
+                tradingSessions,
+                eventSessionIndex + 5);
+
+        StockTimeSeriesPoint? day30Session =
+            GetSession(
+                tradingSessions,
+                eventSessionIndex + 30);
+
+        IReadOnlyList<StockTimeSeriesPoint>
+            previousVolumeSessions =
+                GetPreviousSessions(
+                    tradingSessions,
+                    eventSessionIndex,
+                    VolumeAverageSessionCount);
+
+        decimal? averageVolume =
+            CalculateAverageVolume(
+                previousVolumeSessions);
+
+        decimal? sameDayReturn =
+            CalculateReturnPercent(
+                previousSession.Close,
+                eventSession.Close);
+
+        decimal priceChange =
+            eventSession.Close -
+            previousSession.Close;
+
+        result.IsAvailable = true;
+        result.EffectiveTradingDate =
+            eventSession.DateTime;
+        result.PreviousTradingDate =
+            previousSession.DateTime;
+        result.PreviousClose =
+            previousSession.Close;
+        result.EventDayOpen =
+            eventSession.Open;
+        result.EventDayClose =
+            eventSession.Close;
+        result.EventDayVolume =
+            eventSession.Volume;
+        result.SameDayReturnPercent =
+            sameDayReturn;
+
+        result.Day1TradingDate =
+            day1Session?.DateTime;
+        result.Day1Close =
+            day1Session?.Close;
+        result.Day1ReturnPercent =
+            CalculateReturnPercent(
+                previousSession.Close,
+                day1Session?.Close);
+
+        result.Day5TradingDate =
+            day5Session?.DateTime;
+        result.Day5Close =
+            day5Session?.Close;
+        result.Day5ReturnPercent =
+            CalculateReturnPercent(
+                previousSession.Close,
+                day5Session?.Close);
+
+        result.Day30TradingDate =
+            day30Session?.DateTime;
+        result.Day30Close =
+            day30Session?.Close;
+        result.Day30ReturnPercent =
+            CalculateReturnPercent(
+                previousSession.Close,
+                day30Session?.Close);
+
+        result.AverageVolumeBefore30Sessions =
+            averageVolume;
+        result.PreviousVolumeSessionsUsed =
+            previousVolumeSessions.Count;
+        result.VolumeChangePercent =
+            CalculateVolumeChangePercent(
+                averageVolume,
+                eventSession.Volume);
+
+        result.PriceBefore =
+            previousSession.Close;
+        result.PriceBeforeRecordedAtUtc =
+            previousSession.DateTime;
+        result.PriceAfter =
+            eventSession.Close;
+        result.PriceAfterRecordedAtUtc =
+            eventSession.DateTime;
+        result.PriceChange =
+            priceChange;
+        result.PriceChangePercent =
+            sameDayReturn;
+
+        return result;
+    }
+
+    private static void PopulateBenchmarkComparison(
+        GtaEventImpactResult result,
+        StockTimeSeries benchmarkTimeSeries,
+        IReadOnlyDictionary<DateTime, StockTimeSeriesPoint>
+            benchmarkSessionsByDate)
+    {
+        if (
+            !result.PreviousTradingDate.HasValue ||
+            !result.EffectiveTradingDate.HasValue)
+        {
+            MarkBenchmarkUnavailable(
+                result,
+                "Não existem datas suficientes para comparar o benchmark.");
+            return;
+        }
+
+        result.BenchmarkExchange =
+            benchmarkTimeSeries.Exchange;
+        result.BenchmarkExchangeTimezone =
+            benchmarkTimeSeries.ExchangeTimezone;
+
+        if (
+            !TryGetSessionByDate(
+                benchmarkSessionsByDate,
+                result.PreviousTradingDate.Value,
+                out StockTimeSeriesPoint
+                    benchmarkPreviousSession) ||
+            !TryGetSessionByDate(
+                benchmarkSessionsByDate,
+                result.EffectiveTradingDate.Value,
+                out StockTimeSeriesPoint
+                    benchmarkEventSession))
+        {
+            MarkBenchmarkUnavailable(
+                result,
+                "Não existem dados suficientes do benchmark para os pregões analisados.");
+            return;
+        }
+
+        StockTimeSeriesPoint? benchmarkDay1Session =
+            GetSessionByDate(
+                benchmarkSessionsByDate,
+                result.Day1TradingDate);
+
+        StockTimeSeriesPoint? benchmarkDay5Session =
+            GetSessionByDate(
+                benchmarkSessionsByDate,
+                result.Day5TradingDate);
+
+        StockTimeSeriesPoint? benchmarkDay30Session =
+            GetSessionByDate(
+                benchmarkSessionsByDate,
+                result.Day30TradingDate);
+
+        result.BenchmarkIsAvailable = true;
+        result.BenchmarkUnavailableReason = null;
+        result.BenchmarkPreviousClose =
+            benchmarkPreviousSession.Close;
+        result.BenchmarkEventDayClose =
+            benchmarkEventSession.Close;
+        result.BenchmarkSameDayReturnPercent =
+            CalculateReturnPercent(
+                benchmarkPreviousSession.Close,
+                benchmarkEventSession.Close);
+
+        result.BenchmarkDay1Close =
+            benchmarkDay1Session?.Close;
+        result.BenchmarkDay1ReturnPercent =
+            CalculateReturnPercent(
+                benchmarkPreviousSession.Close,
+                benchmarkDay1Session?.Close);
+
+        result.BenchmarkDay5Close =
+            benchmarkDay5Session?.Close;
+        result.BenchmarkDay5ReturnPercent =
+            CalculateReturnPercent(
+                benchmarkPreviousSession.Close,
+                benchmarkDay5Session?.Close);
+
+        result.BenchmarkDay30Close =
+            benchmarkDay30Session?.Close;
+        result.BenchmarkDay30ReturnPercent =
+            CalculateReturnPercent(
+                benchmarkPreviousSession.Close,
+                benchmarkDay30Session?.Close);
+
+        result.SameDayExcessReturnPercent =
+            SubtractPercentages(
+                result.SameDayReturnPercent,
+                result.BenchmarkSameDayReturnPercent);
+
+        result.Day1ExcessReturnPercent =
+            SubtractPercentages(
+                result.Day1ReturnPercent,
+                result.BenchmarkDay1ReturnPercent);
+
+        result.Day5ExcessReturnPercent =
+            SubtractPercentages(
+                result.Day5ReturnPercent,
+                result.BenchmarkDay5ReturnPercent);
+
+        result.Day30ExcessReturnPercent =
+            SubtractPercentages(
+                result.Day30ReturnPercent,
+                result.BenchmarkDay30ReturnPercent);
+    }
+
     private async Task PopulateBenchmarkComparisonAsync(
         GtaEventImpactResult result,
         string symbol,

@@ -5875,3 +5875,1494 @@ a {
   justify-self: end;
 }
 
+/* =========================================================
+   Compact impact ranking
+   ========================================================= */
+
+.dashboard-content {
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(300px, 0.72fr)
+    minmax(270px, 0.62fr);
+}
+
+.chart-panel,
+.events-panel,
+.impact-ranking-panel {
+  min-width: 0;
+  border: 1px solid var(--dark-panel-border);
+  border-radius: 16px;
+  color: var(--dark-panel-primary);
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(55, 60, 112, 0.2),
+      transparent 34%
+    ),
+    linear-gradient(
+      145deg,
+      #0b162b,
+      var(--dark-panel-background)
+    );
+  box-shadow:
+    0 12px 28px rgba(4, 9, 22, 0.24);
+}
+
+.impact-ranking-panel {
+  display: flex;
+  min-height: 0;
+  padding: 18px;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.impact-ranking-header {
+  align-items: flex-start;
+}
+
+.impact-ranking-header h2 {
+  margin: 3px 0 0;
+  color: var(--dark-panel-primary);
+  font-size: 1.02rem;
+}
+
+.impact-ranking-periods {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgba(132, 153, 199, 0.2);
+  border-radius: 9px;
+  background: rgba(7, 16, 34, 0.64);
+}
+
+.impact-ranking-periods button {
+  min-width: 42px;
+  height: 27px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--dark-panel-secondary);
+  background: transparent;
+  font-size: 0.62rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.impact-ranking-periods button:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.impact-ranking-periods button.active {
+  color: #ff82c2;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(242, 49, 147, 0.24),
+      rgba(126, 62, 185, 0.16)
+    );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 96, 179, 0.25);
+}
+
+.impact-ranking-list {
+  display: grid;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-content: start;
+  gap: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgba(255, 68, 164, 0.72)
+    rgba(12, 23, 47, 0.7);
+}
+
+.impact-ranking-item {
+  display: grid;
+  width: 100%;
+  min-height: 69px;
+  grid-template-columns:
+    25px 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 8px;
+  border: 1px solid rgba(131, 153, 199, 0.15);
+  border-radius: 11px;
+  color: #f7f9ff;
+  background: rgba(8, 18, 37, 0.72);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.impact-ranking-item:hover {
+  border-color: rgba(255, 80, 169, 0.38);
+  background: rgba(13, 25, 49, 0.94);
+  transform: translateY(-1px);
+}
+
+.impact-ranking-position {
+  display: grid;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border: 1px solid rgba(137, 153, 194, 0.22);
+  border-radius: 50%;
+  color: #dce2f1;
+  background: rgba(29, 39, 68, 0.85);
+  font-size: 0.67rem;
+  font-weight: 900;
+}
+
+.impact-ranking-position.position-1 {
+  color: #2a1b00;
+  border-color: rgba(255, 215, 92, 0.72);
+  background:
+    linear-gradient(
+      145deg,
+      #ffe37a,
+      #d9a832
+    );
+}
+
+.impact-ranking-position.position-2 {
+  color: #1d2230;
+  border-color: rgba(226, 233, 245, 0.7);
+  background:
+    linear-gradient(
+      145deg,
+      #f5f7fb,
+      #9da7ba
+    );
+}
+
+.impact-ranking-position.position-3 {
+  color: #35180c;
+  border-color: rgba(228, 151, 100, 0.74);
+  background:
+    linear-gradient(
+      145deg,
+      #f0b68c,
+      #b66b3e
+    );
+}
+
+.impact-ranking-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 950;
+  text-shadow:
+    0 2px 8px rgba(3, 6, 17, 0.5);
+}
+
+.impact-ranking-icon.official {
+  background:
+    linear-gradient(
+      145deg,
+      #ff9b78,
+      #f048a1 52%,
+      #5c3dd8
+    );
+}
+
+.impact-ranking-icon.delay {
+  background:
+    linear-gradient(
+      145deg,
+      #4e69e7,
+      #ca3eac 55%,
+      #ff936a
+    );
+}
+
+.impact-ranking-icon.financial {
+  color: #67b5ff;
+  background:
+    linear-gradient(
+      145deg,
+      #0b1223,
+      #082b51
+    );
+}
+
+.impact-ranking-icon.news {
+  background:
+    linear-gradient(
+      145deg,
+      #ff935f,
+      #ca3d9d 55%,
+      #34309c
+    );
+}
+
+.impact-ranking-icon.market {
+  background:
+    linear-gradient(
+      145deg,
+      #1a7e9b,
+      #4a42c4 55%,
+      #db3b99
+    );
+}
+
+.impact-ranking-icon.event {
+  background:
+    linear-gradient(
+      145deg,
+      #933cdd,
+      #f0389a 55%,
+      #ff925e
+    );
+}
+
+.impact-ranking-copy {
+  min-width: 0;
+}
+
+.impact-ranking-copy strong {
+  display: -webkit-box;
+  margin: 0 0 5px;
+  overflow: hidden;
+  color: #f7f9ff;
+  font-size: 0.76rem;
+  line-height: 1.2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.impact-ranking-copy small {
+  display: block;
+  overflow: hidden;
+  color: var(--dark-panel-secondary);
+  font-size: 0.62rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.impact-ranking-value {
+  padding-left: 5px;
+  font-size: 0.84rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.impact-ranking-value.impact-positive {
+  color: #44e39d;
+}
+
+.impact-ranking-value.impact-negative {
+  color: #ff718f;
+}
+
+.impact-ranking-value.impact-neutral {
+  color: #ffc35b;
+}
+
+.impact-ranking-note {
+  flex: 0 0 auto;
+  margin: 10px 0 0;
+  color: var(--dark-panel-secondary);
+  font-size: 0.61rem;
+  line-height: 1.35;
+}
+
+.impact-ranking-state {
+  display: flex;
+  min-height: 110px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid rgba(131, 153, 199, 0.15);
+  border-radius: 11px;
+  color: var(--dark-panel-secondary);
+  background: rgba(8, 18, 37, 0.72);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.impact-ranking-state p {
+  margin: 0;
+}
+
+.impact-ranking-state.error {
+  color: #ff718f;
+}
+
+@media (min-width: 1181px) {
+  .chart-panel,
+  .events-panel,
+  .impact-ranking-panel {
+    height: 100%;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 1280px) and (min-width: 1081px) {
+  .dashboard-content {
+    grid-template-columns:
+      minmax(0, 1.35fr)
+      minmax(270px, 0.72fr)
+      minmax(245px, 0.58fr);
+    gap: 12px;
+  }
+
+  .impact-ranking-panel {
+    padding: 14px;
+  }
+
+  .impact-ranking-header {
+    gap: 8px;
+  }
+
+  .impact-ranking-periods {
+    flex-direction: column;
+  }
+
+  .impact-ranking-item {
+    grid-template-columns:
+      22px 40px minmax(0, 1fr);
+  }
+
+  .impact-ranking-value {
+    grid-column: 2 / -1;
+    justify-self: end;
+    padding-left: 0;
+  }
+
+  .impact-ranking-icon {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 1080px) {
+  .dashboard-content {
+    grid-template-columns: 1fr;
+  }
+
+  .impact-ranking-panel {
+    order: 3;
+  }
+}
+
+@media (max-width: 700px) {
+  .impact-ranking-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .impact-ranking-periods {
+    width: 100%;
+  }
+
+  .impact-ranking-periods button {
+    flex: 1 1 0;
+  }
+}
+
+/* =========================================================
+   Impact ranking — light theme
+   ========================================================= */
+
+:root:not([data-theme='night'])
+  .impact-ranking-panel {
+  color: #0b132b;
+  border-color: rgba(230, 0, 122, 0.22);
+  background: #f1f4fb;
+  box-shadow:
+    0 12px 30px rgba(11, 19, 43, 0.1),
+    0 0 0 1px rgba(0, 180, 216, 0.035);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-header h2 {
+  color: #0b132b;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-periods {
+  border-color: rgba(11, 19, 43, 0.13);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 6px 16px rgba(11, 19, 43, 0.055);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-periods button {
+  color: #52607a;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-periods button:hover {
+  color: #0b132b;
+  background: #f8f9fc;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-periods button.active {
+  color: #e6007a;
+  background: rgba(230, 0, 122, 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(230, 0, 122, 0.18);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-list {
+  scrollbar-color:
+    rgba(230, 0, 122, 0.5)
+    rgba(255, 255, 255, 0.72);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-item {
+  color: #0b132b;
+  border-color: rgba(0, 180, 216, 0.2);
+  background: #ffffff;
+  box-shadow:
+    0 6px 16px rgba(11, 19, 43, 0.065);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-item:hover {
+  border-color: rgba(230, 0, 122, 0.34);
+  background: #ffffff;
+  box-shadow:
+    0 9px 20px rgba(11, 19, 43, 0.09);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-position {
+  color: #44506a;
+  border-color: rgba(11, 19, 43, 0.14);
+  background: #eef1f7;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-copy strong {
+  color: #0b132b;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-copy small,
+:root:not([data-theme='night'])
+  .impact-ranking-note {
+  color: #65728c;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-value.impact-positive {
+  color: #07894f;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-value.impact-negative {
+  color: #dc2626;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-value.impact-neutral {
+  color: #b7791f;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-state {
+  color: #65728c;
+  border-color: rgba(0, 180, 216, 0.2);
+  background: #ffffff;
+  box-shadow:
+    0 6px 16px rgba(11, 19, 43, 0.065);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-state.error {
+  color: #dc2626;
+}
+
+/* =========================================================
+   Impact ranking — definitive contrast fix
+   ========================================================= */
+
+/* Preserve the medal colors after the generic light-theme rule. */
+:root:not([data-theme='night'])
+  .impact-ranking-position.position-1 {
+  color: #352400 !important;
+  border-color: #d9a526 !important;
+  background:
+    linear-gradient(
+      145deg,
+      #ffe985,
+      #e4ad31
+    ) !important;
+  box-shadow:
+    0 3px 8px rgba(189, 131, 9, 0.22);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-position.position-2 {
+  color: #202838 !important;
+  border-color: #9ca8bb !important;
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #b7c0cf
+    ) !important;
+  box-shadow:
+    0 3px 8px rgba(74, 87, 108, 0.18);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-position.position-3 {
+  color: #3c1d0e !important;
+  border-color: #bd7245 !important;
+  background:
+    linear-gradient(
+      145deg,
+      #ffc69d,
+      #c97949
+    ) !important;
+  box-shadow:
+    0 3px 8px rgba(142, 73, 32, 0.18);
+}
+
+/* Make the category tile visible in both themes, regardless of
+   other category rules elsewhere in the stylesheet. */
+.impact-ranking-icon {
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  color: #ffffff !important;
+  text-shadow:
+    0 2px 7px rgba(2, 6, 18, 0.5) !important;
+  box-shadow:
+    0 5px 12px rgba(4, 10, 28, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.impact-ranking-icon.official {
+  background:
+    linear-gradient(
+      145deg,
+      #ff9a67,
+      #ef3e95 54%,
+      #6337d6
+    ) !important;
+}
+
+.impact-ranking-icon.delay {
+  background:
+    linear-gradient(
+      145deg,
+      #ff9a3d,
+      #f05230 52%,
+      #b31e72
+    ) !important;
+}
+
+.impact-ranking-icon.financial {
+  color: #ffffff !important;
+  background:
+    linear-gradient(
+      145deg,
+      #278df1,
+      #1458c5 58%,
+      #122d72
+    ) !important;
+}
+
+.impact-ranking-icon.news {
+  background:
+    linear-gradient(
+      145deg,
+      #4f92ff,
+      #3151d3 58%,
+      #23246f
+    ) !important;
+}
+
+.impact-ranking-icon.market {
+  background:
+    linear-gradient(
+      145deg,
+      #18bf91,
+      #058068 58%,
+      #075a62
+    ) !important;
+}
+
+.impact-ranking-icon.event {
+  background:
+    linear-gradient(
+      145deg,
+      #ac5cff,
+      #7f35d6 55%,
+      #432180
+    ) !important;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-item {
+  grid-template-columns:
+    25px 48px minmax(0, 1fr) auto;
+  column-gap: 10px;
+  border-color: rgba(22, 120, 172, 0.2);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-position {
+  color: #334155;
+  border-color: #c7d0df;
+  background: #e8edf5;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-icon {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-value {
+  text-shadow: none;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-value.impact-positive {
+  color: #00884f !important;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-value.impact-negative {
+  color: #df2449 !important;
+}
+
+@media (max-width: 1280px) and (min-width: 1081px) {
+  :root:not([data-theme='night'])
+    .impact-ranking-item {
+    grid-template-columns:
+      23px 42px minmax(0, 1fr);
+  }
+}
+
+/* =========================================================
+   Impact ranking — real category classes and medal fallback
+   ========================================================= */
+
+/* The presentation utility returns category-* classes.
+   These selectors intentionally match those exact names. */
+.impact-ranking-item .impact-ranking-icon {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  opacity: 1 !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background-color: #5b3cc4 !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #8b5cf6,
+      #6d38ca 58%,
+      #3a236f
+    ) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.7) !important;
+  box-shadow:
+    0 6px 14px rgba(12, 18, 40, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+.impact-ranking-item
+  .impact-ranking-icon.category-development {
+  background-color: #177da9 !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #27bfd1,
+      #177da9 58%,
+      #233a86
+    ) !important;
+}
+
+.impact-ranking-item
+  .impact-ranking-icon.category-announcement,
+.impact-ranking-item
+  .impact-ranking-icon.category-game-information {
+  background-color: #f044a0 !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #ff9c76,
+      #f044a0 55%,
+      #6239cc
+    ) !important;
+}
+
+.impact-ranking-item
+  .impact-ranking-icon.category-trailer {
+  background-color: #8f42dd !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #7c3aed,
+      #b43be0 55%,
+      #f047a2
+    ) !important;
+}
+
+.impact-ranking-item
+  .impact-ranking-icon.category-leak {
+  background-color: #3f4a66 !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #64748b,
+      #3f4a66 58%,
+      #242c42
+    ) !important;
+}
+
+.impact-ranking-item
+  .impact-ranking-icon.category-delay,
+.impact-ranking-item
+  .impact-ranking-icon.category-security {
+  background-color: #d92d62 !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #f05a62,
+      #d92d62 55%,
+      #732b7a
+    ) !important;
+}
+
+.impact-ranking-item
+  .impact-ranking-icon.category-financial,
+.impact-ranking-item
+  .impact-ranking-icon.category-distribution {
+  background-color: #3160d9 !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #1d8fea,
+      #3160d9 58%,
+      #5034b1
+    ) !important;
+}
+
+.impact-ranking-item
+  .impact-ranking-icon.category-release-window,
+.impact-ranking-item
+  .impact-ranking-icon.category-pre-order {
+  background-color: #f26a2d !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #ff9d3f,
+      #f26a2d 55%,
+      #c03b83
+    ) !important;
+}
+
+.impact-ranking-item
+  .impact-ranking-icon.category-corporate,
+.impact-ranking-item
+  .impact-ranking-icon.category-market-analysis {
+  background-color: #177eaa !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #19b8ad,
+      #177eaa 58%,
+      #3e43b6
+    ) !important;
+}
+
+.impact-ranking-item
+  .impact-ranking-icon.category-labor-legal {
+  background-color: #b56528 !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #d7a028,
+      #b56528 55%,
+      #74305e
+    ) !important;
+}
+
+.impact-ranking-item
+  .impact-ranking-icon.category-pricing,
+.impact-ranking-item
+  .impact-ranking-icon.category-launch {
+  background-color: #0a8f69 !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #23bc76,
+      #0a8f69 58%,
+      #24559f
+    ) !important;
+}
+
+/* Force rank colors with explicit fallback colors.
+   This avoids the generic light-theme position rule washing them out. */
+:root:not([data-theme='night'])
+  .impact-ranking-item
+  .impact-ranking-position.position-1 {
+  color: #3b2700 !important;
+  -webkit-text-fill-color: #3b2700 !important;
+  background-color: #f2c94c !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #ffe985,
+      #e2aa24
+    ) !important;
+  border-color: #c99112 !important;
+  text-shadow: none !important;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-item
+  .impact-ranking-position.position-2 {
+  color: #273142 !important;
+  -webkit-text-fill-color: #273142 !important;
+  background-color: #cbd5e1 !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #f8fafc,
+      #aeb8c8
+    ) !important;
+  border-color: #8d99aa !important;
+  text-shadow: none !important;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-item
+  .impact-ranking-position.position-3 {
+  color: #41200e !important;
+  -webkit-text-fill-color: #41200e !important;
+  background-color: #d59062 !important;
+  background-image:
+    linear-gradient(
+      145deg,
+      #ffc49b,
+      #c97643
+    ) !important;
+  border-color: #ac6339 !important;
+  text-shadow: none !important;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-item
+  .impact-ranking-position.position-4,
+:root:not([data-theme='night'])
+  .impact-ranking-item
+  .impact-ranking-position.position-5 {
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+  background-color: #e5eaf2 !important;
+  background-image: none !important;
+  border-color: #bcc7d6 !important;
+  text-shadow: none !important;
+}
+
+/* =========================================================
+   Impact ranking — responsive layout, selection and clarity
+   ========================================================= */
+
+/* Large screens: preserve the chart while giving the timeline
+   enough width for expanded event details. */
+.dashboard-content {
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(360px, 0.78fr)
+    minmax(300px, 0.6fr);
+}
+
+.dashboard-content.has-expanded-event {
+  grid-template-columns:
+    minmax(0, 1.42fr)
+    minmax(430px, 0.88fr)
+    minmax(285px, 0.54fr);
+}
+
+/* When the ranking is collapsed, its space is returned to the
+   chart and timeline instead of leaving an empty column. */
+.dashboard-content.ranking-collapsed {
+  grid-template-columns:
+    minmax(0, 1.7fr)
+    minmax(420px, 0.86fr)
+    60px;
+}
+
+.dashboard-content.ranking-collapsed.has-expanded-event {
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(480px, 0.96fr)
+    60px;
+}
+
+.impact-ranking-panel.collapsed {
+  display: grid;
+  min-width: 60px;
+  padding: 6px;
+  place-items: stretch;
+}
+
+.impact-ranking-expand-button {
+  display: grid;
+  min-height: 100%;
+  padding: 14px 7px;
+  place-content: center;
+  justify-items: center;
+  gap: 9px;
+  border: 1px solid rgba(255, 74, 166, 0.34);
+  border-radius: 11px;
+  color: #ff78bd;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(242, 49, 147, 0.13),
+      rgba(87, 47, 156, 0.08)
+    );
+  cursor: pointer;
+}
+
+.impact-ranking-expand-button > span {
+  font-size: 1.15rem;
+}
+
+.impact-ranking-expand-button strong {
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.impact-ranking-expand-button small {
+  color: var(--dark-panel-secondary);
+  font-size: 0.58rem;
+}
+
+.impact-ranking-header {
+  margin-bottom: 10px;
+}
+
+.impact-ranking-title-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+
+.impact-ranking-title-row h2 {
+  min-width: 0;
+}
+
+.impact-ranking-info {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  place-items: center;
+  border: 1px solid rgba(135, 157, 205, 0.32);
+  border-radius: 50%;
+  color: var(--dark-panel-secondary);
+  font-size: 0.65rem;
+  font-weight: 900;
+  cursor: help;
+}
+
+.impact-ranking-info:hover,
+.impact-ranking-info:focus-visible {
+  color: #ffffff;
+  border-color: rgba(255, 85, 172, 0.62);
+  outline: none;
+}
+
+.impact-ranking-collapse-button {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid rgba(132, 153, 199, 0.2);
+  border-radius: 8px;
+  color: var(--dark-panel-secondary);
+  background: rgba(7, 16, 34, 0.48);
+  font-size: 0.62rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.impact-ranking-collapse-button:hover {
+  color: #ffffff;
+  border-color: rgba(255, 82, 170, 0.38);
+  background: rgba(255, 82, 170, 0.08);
+}
+
+/* Larger segmented selector with technically precise labels. */
+.impact-ranking-periods {
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.impact-ranking-periods button {
+  min-width: 0;
+  height: 34px;
+  flex: 1 1 0;
+  padding: 0 8px;
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
+/* Ranking entries now expose category, full-title tooltip and
+   a clear selected state linked to the opened timeline event. */
+.impact-ranking-item {
+  position: relative;
+  min-height: 82px;
+  grid-template-columns:
+    25px 46px minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.impact-ranking-copy strong {
+  margin-bottom: 6px;
+}
+
+.impact-ranking-metadata {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.impact-ranking-category {
+  display: inline-flex;
+  max-width: 124px;
+  min-height: 19px;
+  align-items: center;
+  padding: 2px 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 107, 184, 0.2);
+  border-radius: 5px;
+  color: #ff9dce;
+  background: rgba(237, 54, 148, 0.12);
+  font-size: 0.54rem;
+  font-weight: 850;
+  letter-spacing: 0.035em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.impact-ranking-metadata small {
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+.impact-ranking-selected-label {
+  display: inline-flex;
+  margin-top: 5px;
+  align-items: center;
+  gap: 5px;
+  color: #ff76ba;
+  font-size: 0.57rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.impact-ranking-selected-label span {
+  font-size: 0.52rem;
+}
+
+.impact-ranking-item.selected {
+  border-color: rgba(255, 67, 163, 0.78) !important;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(242, 49, 147, 0.18),
+      rgba(23, 37, 68, 0.88)
+    ) !important;
+  box-shadow:
+    inset 3px 0 0 #ff43a3,
+    0 8px 20px rgba(226, 31, 132, 0.15);
+}
+
+.impact-ranking-item.selected::after {
+  position: absolute;
+  top: 50%;
+  right: -7px;
+  width: 12px;
+  height: 12px;
+  border-top: 2px solid #ff43a3;
+  border-right: 2px solid #ff43a3;
+  content: '';
+  transform:
+    translateY(-50%)
+    rotate(45deg);
+}
+
+/* Light-theme adaptations for new controls and selected state. */
+:root:not([data-theme='night'])
+  .impact-ranking-collapse-button {
+  color: #58657d;
+  border-color: rgba(11, 19, 43, 0.13);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-collapse-button:hover {
+  color: #d91173;
+  border-color: rgba(230, 0, 122, 0.3);
+  background: rgba(230, 0, 122, 0.06);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-info {
+  color: #68758e;
+  border-color: rgba(11, 19, 43, 0.18);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-info:hover,
+:root:not([data-theme='night'])
+  .impact-ranking-info:focus-visible {
+  color: #d91173;
+  border-color: rgba(230, 0, 122, 0.4);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-category {
+  color: #ad1457;
+  border-color: rgba(219, 39, 119, 0.2);
+  background: rgba(219, 39, 119, 0.07);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-selected-label {
+  color: #d91173;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-item.selected {
+  border-color: rgba(230, 0, 122, 0.64) !important;
+  background:
+    linear-gradient(
+      145deg,
+      #fff6fb,
+      #f5f0ff
+    ) !important;
+  box-shadow:
+    inset 3px 0 0 #e6007a,
+    0 9px 22px rgba(99, 46, 98, 0.13);
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-item.selected::after {
+  border-color: #e6007a;
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-expand-button {
+  color: #d91173;
+  border-color: rgba(230, 0, 122, 0.25);
+  background:
+    linear-gradient(
+      180deg,
+      #fff8fc,
+      #f4effc
+    );
+}
+
+:root:not([data-theme='night'])
+  .impact-ranking-expand-button small {
+  color: #68758e;
+}
+
+/* At laptop widths such as 1366px, ranking moves below the chart
+   instead of compressing the timeline into a narrow column. */
+@media (max-width: 1450px) and (min-width: 1081px) {
+  .dashboard-content,
+  .dashboard-content.has-expanded-event,
+  .dashboard-content.ranking-collapsed,
+  .dashboard-content.ranking-collapsed.has-expanded-event {
+    grid-template-columns:
+      minmax(0, 1.48fr)
+      minmax(360px, 0.82fr);
+  }
+
+  .impact-ranking-panel,
+  .impact-ranking-panel.collapsed {
+    grid-column: 1 / -1;
+    order: 3;
+    min-width: 0;
+    padding: 16px;
+  }
+
+  .impact-ranking-panel.collapsed {
+    display: block;
+  }
+
+  .impact-ranking-expand-button {
+    width: 100%;
+    min-height: 44px;
+    grid-template-columns: auto auto auto;
+    place-content: center;
+  }
+
+  .impact-ranking-expand-button strong {
+    writing-mode: initial;
+    transform: none;
+  }
+
+  .impact-ranking-list {
+    display: grid;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    overflow: visible;
+  }
+
+  .impact-ranking-note {
+    margin-top: 12px;
+  }
+}
+
+@media (max-width: 1080px) {
+  .dashboard-content,
+  .dashboard-content.has-expanded-event,
+  .dashboard-content.ranking-collapsed,
+  .dashboard-content.ranking-collapsed.has-expanded-event {
+    grid-template-columns: 1fr;
+  }
+
+  .impact-ranking-list {
+    grid-template-columns: 1fr;
+  }
+
+  .impact-ranking-item.selected::after {
+    display: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .impact-ranking-header {
+    align-items: flex-start;
+  }
+
+  .impact-ranking-collapse-button {
+    width: 34px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .impact-ranking-collapse-button span {
+    font-size: 1rem;
+  }
+
+  .impact-ranking-periods {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .impact-ranking-periods button {
+    padding: 0 4px;
+    font-size: 0.61rem;
+  }
+
+  .impact-ranking-item {
+    grid-template-columns:
+      23px 42px minmax(0, 1fr);
+  }
+
+  .impact-ranking-value {
+    grid-column: 2 / -1;
+    justify-self: end;
+  }
+
+  .impact-ranking-icon {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* =========================================================
+   Impact ranking — expand into the right viewport sidebar
+   ========================================================= */
+
+/* On wide monitors, the dashboard is capped at 1660px and leaves an
+   unused gutter beside the ranking. When open, the panel now grows
+   through that gutter until it reaches the right edge of the screen. */
+@media (min-width: 1451px) {
+  .impact-ranking-panel {
+    transition:
+      width 220ms ease,
+      margin-right 220ms ease,
+      border-radius 220ms ease,
+      box-shadow 220ms ease;
+  }
+
+  .impact-ranking-panel:not(.collapsed) {
+    --impact-ranking-right-gutter:
+      max(
+        28px,
+        calc((100vw - 1660px) / 2 + 28px)
+      );
+
+    position: relative;
+    z-index: 8;
+    width:
+      calc(
+        100% +
+        var(--impact-ranking-right-gutter)
+      );
+    max-width: none;
+    margin-right:
+      calc(
+        -1 *
+        var(--impact-ranking-right-gutter)
+      );
+    border-radius: 16px 0 0 16px;
+    box-shadow:
+      -12px 12px 34px rgba(4, 9, 22, 0.2);
+  }
+
+  .impact-ranking-panel.collapsed {
+    width: 60px;
+    margin-right: 0;
+    border-radius: 16px;
+  }
+}
+
+/* Keep the drawer fully contained when the layout switches to the
+   stacked laptop/tablet version. */
+@media (max-width: 1450px) {
+  .impact-ranking-panel,
+  .impact-ranking-panel:not(.collapsed),
+  .impact-ranking-panel.collapsed {
+    width: auto;
+    max-width: none;
+    margin-right: 0;
+    border-radius: 16px;
+  }
+}
+
+/* =========================================================
+   Stock chart — expand into the left viewport sidebar
+   ========================================================= */
+
+/* On wide monitors, use the unused gutter to the left of the
+   centered dashboard. This mirrors the ranking expansion on
+   the right side without changing the timeline width. */
+@media (min-width: 1451px) {
+  .chart-panel {
+    --chart-left-gutter:
+      max(
+        28px,
+        calc((100vw - 1660px) / 2 + 28px)
+      );
+
+    position: relative;
+    z-index: 7;
+    width:
+      calc(
+        100% +
+        var(--chart-left-gutter)
+      );
+    max-width: none;
+    margin-left:
+      calc(
+        -1 *
+        var(--chart-left-gutter)
+      );
+    border-radius: 0 16px 16px 0;
+    box-shadow:
+      12px 12px 34px rgba(4, 9, 22, 0.2);
+    transition:
+      width 220ms ease,
+      margin-left 220ms ease,
+      border-radius 220ms ease,
+      box-shadow 220ms ease;
+  }
+}
+
+/* Keep the chart fully inside the normal page grid when the
+   responsive layout is active. */
+@media (max-width: 1450px) {
+  .chart-panel {
+    width: auto;
+    max-width: none;
+    margin-left: 0;
+    border-radius: 16px;
+  }
+}
+
+/* =========================================================
+   Stock chart — expand left only while ranking is open
+   ========================================================= */
+
+@media (min-width: 1451px) {
+  /* Ranking recolhido: gráfico volta à largura normal da grade. */
+  .dashboard-content.ranking-collapsed
+    .chart-panel {
+    width: auto;
+    max-width: none;
+    margin-left: 0;
+    border-radius: 16px;
+    box-shadow:
+      0 12px 28px rgba(4, 9, 22, 0.24);
+  }
+
+  /* Ranking aberto: gráfico aproveita a lateral esquerda. */
+  .dashboard-content:not(.ranking-collapsed)
+    .chart-panel {
+    --chart-left-gutter:
+      max(
+        28px,
+        calc((100vw - 1660px) / 2 + 28px)
+      );
+
+    width:
+      calc(
+        100% +
+        var(--chart-left-gutter)
+      );
+    margin-left:
+      calc(
+        -1 *
+        var(--chart-left-gutter)
+      );
+    border-radius: 0 16px 16px 0;
+    box-shadow:
+      12px 12px 34px rgba(4, 9, 22, 0.2);
+  }
+}
+

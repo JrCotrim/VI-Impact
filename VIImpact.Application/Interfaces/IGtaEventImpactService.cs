@@ -26,4 +26,13 @@ public interface IGtaEventImpactService
         string symbol,
         string benchmarkSymbol,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Calculates the impact of all eligible occurred events while
+    /// sharing the same historical series between the calculations.
+    /// </summary>
+    Task<IReadOnlyList<GtaEventImpactResult>> CalculateRankingAsync(
+        string symbol,
+        string benchmarkSymbol,
+        CancellationToken cancellationToken = default);
 }

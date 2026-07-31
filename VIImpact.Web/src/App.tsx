@@ -7,7 +7,10 @@ import './App.css'
 import { ChartPeriodSelector } from './components/ChartPeriodSelector'
 import { StockChart } from './components/StockChart'
 import { getDashboardData } from './services/dashboardService'
-import { getGtaEventImpact } from './services/gtaEventImpactService'
+import {
+  getGtaEventImpact,
+  getGtaEventImpactRanking,
+} from './services/gtaEventImpactService'
 import { getStockTimeSeries } from './services/stockTimeSeriesService'
 import {
   formatGtaEventDate,
@@ -30,6 +33,29 @@ import type {
 } from './types/dashboard'
 
 type Theme = 'day' | 'night'
+type ImpactRankingPeriod =
+  | '1D'
+  | '5D'
+  | '30D'
+
+const impactRankingPeriodOptions: Array<{
+  value: ImpactRankingPeriod
+  label: string
+}> = [
+  {
+    value: '1D',
+    label: '1 pregão',
+  },
+  {
+    value: '5D',
+    label: '5 pregões',
+  },
+  {
+    value: '30D',
+    label: '30 pregões',
+  },
+]
+
 
 const performancePeriodOrder: StockTimeSeriesPeriod[] = [
   '1D',
@@ -238,6 +264,21 @@ function formatImpactPercent(
   }
 
   return formatSignedPercent(value)
+}
+
+function getRankingImpactValue(
+  impact: GtaEventImpact,
+  period: ImpactRankingPeriod,
+): number | null {
+  if (period === '1D') {
+    return impact.day1ReturnPercent
+  }
+
+  if (period === '5D') {
+    return impact.day5ReturnPercent
+  }
+
+  return impact.day30ReturnPercent
 }
 
 function getImpactValueClassName(
@@ -813,6 +854,31 @@ function App() {
   ] = useState<Record<string, GtaEventImpact>>({})
 
   const [
+    impactRanking,
+    setImpactRanking,
+  ] = useState<GtaEventImpact[]>([])
+
+  const [
+    selectedRankingPeriod,
+    setSelectedRankingPeriod,
+  ] = useState<ImpactRankingPeriod>('5D')
+
+  const [
+    isImpactRankingCollapsed,
+    setIsImpactRankingCollapsed,
+  ] = useState(false)
+
+  const [
+    isImpactRankingLoading,
+    setIsImpactRankingLoading,
+  ] = useState(true)
+
+  const [
+    impactRankingError,
+    setImpactRankingError,
+  ] = useState<string | null>(null)
+
+  const [
     loadingEventImpactIds,
     setLoadingEventImpactIds,
   ] = useState<Set<string>>(new Set())
@@ -980,6 +1046,49 @@ function App() {
 
     return () => {
       isActive = false
+    }
+  }, [])
+
+  useEffect(() => {
+    const abortController =
+      new AbortController()
+
+    async function loadImpactRanking() {
+      try {
+        setImpactRankingError(null)
+
+        const ranking =
+          await getGtaEventImpactRanking(
+            'TTWO',
+            'QQQ',
+            abortController.signal,
+          )
+
+        setImpactRanking(ranking)
+      } catch (error) {
+        if (
+          error instanceof DOMException &&
+          error.name === 'AbortError'
+        ) {
+          return
+        }
+
+        setImpactRankingError(
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível carregar o ranking.',
+        )
+      } finally {
+        if (!abortController.signal.aborted) {
+          setIsImpactRankingLoading(false)
+        }
+      }
+    }
+
+    void loadImpactRanking()
+
+    return () => {
+      abortController.abort()
     }
   }, [])
 
@@ -1476,6 +1585,48 @@ function App() {
           ).getTime(),
       )
 
+  const rankedEvents = impactRanking
+    .flatMap((impact) => {
+      const gtaEvent =
+        dashboard.gtaEvents.find(
+          (candidateEvent) =>
+            candidateEvent.id ===
+            impact.eventId,
+        )
+
+      const impactValue =
+        getRankingImpactValue(
+          impact,
+          selectedRankingPeriod,
+        )
+
+      if (
+        !gtaEvent ||
+        !impact.isAvailable ||
+        impactValue === null
+      ) {
+        return []
+      }
+
+      return [
+        {
+          gtaEvent,
+          impact,
+          impactValue,
+        },
+      ]
+    })
+    .sort(
+      (firstEntry, secondEntry) =>
+        Math.abs(
+          secondEntry.impactValue,
+        ) -
+        Math.abs(
+          firstEntry.impactValue,
+        ),
+    )
+    .slice(0, 5)
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -1804,7 +1955,19 @@ function App() {
           </article>
         </section>
 
-        <section className="dashboard-content">
+        <section
+          className={[
+            'dashboard-content',
+            expandedEventId
+              ? 'has-expanded-event'
+              : '',
+            isImpactRankingCollapsed
+              ? 'ranking-collapsed'
+              : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
           <article
             className="chart-panel"
             id="chart"
@@ -2320,6 +2483,240 @@ function App() {
               )}
             </div>
 
+          </aside>
+
+          <aside
+            className={[
+              'impact-ranking-panel',
+              isImpactRankingCollapsed
+                ? 'collapsed'
+                : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            id="impact-ranking"
+          >
+            {isImpactRankingCollapsed ? (
+              <button
+                className="impact-ranking-expand-button"
+                type="button"
+                onClick={() =>
+                  setIsImpactRankingCollapsed(false)
+                }
+                aria-label="Abrir ranking de impacto"
+                title="Abrir ranking de impacto"
+              >
+                <span aria-hidden="true">↗</span>
+                <strong>Ranking</strong>
+                <small>Top 5</small>
+              </button>
+            ) : (
+              <>
+                <div className="panel-header impact-ranking-header">
+                  <div>
+                    <p className="panel-eyebrow">
+                      Ranking de impacto
+                    </p>
+
+                    <div className="impact-ranking-title-row">
+                      <h2>
+                        Maiores impactos na TTWO
+                      </h2>
+
+                      <span
+                        className="impact-ranking-info"
+                        tabIndex={0}
+                        title="A posição considera o tamanho absoluto da variação, independentemente de alta ou queda."
+                        aria-label="Como as posições do ranking são calculadas"
+                      >
+                        i
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    className="impact-ranking-collapse-button"
+                    type="button"
+                    onClick={() =>
+                      setIsImpactRankingCollapsed(true)
+                    }
+                    title="Recolher ranking"
+                    aria-label="Recolher ranking"
+                  >
+                    <span aria-hidden="true">−</span>
+                    Recolher
+                  </button>
+                </div>
+
+                <div
+                  className="impact-ranking-periods"
+                  role="group"
+                  aria-label="Quantidade de pregões usada no ranking"
+                >
+                  {impactRankingPeriodOptions.map(
+                    (periodOption) => (
+                      <button
+                        key={periodOption.value}
+                        className={
+                          selectedRankingPeriod ===
+                          periodOption.value
+                            ? 'active'
+                            : ''
+                        }
+                        type="button"
+                        onClick={() =>
+                          setSelectedRankingPeriod(
+                            periodOption.value,
+                          )
+                        }
+                      >
+                        {periodOption.label}
+                      </button>
+                    ),
+                  )}
+                </div>
+
+                <div className="impact-ranking-list">
+                  {isImpactRankingLoading && (
+                    <div className="impact-ranking-state">
+                      <span className="status-pulse" />
+                      <p>Calculando ranking...</p>
+                    </div>
+                  )}
+
+                  {!isImpactRankingLoading &&
+                    impactRankingError && (
+                      <div className="impact-ranking-state error">
+                        <p>
+                          {impactRankingError}
+                        </p>
+                      </div>
+                    )}
+
+                  {!isImpactRankingLoading &&
+                    !impactRankingError &&
+                    rankedEvents.length === 0 && (
+                      <div className="impact-ranking-state">
+                        <p>
+                          Nenhum impacto disponível para este período.
+                        </p>
+                      </div>
+                    )}
+
+                  {!isImpactRankingLoading &&
+                    !impactRankingError &&
+                    rankedEvents.map(
+                      (
+                        {
+                          gtaEvent,
+                          impactValue,
+                        },
+                        index,
+                      ) => {
+                        const eventStyle =
+                          getGtaEventPresentation(
+                            gtaEvent,
+                          )
+
+                        const categoryLabel =
+                          getGtaEventCategoryLabel(
+                            gtaEvent,
+                          ) ?? 'Não classificada'
+
+                        const isSelected =
+                          selectedEventId ===
+                          gtaEvent.id
+
+                        return (
+                          <button
+                            className={[
+                              'impact-ranking-item',
+                              isSelected
+                                ? 'selected'
+                                : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' ')}
+                            type="button"
+                            key={gtaEvent.id}
+                            onClick={() =>
+                              handleChartEventSelect(
+                                gtaEvent,
+                              )
+                            }
+                            aria-label={
+                              `Abrir ${gtaEvent.title} no gráfico`
+                            }
+                            aria-pressed={isSelected}
+                            title={gtaEvent.title}
+                          >
+                            <span
+                              className={`impact-ranking-position position-${index + 1}`}
+                              title="A posição considera o tamanho absoluto da variação, independentemente de alta ou queda."
+                            >
+                              {index + 1}
+                            </span>
+
+                            <span
+                              className={`impact-ranking-icon ${eventStyle.className}`}
+                              aria-hidden="true"
+                            >
+                              {eventStyle.symbol}
+                            </span>
+
+                            <span className="impact-ranking-copy">
+                              <strong
+                                title={gtaEvent.title}
+                              >
+                                {gtaEvent.title}
+                              </strong>
+
+                              <span className="impact-ranking-metadata">
+                                <span className="impact-ranking-category">
+                                  {categoryLabel}
+                                </span>
+
+                                <small>
+                                  {formatGtaEventDate(
+                                    gtaEvent.occurredAtUtc,
+                                  )}
+                                </small>
+                              </span>
+
+                              {isSelected && (
+                                <span className="impact-ranking-selected-label">
+                                  <span aria-hidden="true">●</span>
+                                  Selecionado
+                                </span>
+                              )}
+                            </span>
+
+                            <strong
+                              className={`impact-ranking-value ${getImpactValueClassName(
+                                impactValue,
+                              )}`}
+                            >
+                              {formatSignedPercent(
+                                impactValue,
+                              )}
+                            </strong>
+                          </button>
+                        )
+                      },
+                    )}
+                </div>
+
+                <p className="impact-ranking-note">
+                  Ranking pela maior variação absoluta da TTWO em{' '}
+                  {impactRankingPeriodOptions.find(
+                    (periodOption) =>
+                      periodOption.value ===
+                      selectedRankingPeriod,
+                  )?.label.toLowerCase()}
+                  . Altas e quedas usam o mesmo critério de magnitude.
+                </p>
+              </>
+            )}
           </aside>
         </section>
       </main>

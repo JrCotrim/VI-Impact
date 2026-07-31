@@ -91,6 +91,47 @@ public sealed class GtaEventsController : ControllerBase
     }
 
     /// <summary>
+    /// Calculates the market reaction for all eligible occurred
+    /// GTA VI events using shared historical market series.
+    /// </summary>
+    [HttpGet("impact-ranking")]
+    public async Task<ActionResult<IReadOnlyList<GtaEventImpactResponse>>>
+        GetImpactRanking(
+            [FromQuery] string symbol = "TTWO",
+            [FromQuery] string benchmarkSymbol = "QQQ",
+            CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(symbol))
+        {
+            return BadRequest(new
+            {
+                Message = "The stock symbol is required."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(benchmarkSymbol))
+        {
+            return BadRequest(new
+            {
+                Message = "The benchmark symbol is required."
+            });
+        }
+
+        IReadOnlyList<GtaEventImpactResult> results =
+            await _gtaEventImpactService.CalculateRankingAsync(
+                symbol,
+                benchmarkSymbol,
+                cancellationToken);
+
+        IReadOnlyList<GtaEventImpactResponse> response =
+            results
+                .Select(MapImpactResponse)
+                .ToArray();
+
+        return Ok(response);
+    }
+
+    /// <summary>
     /// Calculates the observed market reaction around a GTA VI event.
     /// D+1, D+5 and D+30 are cumulative from the previous close.
     /// The stock returns are also compared with a market benchmark.

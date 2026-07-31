@@ -85,3 +85,55 @@ export async function getGtaEventImpact(
 
   return response.json() as Promise<GtaEventImpact>
 }
+
+/**
+ * Retrieves the observed market impact for all eligible occurred events.
+ * The API shares the same TTWO and QQQ historical series between calculations.
+ */
+export async function getGtaEventImpactRanking(
+  symbol = 'TTWO',
+  benchmarkSymbol = 'QQQ',
+  signal?: AbortSignal,
+): Promise<GtaEventImpact[]> {
+  const normalizedSymbol =
+    symbol.trim().toUpperCase()
+
+  const normalizedBenchmarkSymbol =
+    benchmarkSymbol.trim().toUpperCase()
+
+  if (!normalizedSymbol) {
+    throw new Error(
+      'O símbolo da ação é obrigatório.',
+    )
+  }
+
+  if (!normalizedBenchmarkSymbol) {
+    throw new Error(
+      'O símbolo do benchmark é obrigatório.',
+    )
+  }
+
+  const searchParameters =
+    new URLSearchParams({
+      symbol: normalizedSymbol,
+      benchmarkSymbol:
+        normalizedBenchmarkSymbol,
+    })
+
+  const endpoint =
+    `${apiBaseUrl}/api/gtaevents/impact-ranking` +
+    `?${searchParameters.toString()}`
+
+  const response = await fetch(endpoint, {
+    signal,
+  })
+
+  if (!response.ok) {
+    const message =
+      await getErrorMessage(response)
+
+    throw new Error(message)
+  }
+
+  return response.json() as Promise<GtaEventImpact[]>
+}
