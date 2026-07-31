@@ -11,6 +11,8 @@ import { getGtaEventImpact } from './services/gtaEventImpactService'
 import { getStockTimeSeries } from './services/stockTimeSeriesService'
 import {
   formatGtaEventDate,
+  getGtaEventCategoryLabel,
+  getGtaEventConfirmationLabel,
   getGtaEventPresentation,
   getGtaEventPriorityLabel,
   getGtaEventSourceLabel,
@@ -1474,10 +1476,20 @@ function App() {
                       expandedEventId ===
                       gtaEvent.id
 
+                    const categoryLabel =
+                      getGtaEventCategoryLabel(
+                        gtaEvent,
+                      ) ?? 'Não classificada'
+
                     const priorityLabel =
                       getGtaEventPriorityLabel(
                         gtaEvent,
-                      ) ?? 'Sem prioridade definida'
+                      ) ?? 'Não classificada'
+
+                    const confirmationLabel =
+                      getGtaEventConfirmationLabel(
+                        gtaEvent,
+                      )
 
                     const sourceLabel =
                       getGtaEventSourceLabel(
@@ -1592,7 +1604,7 @@ function App() {
                               <div>
                                 <span>Categoria</span>
                                 <strong>
-                                  {eventStyle.label}
+                                  {categoryLabel}
                                 </strong>
                               </div>
 
@@ -1604,18 +1616,16 @@ function App() {
                               </div>
 
                               <div>
-                                <span>Fonte</span>
+                                <span>Confirmação</span>
                                 <strong>
-                                  {sourceLabel}
+                                  {confirmationLabel}
                                 </strong>
                               </div>
 
                               <div>
-                                <span>Confirmação</span>
+                                <span>Fonte</span>
                                 <strong>
-                                  {gtaEvent.isOfficial
-                                    ? 'Oficial'
-                                    : 'Não oficial'}
+                                  {sourceLabel}
                                 </strong>
                               </div>
 
@@ -1631,13 +1641,15 @@ function App() {
                               <div>
                                 <span>Pregão analisado</span>
                                 <strong>
-                                  {eventImpact
-                                    ? formatTradingDate(
-                                        eventImpact.effectiveTradingDate,
-                                      )
-                                    : isImpactLoading
-                                      ? 'Calculando...'
-                                      : 'Aguardando análise'}
+                                  {gtaEvent.isImpactAnalysisEligible === false
+                                    ? 'Não aplicável'
+                                    : eventImpact
+                                      ? formatTradingDate(
+                                          eventImpact.effectiveTradingDate,
+                                        )
+                                      : isImpactLoading
+                                        ? 'Calculando...'
+                                        : 'Aguardando análise'}
                                 </strong>
                               </div>
                             </div>
@@ -1810,14 +1822,14 @@ function App() {
                                   target="_blank"
                                   rel="noreferrer"
                                 >
-                                  Abrir fonte
+                                  Ver fonte original
                                   <span aria-hidden="true">
                                     ↗
                                   </span>
                                 </a>
                               ) : (
                                 <span className="event-detail-source-missing">
-                                  Fonte ainda não cadastrada
+                                  Cadastro pendente
                                 </span>
                               )}
 

@@ -438,6 +438,44 @@ export function isOccurredGtaEvent(
   )
 }
 
+export function getGtaEventCategoryLabel(
+  gtaEvent: GtaEvent,
+): string | null {
+  const category = (
+    gtaEvent as RichGtaEvent
+  ).category
+
+  const categoryName =
+    normalizeCategoryName(category)
+
+  if (!categoryName) {
+    return null
+  }
+
+  return (
+    presentationByCategory[categoryName]
+      ?.label ?? null
+  )
+}
+
+export function getGtaEventConfirmationLabel(
+  gtaEvent: GtaEvent,
+): string {
+  const isOfficial = (
+    gtaEvent as RichGtaEvent
+  ).isOfficial
+
+  if (isOfficial === true) {
+    return 'Oficial'
+  }
+
+  if (isOfficial === false) {
+    return 'Não oficial'
+  }
+
+  return 'Cadastro pendente'
+}
+
 export function getGtaEventPriorityLabel(
   gtaEvent: GtaEvent,
 ): string | null {
@@ -446,15 +484,15 @@ export function getGtaEventPriorityLabel(
   ).priority
 
   if (priority === 1 || priority === 'Primary') {
-    return 'Prioridade P1'
+    return 'Alta · P1'
   }
 
   if (priority === 2 || priority === 'Relevant') {
-    return 'Prioridade P2'
+    return 'Média · P2'
   }
 
   if (priority === 3 || priority === 'Contextual') {
-    return 'Prioridade P3'
+    return 'Contextual · P3'
   }
 
   return null
@@ -480,5 +518,5 @@ export function getGtaEventSourceLabel(
     }
   }
 
-  return 'Fonte ainda não cadastrada'
+  return 'Cadastro pendente'
 }

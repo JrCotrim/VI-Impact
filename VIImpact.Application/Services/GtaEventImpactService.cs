@@ -62,14 +62,14 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
         {
             return MarkUnavailable(
                 result,
-                "The event has not occurred yet.");
+                "O evento ainda não ocorreu.");
         }
 
         if (!gtaEvent.IsImpactAnalysisEligible)
         {
             return MarkUnavailable(
                 result,
-                "The event is not eligible for impact analysis.");
+                "Este evento não está elegível para análise de impacto.");
         }
 
         DateTime queryDate = analysisTimestampUtc.Date;
@@ -98,7 +98,7 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
         {
             return MarkUnavailable(
                 result,
-                "There is not enough historical market data for this event.");
+                "Não existem dados históricos de mercado suficientes para este evento.");
         }
 
         EventMarketReference marketReference =
@@ -119,7 +119,7 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
         {
             return MarkUnavailable(
                 result,
-                "A complete previous and effective trading session could not be found.");
+                "Não foi possível localizar um pregão anterior e um pregão efetivo completos.");
         }
 
         StockTimeSeriesPoint previousSession =

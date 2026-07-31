@@ -86,10 +86,23 @@ public sealed class DashboardController : ControllerBase
                 .Select(gtaEvent => new GtaEventMarkerResponse
                 {
                     Id = gtaEvent.Id,
+                    Slug = gtaEvent.Slug,
                     Title = gtaEvent.Title,
                     Description = gtaEvent.Description,
+                    Category = gtaEvent.Category,
+                    Subcategory = gtaEvent.Subcategory,
+                    Priority = gtaEvent.Priority,
+                    SourceType = gtaEvent.SourceType,
+                    SourceName = gtaEvent.SourceName,
                     SourceUrl = gtaEvent.SourceUrl,
-                    OccurredAtUtc = gtaEvent.OccurredAtUtc
+                    OccurredAtUtc = gtaEvent.OccurredAtUtc,
+                    OccurredUntilUtc = gtaEvent.OccurredUntilUtc,
+                    PublishedAtUtc = gtaEvent.PublishedAtUtc,
+                    DatePrecision = gtaEvent.DatePrecision,
+                    Status = gtaEvent.Status,
+                    IsOfficial = gtaEvent.IsOfficial,
+                    IsImpactAnalysisEligible =
+                        gtaEvent.IsImpactAnalysisEligible
                 })
                 .ToList()
         };
