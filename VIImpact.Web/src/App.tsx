@@ -46,8 +46,6 @@ const performancePeriodOrder: StockTimeSeriesPeriod[] = [
 
 const longPerformancePeriods =
   new Set<StockTimeSeriesPeriod>([
-    '1D',
-    '7D',
     '1M',
     '3M',
     '6M',
@@ -212,48 +210,6 @@ function formatSignedPercent(
   return `${formattedValue}%`
 }
 
-
-function calculateSeriesReturnPercent(
-  timeSeries: StockTimeSeries | null,
-): number | null {
-  if (
-    !timeSeries ||
-    timeSeries.values.length < 2
-  ) {
-    return null
-  }
-
-  const sortedValues = [
-    ...timeSeries.values,
-  ].sort(
-    (firstValue, secondValue) =>
-      parseUtcDate(
-        firstValue.dateTimeUtc,
-      ).getTime() -
-      parseUtcDate(
-        secondValue.dateTimeUtc,
-      ).getTime(),
-  )
-
-  const firstClose = sortedValues[0].close
-  const lastClose =
-    sortedValues[sortedValues.length - 1].close
-
-  if (
-    !Number.isFinite(firstClose) ||
-    !Number.isFinite(lastClose) ||
-    firstClose <= 0
-  ) {
-    return null
-  }
-
-  return (
-    ((lastClose - firstClose) /
-      firstClose) *
-    100
-  )
-}
-
 function formatCompactVolume(
   value: number,
 ): string {
@@ -284,14 +240,6 @@ function formatImpactPercent(
   return formatSignedPercent(value)
 }
 
-function formatBenchmarkPercent(
-  value: number | null,
-): string {
-  return value === null
-    ? '—'
-    : formatSignedPercent(value)
-}
-
 function getImpactValueClassName(
   value: number | null,
 ): string {
@@ -302,56 +250,6 @@ function getImpactValueClassName(
   return value > 0
     ? 'impact-positive'
     : 'impact-negative'
-}
-
-interface ImpactComparisonRow {
-  label: string
-  stockReturnPercent: number | null
-  benchmarkReturnPercent: number | null
-  excessReturnPercent: number | null
-}
-
-function getImpactComparisonRows(
-  impact: GtaEventImpact,
-): ImpactComparisonRow[] {
-  return [
-    {
-      label: 'Mesmo pregão',
-      stockReturnPercent:
-        impact.sameDayReturnPercent,
-      benchmarkReturnPercent:
-        impact.benchmarkSameDayReturnPercent,
-      excessReturnPercent:
-        impact.sameDayExcessReturnPercent,
-    },
-    {
-      label: 'Após 1 pregão',
-      stockReturnPercent:
-        impact.day1ReturnPercent,
-      benchmarkReturnPercent:
-        impact.benchmarkDay1ReturnPercent,
-      excessReturnPercent:
-        impact.day1ExcessReturnPercent,
-    },
-    {
-      label: 'Após 5 pregões',
-      stockReturnPercent:
-        impact.day5ReturnPercent,
-      benchmarkReturnPercent:
-        impact.benchmarkDay5ReturnPercent,
-      excessReturnPercent:
-        impact.day5ExcessReturnPercent,
-    },
-    {
-      label: 'Após 30 pregões',
-      stockReturnPercent:
-        impact.day30ReturnPercent,
-      benchmarkReturnPercent:
-        impact.benchmarkDay30ReturnPercent,
-      excessReturnPercent:
-        impact.day30ExcessReturnPercent,
-    },
-  ]
 }
 
 function formatTradingDate(
@@ -828,16 +726,6 @@ function App() {
     useState<StockTimeSeries | null>(null)
 
   const [
-    benchmarkTimeSeries,
-    setBenchmarkTimeSeries,
-  ] = useState<StockTimeSeries | null>(null)
-
-  const [
-    benchmarkError,
-    setBenchmarkError,
-  ] = useState<string | null>(null)
-
-  const [
     periodPerformances,
     setPeriodPerformances,
   ] = useState<StockPeriodPerformance[]>([])
@@ -940,6 +828,9 @@ function App() {
   const eventsListRef =
     useRef<HTMLDivElement | null>(null)
 
+  const timelineReturnTimeoutRef =
+    useRef<number | null>(null)
+
   const [
     timelineScrollRequest,
     setTimelineScrollRequest,
@@ -967,6 +858,20 @@ function App() {
       window.clearInterval(intervalId)
     }
   }, [])
+
+  useEffect(
+    () => () => {
+      if (
+        timelineReturnTimeoutRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          timelineReturnTimeoutRef.current,
+        )
+      }
+    },
+    [],
+  )
 
   useEffect(() => {
     if (
@@ -1081,90 +986,130 @@ function App() {
   useEffect(() => {
     let isActive = true
 
-    const timeoutId =
-      window.setTimeout(() => {
-        async function loadTimeSeries() {
-          const requestOptions = {
-            period: selectedPeriod,
+    async function loadDailyPerformance() {
+      try {
+        const dailyTimeSeries =
+          await getStockTimeSeries(
+            'TTWO',
+            {
+              period: '1D',
+            },
+          )
 
-            startDate:
-              selectedPeriod === 'CUSTOM'
-                ? appliedCustomStartDate
-                : undefined,
-
-            endDate:
-              selectedPeriod === 'CUSTOM'
-                ? appliedCustomEndDate
-                : undefined,
-          }
-
-          const [
-            primaryResult,
-            benchmarkResult,
-          ] = await Promise.allSettled([
-            getStockTimeSeries(
-              'TTWO',
-              requestOptions,
-            ),
-            getStockTimeSeries(
-              'QQQ',
-              requestOptions,
-            ),
-          ])
-
-          if (!isActive) {
-            return
-          }
-
-          if (
-            primaryResult.status ===
-            'rejected'
-          ) {
-            setChartError(
-              primaryResult.reason instanceof Error
-                ? primaryResult.reason.message
-                : 'Não foi possível carregar o histórico.',
-            )
-            setTimeSeries(null)
-            setBenchmarkTimeSeries(null)
-            setBenchmarkError(null)
-            setIsChartLoading(false)
-            return
-          }
-
-          const timeSeriesData =
-            primaryResult.value
-
+        if (isActive) {
           setPeriodPerformances(
             (currentPerformances) =>
               mergePeriodPerformances(
                 currentPerformances,
-                timeSeriesData.performances,
-                selectedPeriod,
+                dailyTimeSeries.performances,
+                '1D',
               ),
           )
+        }
+      } catch {
+        // The main chart remains available even if this
+        // background performance request temporarily fails.
+      }
+    }
 
-          setTimeSeries(timeSeriesData)
-          setChartError(null)
+    void loadDailyPerformance()
 
-          if (
-            benchmarkResult.status ===
-            'fulfilled'
-          ) {
-            setBenchmarkTimeSeries(
-              benchmarkResult.value,
-            )
-            setBenchmarkError(null)
-          } else {
-            setBenchmarkTimeSeries(null)
-            setBenchmarkError(
-              benchmarkResult.reason instanceof Error
-                ? benchmarkResult.reason.message
-                : 'O histórico do QQQ não está disponível.',
-            )
+    return () => {
+      isActive = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let isActive = true
+
+    async function loadWeeklyPerformance() {
+      try {
+        const weeklyTimeSeries =
+          await getStockTimeSeries(
+            'TTWO',
+            {
+              period: '7D',
+            },
+          )
+
+        if (isActive) {
+          setPeriodPerformances(
+            (currentPerformances) =>
+              mergePeriodPerformances(
+                currentPerformances,
+                weeklyTimeSeries.performances,
+                '7D',
+              ),
+          )
+        }
+      } catch {
+        // The main chart remains available even if this
+        // background performance request temporarily fails.
+      }
+    }
+
+    void loadWeeklyPerformance()
+
+    return () => {
+      isActive = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let isActive = true
+
+    const timeoutId =
+      window.setTimeout(() => {
+        async function loadTimeSeries() {
+          try {
+            const timeSeriesData =
+              await getStockTimeSeries(
+                'TTWO',
+                {
+                  period:
+                    selectedPeriod,
+
+                  startDate:
+                    selectedPeriod ===
+                    'CUSTOM'
+                      ? appliedCustomStartDate
+                      : undefined,
+
+                  endDate:
+                    selectedPeriod ===
+                    'CUSTOM'
+                      ? appliedCustomEndDate
+                      : undefined,
+                },
+              )
+
+            if (isActive) {
+              setPeriodPerformances(
+                (currentPerformances) =>
+                  mergePeriodPerformances(
+                    currentPerformances,
+                    timeSeriesData.performances,
+                    selectedPeriod,
+                  ),
+              )
+
+              setTimeSeries(
+                timeSeriesData,
+              )
+            }
+          } catch (error) {
+            if (isActive) {
+              setChartError(
+                error instanceof Error
+                  ? error.message
+                  : 'Não foi possível carregar o histórico.',
+              )
+            }
+          } finally {
+            if (isActive) {
+              setIsChartLoading(false)
+            }
           }
-
-          setIsChartLoading(false)
         }
 
         void loadTimeSeries()
@@ -1183,9 +1128,7 @@ function App() {
   function prepareChartReload() {
     setIsChartLoading(true)
     setChartError(null)
-    setBenchmarkError(null)
     setTimeSeries(null)
-    setBenchmarkTimeSeries(null)
   }
 
   function handlePeriodChange(
@@ -1333,7 +1276,6 @@ function App() {
         await getGtaEventImpact(
           gtaEvent.id,
           dashboard?.symbol ?? 'TTWO',
-          'QQQ',
         )
 
       setEventImpacts(
@@ -1367,6 +1309,38 @@ function App() {
     }
   }
 
+  function cancelTimelineReturn() {
+    if (
+      timelineReturnTimeoutRef.current ===
+      null
+    ) {
+      return
+    }
+
+    window.clearTimeout(
+      timelineReturnTimeoutRef.current,
+    )
+
+    timelineReturnTimeoutRef.current = null
+  }
+
+  function scheduleTimelineReturnToLatest() {
+    cancelTimelineReturn()
+
+    timelineReturnTimeoutRef.current =
+      window.setTimeout(() => {
+        setExpandedEventId(null)
+
+        eventsListRef.current?.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        })
+
+        timelineReturnTimeoutRef.current =
+          null
+      }, 10000)
+  }
+
   function handleChartEventSelect(
     gtaEvent: GtaEvent,
   ) {
@@ -1377,11 +1351,14 @@ function App() {
     )
     void loadEventImpact(gtaEvent)
     focusEventOnChart(gtaEvent)
+    scheduleTimelineReturnToLatest()
   }
 
   function handleTimelineEventSelect(
     gtaEvent: GtaEvent,
   ) {
+    cancelTimelineReturn()
+
     const willExpand =
       expandedEventId !== gtaEvent.id
 
@@ -1483,16 +1460,6 @@ function App() {
           averageVolume30Sessions) *
         100
       : null
-
-  const primaryPeriodReturn =
-    calculateSeriesReturnPercent(timeSeries)
-  const benchmarkPeriodReturn =
-    calculateSeriesReturnPercent(
-      benchmarkTimeSeries,
-    )
-  const hasBenchmarkComparison =
-    benchmarkTimeSeries !== null &&
-    benchmarkTimeSeries.values.length > 0
 
   const occurredEvents =
     [...dashboard.gtaEvents]
@@ -1713,7 +1680,7 @@ function App() {
                     latestQuote.changePercent,
                   )}
                   <span className="variation-period-copy">
-                    desde o fechamento anterior
+                    {' '}desde o fechamento anterior
                   </span>
                 </span>
               </div>
@@ -1845,67 +1812,17 @@ function App() {
             <div className="panel-header">
               <div>
                 <p className="panel-eyebrow">
-                  {hasBenchmarkComparison
-                    ? `${timeSeries?.symbol ?? dashboard.symbol} × ${benchmarkTimeSeries?.symbol ?? 'QQQ'}`
-                    : `${timeSeries?.symbol ?? dashboard.symbol} · ${timeSeries?.exchange ?? 'NASDAQ'}`}
+                  {timeSeries?.symbol ??
+                    dashboard.symbol}{' '}
+                  ·{' '}
+                  {timeSeries?.exchange ??
+                    'NASDAQ'}
                 </p>
 
-                <h2>
-                  {hasBenchmarkComparison
-                    ? 'Desempenho comparado (base 100)'
-                    : 'Gráfico de cotações'}
-                </h2>
+                <h2>Gráfico de cotações</h2>
               </div>
 
-              {hasBenchmarkComparison && (
-                <div
-                  className="chart-comparison-legend"
-                  aria-label="Legenda da comparação"
-                >
-                  <span className="chart-comparison-item">
-                    <i className="chart-comparison-swatch primary" />
-                    <span>
-                      {timeSeries?.symbol ?? 'TTWO'}
-                    </span>
-                    <strong
-                      className={getImpactValueClassName(
-                        primaryPeriodReturn,
-                      )}
-                    >
-                      {primaryPeriodReturn === null
-                        ? '—'
-                        : formatSignedPercent(
-                            primaryPeriodReturn,
-                          )}
-                    </strong>
-                  </span>
-
-                  <span className="chart-comparison-item">
-                    <i className="chart-comparison-swatch benchmark" />
-                    <span>
-                      {benchmarkTimeSeries?.symbol ?? 'QQQ'}
-                    </span>
-                    <strong
-                      className={getImpactValueClassName(
-                        benchmarkPeriodReturn,
-                      )}
-                    >
-                      {benchmarkPeriodReturn === null
-                        ? '—'
-                        : formatSignedPercent(
-                            benchmarkPeriodReturn,
-                          )}
-                    </strong>
-                  </span>
-                </div>
-              )}
             </div>
-
-            {benchmarkError && (
-              <p className="chart-benchmark-status">
-                QQQ indisponível no momento. O gráfico continua exibindo a TTWO.
-              </p>
-            )}
 
             <ChartPeriodSelector
               selectedPeriod={
@@ -1955,18 +1872,6 @@ function App() {
                     values={
                       timeSeries.values
                     }
-                    benchmarkValues={
-                      benchmarkTimeSeries?.values ??
-                      []
-                    }
-                    primarySymbol={
-                      timeSeries.symbol ||
-                      dashboard.symbol
-                    }
-                    benchmarkSymbol={
-                      benchmarkTimeSeries?.symbol ??
-                      'QQQ'
-                    }
                     events={
                       occurredEvents
                     }
@@ -1981,9 +1886,9 @@ function App() {
             </div>
 
             <p className="chart-footnote">
-              {hasBenchmarkComparison
-                ? 'TTWO e QQQ normalizados em base 100 no início do período selecionado. Os eventos permanecem posicionados sobre a linha da TTWO.'
-                : `Dados referentes ao período selecionado. Cotações em ${timeSeries?.currency ?? 'USD'}.`}
+              Dados referentes ao período selecionado.
+              Cotações em{' '}
+              {timeSeries?.currency ?? 'USD'}.
             </p>
           </article>
 
@@ -2013,6 +1918,8 @@ function App() {
             <div
               className="events-list"
               ref={eventsListRef}
+              onPointerDown={cancelTimelineReturn}
+              onWheel={cancelTimelineReturn}
             >
               {occurredEvents.length > 0 ? (
                 occurredEvents.map(
@@ -2068,13 +1975,6 @@ function App() {
                             eventImpact,
                           )
                         : null
-
-                    const impactComparisonRows =
-                      eventImpact
-                        ? getImpactComparisonRows(
-                            eventImpact,
-                          )
-                        : []
 
                     const cardClassName = [
                       'event-card',
@@ -2293,9 +2193,59 @@ function App() {
 
                                   <div className="event-impact-metrics">
                                     <div>
-                                      <span>
-                                        Volume no pregão contra média anterior
-                                      </span>
+                                      <span>No mesmo pregão</span>
+                                      <strong
+                                        className={getImpactValueClassName(
+                                          eventImpact.sameDayReturnPercent,
+                                        )}
+                                      >
+                                        {formatImpactPercent(
+                                          eventImpact.sameDayReturnPercent,
+                                        )}
+                                      </strong>
+                                    </div>
+
+                                    <div>
+                                      <span>Após 1 pregão</span>
+                                      <strong
+                                        className={getImpactValueClassName(
+                                          eventImpact.day1ReturnPercent,
+                                        )}
+                                      >
+                                        {formatImpactPercent(
+                                          eventImpact.day1ReturnPercent,
+                                        )}
+                                      </strong>
+                                    </div>
+
+                                    <div>
+                                      <span>Após 5 pregões</span>
+                                      <strong
+                                        className={getImpactValueClassName(
+                                          eventImpact.day5ReturnPercent,
+                                        )}
+                                      >
+                                        {formatImpactPercent(
+                                          eventImpact.day5ReturnPercent,
+                                        )}
+                                      </strong>
+                                    </div>
+
+                                    <div>
+                                      <span>Após 30 pregões</span>
+                                      <strong
+                                        className={getImpactValueClassName(
+                                          eventImpact.day30ReturnPercent,
+                                        )}
+                                      >
+                                        {formatImpactPercent(
+                                          eventImpact.day30ReturnPercent,
+                                        )}
+                                      </strong>
+                                    </div>
+
+                                    <div>
+                                      <span>Volume contra média</span>
                                       <strong
                                         className={getImpactValueClassName(
                                           eventImpact.volumeChangePercent,
@@ -2308,93 +2258,6 @@ function App() {
                                     </div>
                                   </div>
 
-                                  <section className="event-benchmark-section">
-                                    <div className="event-benchmark-heading">
-                                      <div>
-                                        <span className="event-benchmark-eyebrow">
-                                          Comparação com benchmark
-                                        </span>
-
-                                        <strong>
-                                          {eventImpact.symbol} ×{' '}
-                                          {eventImpact.benchmarkSymbol ||
-                                            'QQQ'}
-                                        </strong>
-                                      </div>
-
-                                      <span>
-                                        Retorno excedente ={' '}
-                                        {eventImpact.symbol} −{' '}
-                                        {eventImpact.benchmarkSymbol ||
-                                          'QQQ'}
-                                      </span>
-                                    </div>
-
-                                    {eventImpact.benchmarkIsAvailable ? (
-                                      <div className="event-benchmark-table">
-                                        <div className="event-benchmark-row event-benchmark-row-header">
-                                          <span>Período</span>
-                                          <span>
-                                            {eventImpact.symbol}
-                                          </span>
-                                          <span>
-                                            {eventImpact.benchmarkSymbol ||
-                                              'QQQ'}
-                                          </span>
-                                          <span>Excedente</span>
-                                        </div>
-
-                                        {impactComparisonRows.map(
-                                          (comparisonRow) => (
-                                            <div
-                                              className="event-benchmark-row"
-                                              key={comparisonRow.label}
-                                            >
-                                              <span>
-                                                {comparisonRow.label}
-                                              </span>
-
-                                              <strong
-                                                className={getImpactValueClassName(
-                                                  comparisonRow.stockReturnPercent,
-                                                )}
-                                              >
-                                                {formatBenchmarkPercent(
-                                                  comparisonRow.stockReturnPercent,
-                                                )}
-                                              </strong>
-
-                                              <strong
-                                                className={getImpactValueClassName(
-                                                  comparisonRow.benchmarkReturnPercent,
-                                                )}
-                                              >
-                                                {formatBenchmarkPercent(
-                                                  comparisonRow.benchmarkReturnPercent,
-                                                )}
-                                              </strong>
-
-                                              <strong
-                                                className={getImpactValueClassName(
-                                                  comparisonRow.excessReturnPercent,
-                                                )}
-                                              >
-                                                {formatBenchmarkPercent(
-                                                  comparisonRow.excessReturnPercent,
-                                                )}
-                                              </strong>
-                                            </div>
-                                          ),
-                                        )}
-                                      </div>
-                                    ) : (
-                                      <p className="event-benchmark-status">
-                                        {eventImpact.benchmarkUnavailableReason ??
-                                          'Não existem dados suficientes do benchmark para este evento.'}
-                                      </p>
-                                    )}
-                                  </section>
-
                                   {tradingDateExplanation && (
                                     <p className="event-impact-explanation">
                                       {tradingDateExplanation}
@@ -2402,7 +2265,7 @@ function App() {
                                   )}
 
                                   <p className="event-impact-disclaimer">
-                                    O retorno excedente representa o movimento da {eventImpact.symbol} menos o movimento do {eventImpact.benchmarkSymbol || 'QQQ'} no mesmo intervalo. Os valores mostram movimentos observados e não comprovam que o evento foi a causa das variações.
+                                    Os valores representam movimentos observados nas ações da Take-Two após o evento. Eles não comprovam que o evento foi a única causa das variações.
                                   </p>
                                 </>
                               ) : (

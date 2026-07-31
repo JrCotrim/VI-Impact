@@ -141,6 +141,7 @@ interface PendingChartCrosshair {
 const minimumVisiblePointCount = 3
 const maximumWheelDelta = 240
 const wheelZoomIntensity = 0.0018
+const emptyBenchmarkValues: StockTimeSeriesPoint[] = []
 
 function clamp(
   value: number,
@@ -1994,7 +1995,7 @@ function EventMarkerShape({
 
 export function StockChart({
   values,
-  benchmarkValues = [],
+  benchmarkValues = emptyBenchmarkValues,
   primarySymbol = 'TTWO',
   benchmarkSymbol = 'QQQ',
   events,
@@ -2455,6 +2456,8 @@ export function StockChart({
       }
 
       event.preventDefault()
+      event.stopPropagation()
+
       setActiveEventTooltip(null)
       pendingCrosshairRef.current = null
       lastCrosshairTimestampRef.current = null
@@ -2466,12 +2469,28 @@ export function StockChart({
 
       const containerBounds =
         chartElement.getBoundingClientRect()
-      const anchorRatio =
+      const anchorRatio = clamp(
         containerBounds.width > 0
           ? (event.clientX -
               containerBounds.left) /
             containerBounds.width
-          : 0.5
+          : 0.5,
+        0,
+        1,
+      )
+
+      const normalizedDelta =
+        event.deltaMode === WheelEvent.DOM_DELTA_LINE
+          ? event.deltaY * 16
+          : event.deltaMode ===
+              WheelEvent.DOM_DELTA_PAGE
+            ? event.deltaY *
+              Math.max(
+                containerBounds.height,
+                1,
+              )
+            : event.deltaY
+
       const currentViewport =
         pendingViewportRef.current ??
         viewportRef.current
@@ -2480,22 +2499,28 @@ export function StockChart({
         zoomViewport(
           currentViewport,
           totalPointCount,
-          event.deltaY,
+          normalizedDelta,
           anchorRatio,
         ),
       )
     }
 
+    const wheelListenerOptions: AddEventListenerOptions = {
+      passive: false,
+      capture: true,
+    }
+
     chartElement.addEventListener(
       'wheel',
       handleNativeWheel,
-      { passive: false },
+      wheelListenerOptions,
     )
 
     return () => {
       chartElement.removeEventListener(
         'wheel',
         handleNativeWheel,
+        true,
       )
     }
   }, [
