@@ -86,6 +86,9 @@ builder.Configuration
 
 builder.Services.AddSingleton(twelveDataOptions);
 
+builder.Services.AddSingleton<
+    TwelveDataResilienceState>();
+
 builder.Services.AddHttpClient<
     IStockMarketService,
     TwelveDataStockMarketService>(
@@ -93,6 +96,11 @@ builder.Services.AddHttpClient<
         {
             client.BaseAddress =
                 new Uri(twelveDataOptions.BaseUrl);
+
+            // Per-attempt timeouts are enforced by the provider
+            // resilience policy.
+            client.Timeout =
+                Timeout.InfiniteTimeSpan;
         });
 
 var app = builder.Build();
