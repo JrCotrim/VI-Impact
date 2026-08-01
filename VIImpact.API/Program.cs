@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using VIImpact.API.BackgroundServices;
 using VIImpact.API.Configuration;
+using VIImpact.API.ErrorHandling;
 using VIImpact.Application.Interfaces;
 using VIImpact.Application.Services;
 using VIImpact.Infrastructure.Configuration;
@@ -46,6 +47,9 @@ builder.Services.AddProblemDetails(options =>
             context.HttpContext.TraceIdentifier;
     };
 });
+
+builder.Services.AddExceptionHandler<
+    ApiExceptionHandler>();
 
 // Automatic stock quote collection
 builder.Services.Configure<StockCollectionOptions>(
