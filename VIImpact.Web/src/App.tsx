@@ -703,49 +703,71 @@ function createVolumeVisualization(
   const volumes = getSortedQuotes(quotes)
     .slice(-13)
     .map((quote) => quote.volume)
+    .filter((volume) => volume > 0)
 
   if (volumes.length === 0) {
     return {
       bars: [
-        20,
-        34,
+        24,
+        22,
+        27,
+        31,
         26,
-        42,
-        30,
-        48,
         36,
+        29,
+        33,
+        28,
+        35,
+        31,
+        34,
+        32,
       ],
       averageHeight: null,
     }
   }
 
-  const maximumVolume =
-    Math.max(
-      ...volumes,
-      averageVolume ?? 0,
-    ) || 1
-
-  const bars = volumes.map(
-    (volume) =>
-      Math.max(
-        7,
-        Math.round(
-          (volume / maximumVolume) * 48,
-        ),
-      ),
+  const sortedVolumes = [...volumes].sort(
+    (firstVolume, secondVolume) =>
+      firstVolume - secondVolume,
   )
+
+  const percentileIndex = Math.min(
+    sortedVolumes.length - 1,
+    Math.floor(
+      (sortedVolumes.length - 1) * 0.82,
+    ),
+  )
+
+  const scaleMaximum =
+    sortedVolumes[percentileIndex] || 1
+
+  const bars = volumes.map((volume) => {
+    const normalizedVolume =
+      Math.min(volume, scaleMaximum) /
+      scaleMaximum
+
+    return Math.max(
+      8,
+      Math.round(
+        Math.sqrt(normalizedVolume) * 42,
+      ),
+    )
+  })
 
   const averageHeight =
     averageVolume &&
     averageVolume > 0
       ? Math.max(
-          5,
+          7,
           Math.min(
-            48,
+            42,
             Math.round(
-              (averageVolume /
-                maximumVolume) *
-                48,
+              Math.sqrt(
+                Math.min(
+                  averageVolume,
+                  scaleMaximum,
+                ) / scaleMaximum,
+              ) * 42,
             ),
           ),
         )
@@ -946,11 +968,11 @@ function formatVolumeComparison(
   changePercent: number | null,
 ): string {
   if (changePercent === null) {
-    return 'Calculando média de 30 dias'
+    return 'Média de 30 dias indisponível'
   }
 
   if (Math.abs(changePercent) < 0.01) {
-    return 'Na média dos últimos 30 dias'
+    return 'Na média de 30 dias'
   }
 
   const formattedPercent =
@@ -2182,18 +2204,13 @@ function App() {
                   viewBox="0 0 24 24"
                   aria-hidden="true"
                 >
-                  <path d="M12 2v20M16.5 6.5H9.75a3.25 3.25 0 0 0 0 6.5h4.5a3.25 3.25 0 0 1 0 6.5H7.5" />
+                  <path d="M3 15h3l2-8 4 11 3-7 2 4h4" />
                 </svg>
               </span>
 
-              <div className="summary-card-heading-copy">
-                <span className="summary-card-title">
-                  Preço atual
-                </span>
-                <span className="summary-card-symbol">
-                  {dashboard.symbol} · {exchangeName}
-                </span>
-              </div>
+              <span className="summary-card-title">
+                Preço atual
+              </span>
             </div>
 
             <div className="summary-card-main summary-card-main-stacked">
@@ -2203,32 +2220,48 @@ function App() {
                 )}
               </strong>
 
-              <span className="summary-card-context">
-                Último preço registrado
+              <span className="summary-card-symbol">
+                {dashboard.symbol} · {exchangeName}
               </span>
             </div>
 
-            <small>
-              <span
-                className={`live-dot ${
-                  marketStatus === 'Mercado aberto'
-                    ? ''
-                    : 'market-closed'
-                }`}
-              />
-              {marketStatus}
-            </small>
+            <div className="summary-card-footer price-card-footer">
+              <span className="market-status-indicator">
+                <span
+                  className={[
+                    'live-dot',
+                    marketStatus === 'Mercado aberto'
+                      ? ''
+                      : 'market-closed',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  aria-hidden="true"
+                />
+
+                {marketStatus}
+              </span>
+
+            </div>
           </article>
 
           <article className="summary-card variation-card">
             <div className="summary-card-heading">
-              <span className="summary-icon variation-icon">
+              <span
+                className={[
+                  'summary-icon',
+                  'variation-icon',
+                  isPositive
+                    ? 'positive'
+                    : 'negative',
+                ].join(' ')}
+              >
                 <svg
                   viewBox="0 0 24 24"
                   aria-hidden="true"
                 >
-                  <path d="m5 16 5-5 3 3 6-7" />
-                  <path d="M14 7h5v5" />
+                  <path d="m4 7 5 5 4-4 7 7" />
+                  <path d="M16 15h4v-4" />
                 </svg>
               </span>
 
@@ -2284,11 +2317,6 @@ function App() {
                 />
               </svg>
             </div>
-
-            <small>
-              <span className="live-dot" />
-              Últimos registros
-            </small>
           </article>
 
           <article className="summary-card volume-card">
@@ -2298,7 +2326,7 @@ function App() {
                   viewBox="0 0 24 24"
                   aria-hidden="true"
                 >
-                  <path d="M5 20V11M12 20V5M19 20V8" />
+                  <path d="M4 19v-6M9 19V8M14 19v-9M19 19V4" />
                 </svg>
               </span>
 
@@ -2339,23 +2367,7 @@ function App() {
                   />
                 ),
               )}
-
-              {volumeVisualization
-                .averageHeight !== null && (
-                <div
-                  className="volume-average-marker"
-                  style={{
-                    bottom:
-                      `${volumeVisualization.averageHeight}px`,
-                  }}
-                />
-              )}
             </div>
-
-            <small>
-              <span className="live-dot" />
-              Volume acumulado do pregão
-            </small>
           </article>
 
           <article className="summary-card update-card">
@@ -2365,8 +2377,8 @@ function App() {
                   viewBox="0 0 24 24"
                   aria-hidden="true"
                 >
-                  <circle cx="12" cy="12" r="8" />
-                  <path d="M12 7v5l3 2" />
+                  <circle cx="12" cy="12" r="8.5" />
+                  <path d="M12 7.5V12l3 2" />
                 </svg>
               </span>
 
@@ -2436,13 +2448,11 @@ function App() {
               )}
             </div>
 
-            <small>
-              <span className="live-dot" />
-              {marketStatus ===
-              'Mercado fechado'
-                ? 'Sessão regular da Nasdaq'
-                : 'Horário local'}
-            </small>
+            <div className="summary-card-footer update-card-footer">
+              <small>
+                Sessão Nasdaq · 9:30–16:00 ET
+              </small>
+            </div>
           </article>
         </section>
 
