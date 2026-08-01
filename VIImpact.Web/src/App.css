@@ -8496,3 +8496,930 @@ a {
   color: #5d6b82;
 }
 
+/* =========================================================
+   Cards de resumo — visual compacto de terminal de mercado
+   ========================================================= */
+
+.summary-grid {
+  gap: 16px;
+  margin-top: 10px;
+  margin-bottom: 16px;
+}
+
+.summary-card,
+:root[data-theme='night'] .summary-card,
+:root:not([data-theme='night']) .summary-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 158px;
+  padding: 18px 18px 16px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(116, 58, 153, 0.42) !important;
+  border-radius: 16px;
+  background: rgba(13, 8, 28, 0.96) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(12px);
+}
+
+.summary-card:hover,
+:root:not([data-theme='night']) .summary-card:hover {
+  border-color: rgba(180, 77, 226, 0.58) !important;
+  box-shadow: 0 10px 26px rgba(4, 2, 12, 0.18) !important;
+  transform: translateY(-1px);
+}
+
+.summary-card::before,
+.summary-card::after {
+  display: none !important;
+}
+
+.summary-card-heading {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 18px;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-icon,
+:root[data-theme='night'] .summary-icon {
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none;
+}
+
+.summary-icon svg {
+  width: 16px;
+  height: 16px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.price-icon {
+  color: #ff3f9f;
+}
+
+.variation-icon.negative {
+  color: #ff476f;
+}
+
+.variation-icon.positive {
+  color: #35d99a;
+}
+
+.volume-icon {
+  color: #a647dc;
+}
+
+.update-icon {
+  color: #398bff;
+}
+
+.summary-card-title {
+  display: block;
+  overflow: visible;
+  color: #aaa0b9;
+  font-size: 0.7rem;
+  font-weight: 750;
+  line-height: 1;
+  text-overflow: clip;
+  text-transform: uppercase;
+  white-space: nowrap;
+  letter-spacing: 0.055em;
+}
+
+.summary-card-main,
+.summary-card-main-stacked,
+.volume-card .summary-card-main {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  max-width: none;
+  margin: 14px 0 0;
+  padding: 0 !important;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-card-main strong,
+.summary-card strong {
+  align-self: auto;
+  margin: 0;
+  padding: 0;
+  color: #f8f4ff;
+  font-size: clamp(1.5rem, 1.75vw, 1.84rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.summary-card-symbol {
+  overflow: visible;
+  color: #9d93ad;
+  font-size: 0.65rem;
+  font-weight: 650;
+  line-height: 1.15;
+  text-overflow: clip;
+  text-transform: uppercase;
+  white-space: nowrap;
+  letter-spacing: 0.025em;
+}
+
+.summary-card-context {
+  overflow: visible;
+  max-width: 100%;
+  color: #a79daf;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.summary-card-footer {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  align-items: start;
+  gap: 7px;
+  margin-top: auto;
+}
+
+.summary-card-footer small,
+.price-card-footer small,
+.update-card-footer small {
+  display: block;
+  margin: 0;
+  padding: 0 !important;
+  color: #8e849e;
+  font-size: 0.58rem;
+  font-weight: 550;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.market-status-pill {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 23px;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.market-status-pill.closed {
+  color: #ffc44f;
+  background: rgba(170, 103, 24, 0.24);
+}
+
+.market-status-pill.open {
+  color: #4be2a5;
+  background: rgba(28, 164, 106, 0.2);
+}
+
+.variation-card {
+  display: flex;
+  min-height: 158px;
+}
+
+.variation-content {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: 100%;
+  min-height: 0;
+  margin-top: 14px;
+  padding: 0 !important;
+  grid-template-columns:
+    minmax(128px, 1fr)
+    minmax(92px, 42%);
+  align-items: end;
+  gap: 14px;
+  flex: 1 1 auto;
+}
+
+.variation-values {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 6px;
+}
+
+.variation-values strong {
+  font-size: clamp(1.46rem, 1.7vw, 1.8rem);
+}
+
+.variation-percent {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px 5px;
+  font-size: 0.69rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.variation-period-copy {
+  color: #a69bac;
+  font-size: 0.63rem;
+  font-weight: 550;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.variation-card .summary-sparkline {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  display: block;
+  width: 100% !important;
+  max-width: none;
+  height: 50px;
+  align-self: end;
+  justify-self: stretch;
+  margin: 0;
+  opacity: 1;
+}
+
+.summary-sparkline polyline {
+  stroke-width: 2.25;
+}
+
+.volume-card .summary-card-main {
+  width: calc(100% - 118px);
+  margin-top: 14px;
+}
+
+.volume-card .summary-card-context {
+  max-width: 170px;
+}
+
+.volume-bars {
+  position: absolute;
+  z-index: 2;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  height: 48px;
+  align-items: flex-end;
+  gap: 2px;
+  opacity: 0.96;
+}
+
+.volume-bars span {
+  width: 7px;
+  min-height: 5px;
+  border-radius: 1px 1px 0 0;
+  background: linear-gradient(
+    180deg,
+    #9a42cf,
+    #67239b
+  );
+  box-shadow: none;
+}
+
+.volume-average-marker {
+  display: none !important;
+}
+
+.update-card .market-closed-summary {
+  display: flex !important;
+  margin-top: 14px;
+  padding: 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  text-align: left;
+}
+
+.update-card .market-closed-value {
+  align-self: flex-start;
+  padding: 0;
+  font-size: clamp(1.35rem, 1.65vw, 1.68rem);
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+}
+
+.update-session-details {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  align-items: flex-start;
+  gap: 3px;
+  font-size: 0.65rem;
+}
+
+.update-session-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.update-session-label {
+  color: #998fa8;
+  font-size: 0.62rem;
+  font-weight: 550;
+}
+
+.update-session-inline-value {
+  color: #d8d1e2;
+  font-size: 0.64rem;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+.update-card .time-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.volume-comparison-positive {
+  color: #37d89a;
+}
+
+.volume-comparison-negative {
+  color: #ff5b7d;
+}
+
+:root:not([data-theme='night']) .summary-card {
+  border-color: rgba(107, 67, 139, 0.24) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: 0 8px 22px rgba(42, 24, 66, 0.08) !important;
+}
+
+:root:not([data-theme='night']) .summary-card-main strong,
+:root:not([data-theme='night']) .summary-card strong {
+  color: #191426;
+}
+
+:root:not([data-theme='night']) .summary-card-title {
+  color: #675e74;
+}
+
+:root:not([data-theme='night']) .summary-card-symbol,
+:root:not([data-theme='night']) .summary-card-context,
+:root:not([data-theme='night']) .variation-period-copy,
+:root:not([data-theme='night']) .summary-card-footer small,
+:root:not([data-theme='night']) .update-session-label {
+  color: #736a7f;
+}
+
+:root:not([data-theme='night']) .update-session-inline-value {
+  color: #31283d;
+}
+
+@media (max-width: 1280px) {
+  .summary-card,
+  .variation-card {
+    min-height: 154px;
+  }
+
+  .volume-bars span {
+    width: 6px;
+  }
+}
+
+@media (max-width: 700px) {
+  .summary-card,
+  .variation-card {
+    min-height: 150px;
+  }
+
+  .variation-content {
+    grid-template-columns:
+      minmax(120px, 1fr)
+      minmax(100px, 40%);
+  }
+}
+
+@media (max-width: 460px) {
+  .summary-card,
+  .variation-card {
+    min-height: 148px;
+    padding: 16px;
+  }
+
+  .variation-content {
+    grid-template-columns: 1fr;
+  }
+
+  .variation-card .summary-sparkline {
+    display: none;
+  }
+
+  .volume-card .summary-card-main {
+    width: calc(100% - 88px);
+  }
+
+  .volume-bars {
+    right: 16px;
+    opacity: 0.68;
+  }
+
+  .volume-bars span {
+    width: 4px;
+  }
+}
+
+/* =========================================================
+   Ajuste final dos cards de resumo
+   ========================================================= */
+
+/* Primeiro card: status simples com bolinha verde/cinza. */
+.market-status-pill {
+  display: none !important;
+}
+
+.market-status-indicator {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 7px;
+  color: #a79daf;
+  font-size: 0.65rem;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.market-status-indicator .live-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+}
+
+.market-status-indicator .live-dot.market-closed {
+  background: #838797;
+  box-shadow:
+    0 0 0 2px rgba(131, 135, 151, 0.16);
+}
+
+:root:not([data-theme='night'])
+  .market-status-indicator {
+  color: #6f667b;
+}
+
+/* Variação diária:
+   valor, percentual e gráfico empilhados como na referência. */
+.variation-card,
+.volume-card {
+  display: flex;
+  min-height: 158px;
+  flex-direction: column;
+}
+
+.variation-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  margin-top: 16px;
+  padding: 0 !important;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+}
+
+.variation-values {
+  display: grid;
+  width: 100%;
+  align-content: start;
+  justify-items: start;
+  gap: 5px;
+}
+
+.variation-values strong {
+  margin: 0;
+  padding: 0;
+  color: #f8f4ff;
+  font-size: clamp(1.5rem, 1.75vw, 1.84rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+
+.variation-percent {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px 5px;
+  font-size: 0.69rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.variation-card .summary-sparkline {
+  position: static;
+  display: block;
+  width: min(54%, 190px) !important;
+  height: 44px;
+  margin: 10px 0 0;
+  align-self: flex-start;
+  opacity: 1;
+}
+
+.variation-card .summary-sparkline polyline {
+  stroke-width: 2.15;
+}
+
+/* Volume negociado:
+   número e comparação no topo, barras logo abaixo à esquerda. */
+.volume-card .summary-card-main {
+  width: 100%;
+  max-width: none;
+  margin-top: 16px;
+  padding: 0 !important;
+  flex: 0 0 auto;
+}
+
+.volume-card .summary-card-main strong {
+  font-size: clamp(1.5rem, 1.75vw, 1.84rem);
+}
+
+.volume-card .summary-card-context {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.volume-bars {
+  position: static;
+  display: flex;
+  width: min(54%, 190px);
+  height: 44px;
+  margin-top: 10px;
+  align-items: flex-end;
+  align-self: flex-start;
+  gap: 2px;
+  opacity: 0.96;
+}
+
+.volume-bars span {
+  width: auto;
+  min-width: 4px;
+  max-width: 10px;
+  min-height: 5px;
+  flex: 1 1 7px;
+  border-radius: 1px 1px 0 0;
+}
+
+/* Garante que os dois cards mantenham a mesma hierarquia
+   tipográfica do card de preço. */
+:root:not([data-theme='night'])
+  .variation-values strong {
+  color: #191426;
+}
+
+@media (max-width: 1280px) {
+  .variation-card,
+  .volume-card {
+    min-height: 154px;
+  }
+
+  .variation-card .summary-sparkline,
+  .volume-bars {
+    width: min(58%, 178px);
+  }
+}
+
+@media (max-width: 700px) {
+  .variation-card,
+  .volume-card {
+    min-height: 150px;
+  }
+
+  .variation-card .summary-sparkline,
+  .volume-bars {
+    width: min(62%, 180px);
+  }
+}
+
+@media (max-width: 460px) {
+  .variation-card .summary-sparkline,
+  .volume-bars {
+    width: min(72%, 180px);
+  }
+}
+
+/* =========================================================
+   Refinamento final dos quatro cards de resumo
+   ========================================================= */
+
+.summary-card,
+.variation-card,
+.volume-card {
+  min-height: 166px;
+}
+
+.summary-card {
+  padding: 19px 20px 17px;
+}
+
+.summary-card-heading {
+  min-height: 20px;
+  gap: 9px;
+}
+
+.summary-icon,
+:root[data-theme='night'] .summary-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.summary-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.95;
+}
+
+.summary-card-title {
+  font-size: 0.76rem;
+  line-height: 1.08;
+  letter-spacing: 0.052em;
+}
+
+.summary-card-main,
+.summary-card-main-stacked,
+.volume-card .summary-card-main {
+  margin-top: 16px;
+  gap: 5px;
+}
+
+.summary-card-main strong,
+.summary-card strong,
+.variation-values strong,
+.volume-card .summary-card-main strong {
+  font-size: clamp(1.62rem, 1.86vw, 1.96rem);
+}
+
+.summary-card-symbol {
+  font-size: 0.7rem;
+}
+
+.summary-card-context {
+  font-size: 0.73rem;
+  line-height: 1.24;
+}
+
+.market-status-indicator {
+  gap: 8px;
+  font-size: 0.71rem;
+}
+
+.market-status-indicator .live-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+}
+
+.price-card-footer {
+  margin-top: auto;
+  gap: 0;
+}
+
+.variation-content {
+  margin-top: 16px;
+}
+
+.variation-percent {
+  gap: 4px 6px;
+  font-size: 0.74rem;
+}
+
+.variation-period-copy {
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.variation-card .summary-sparkline {
+  width: min(55%, 196px) !important;
+  height: 46px;
+  margin-top: 11px;
+}
+
+/* Gráfico do volume mais à esquerda e próximo da referência:
+   barras mais largas, pouco espaçamento e linha pontilhada roxa. */
+.volume-bars {
+  position: relative;
+  width: 154px;
+  max-width: 100%;
+  height: 47px;
+  margin: 12px 0 0;
+  padding-top: 5px;
+  align-self: flex-start;
+  gap: 1px;
+  border-top:
+    1px dashed rgba(169, 70, 219, 0.78);
+  transform: translateX(-1px);
+}
+
+.volume-bars span {
+  min-width: 7px;
+  max-width: 11px;
+  flex: 1 1 9px;
+  border-radius: 1px 1px 0 0;
+  background:
+    linear-gradient(
+      180deg,
+      #9742cc,
+      #6d299f
+    );
+}
+
+.update-card .market-closed-value {
+  font-size: clamp(1.46rem, 1.78vw, 1.82rem);
+}
+
+.update-session-details {
+  gap: 4px;
+}
+
+.update-session-label {
+  font-size: 0.67rem;
+}
+
+.update-session-inline-value {
+  font-size: 0.7rem;
+}
+
+.summary-card-footer small,
+.update-card-footer small {
+  font-size: 0.63rem;
+}
+
+@media (max-width: 1280px) {
+  .summary-card,
+  .variation-card,
+  .volume-card {
+    min-height: 162px;
+  }
+
+  .summary-card-title {
+    font-size: 0.74rem;
+  }
+
+  .summary-card-main strong,
+  .summary-card strong,
+  .variation-values strong,
+  .volume-card .summary-card-main strong {
+    font-size: clamp(1.56rem, 1.82vw, 1.88rem);
+  }
+
+  .volume-bars {
+    width: 148px;
+  }
+}
+
+@media (max-width: 700px) {
+  .summary-card,
+  .variation-card,
+  .volume-card {
+    min-height: 158px;
+  }
+
+  .summary-icon,
+  :root[data-theme='night'] .summary-icon,
+  .summary-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .summary-icon,
+  :root[data-theme='night'] .summary-icon {
+    flex-basis: 17px;
+  }
+
+  .summary-card-title {
+    font-size: 0.72rem;
+  }
+
+  .volume-bars {
+    width: 146px;
+  }
+}
+
+/* =========================================================
+   Correção do mini gráfico de volume
+   ========================================================= */
+
+/* A linha deixa de ficar presa no topo e volta a representar
+   a média calculada dentro da área do gráfico. */
+.volume-bars {
+  position: relative;
+  width: 154px;
+  max-width: 100%;
+  height: 47px;
+  margin: 12px 0 0;
+  padding-top: 0;
+  align-self: flex-start;
+  align-items: flex-end;
+  gap: 2px;
+  border-top: 0;
+  transform: none;
+}
+
+.volume-bars span {
+  position: relative;
+  z-index: 2;
+  min-width: 6px;
+  max-width: 10px;
+  flex: 1 1 8px;
+  border-radius: 1px 1px 0 0;
+}
+
+.volume-average-marker {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  left: 0;
+  display: block !important;
+  height: 0;
+  border-top:
+    1px dashed rgba(169, 70, 219, 0.78);
+  pointer-events: none;
+}
+
+.volume-average-marker em {
+  display: none !important;
+}
+
+@media (max-width: 1280px) {
+  .volume-bars {
+    width: 148px;
+  }
+}
+
+@media (max-width: 700px) {
+  .volume-bars {
+    width: 146px;
+  }
+}
+
+/* =========================================================
+   Ajuste de posição do mini gráfico de volume
+   ========================================================= */
+
+/* As regras antigas usavam right/bottom quando o gráfico era
+   absoluto. Ao trocar para relativo, esses deslocamentos ainda
+   afetavam sua posição. Aqui eles são neutralizados. */
+.volume-card .volume-bars {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  width: 154px;
+  max-width: calc(100% - 12px);
+  height: 47px;
+  margin: 19px 0 0 10px;
+  padding: 0;
+  align-self: flex-start;
+  transform: none;
+}
+
+@media (max-width: 1280px) {
+  .volume-card .volume-bars {
+    width: 148px;
+    margin-top: 18px;
+    margin-left: 9px;
+  }
+}
+
+@media (max-width: 700px) {
+  .volume-card .volume-bars {
+    width: 146px;
+    margin-top: 17px;
+    margin-left: 8px;
+  }
+}
+
