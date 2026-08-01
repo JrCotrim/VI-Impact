@@ -659,17 +659,30 @@ function calculateAbsoluteChange(
 
 function createSparklinePoints(
   quotes: StockQuote[],
+  timeSeries: StockTimeSeries | null,
 ): string {
-  const recentQuotes = getSortedQuotes(quotes)
-    .slice(-28)
+  const historicalPrices =
+    timeSeries?.values
+      .slice(-28)
+      .map((value) => value.close)
+      .filter((price) =>
+        Number.isFinite(price),
+      ) ?? []
 
-  if (recentQuotes.length === 0) {
+  const prices =
+    historicalPrices.length >= 2
+      ? historicalPrices
+      : getSortedQuotes(quotes)
+          .slice(-28)
+          .map((quote) => quote.price)
+
+  if (prices.length === 0) {
     return '0,26 180,26'
   }
 
-  const prices = recentQuotes.map(
-    (quote) => quote.price,
-  )
+  if (prices.length === 1) {
+    return '0,28 180,28'
+  }
 
   const minimumPrice = Math.min(...prices)
   const maximumPrice = Math.max(...prices)
@@ -703,12 +716,22 @@ interface VolumeVisualization {
 
 function createVolumeVisualization(
   quotes: StockQuote[],
+  timeSeries: StockTimeSeries | null,
   averageVolume: number | null,
 ): VolumeVisualization {
-  const volumes = getSortedQuotes(quotes)
-    .slice(-13)
-    .map((quote) => quote.volume)
-    .filter((volume) => volume > 0)
+  const historicalVolumes =
+    timeSeries?.values
+      .slice(-13)
+      .map((value) => value.volume)
+      .filter((volume) => volume > 0) ?? []
+
+  const volumes =
+    historicalVolumes.length >= 2
+      ? historicalVolumes
+      : getSortedQuotes(quotes)
+          .slice(-13)
+          .map((quote) => quote.volume)
+          .filter((volume) => volume > 0)
 
   if (volumes.length === 0) {
     return {
@@ -1924,11 +1947,13 @@ function App() {
   const sparklinePoints =
     createSparklinePoints(
       dashboard.quotes,
+      timeSeries,
     )
 
   const volumeVisualization =
     createVolumeVisualization(
       dashboard.quotes,
+      timeSeries,
       averageVolume30Sessions,
     )
 

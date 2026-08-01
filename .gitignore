@@ -361,3 +361,16 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# VI Impact frontend build output
+VIImpact.Web/dist/
+
+# Docker Compose local secrets and overrides
+.env
+.env.*
+!.env.example
+compose.override.yaml
+compose.override.yml
+docker-compose.override.yaml
+docker-compose.override.yml
+

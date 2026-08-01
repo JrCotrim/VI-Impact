@@ -1,7 +1,6 @@
-import { fetchJson } from './apiClient'
+import { buildApiUrl, fetchJson } from './apiClient'
 import type { GtaEventImpact } from '../types/dashboard'
 
-const apiBaseUrl = 'http://localhost:5170'
 
 /**
  * Retrieves the observed stock-market movement associated with a GTA VI event.
@@ -44,10 +43,11 @@ export async function getGtaEventImpact(
         normalizedBenchmarkSymbol,
     })
 
-  const endpoint =
-    `${apiBaseUrl}/api/gtaevents/` +
-    `${encodeURIComponent(normalizedEventId)}/impact` +
-    `?${searchParameters.toString()}`
+  const endpoint = buildApiUrl(
+    `/api/gtaevents/` +
+      `${encodeURIComponent(normalizedEventId)}/impact` +
+      `?${searchParameters.toString()}`,
+  )
 
   return fetchJson<GtaEventImpact>(
     endpoint,
@@ -90,9 +90,10 @@ export async function getGtaEventImpactRanking(
         normalizedBenchmarkSymbol,
     })
 
-  const endpoint =
-    `${apiBaseUrl}/api/gtaevents/impact-ranking` +
-    `?${searchParameters.toString()}`
+  const endpoint = buildApiUrl(
+    `/api/gtaevents/impact-ranking` +
+      `?${searchParameters.toString()}`,
+  )
 
   return fetchJson<GtaEventImpact[]>(
     endpoint,

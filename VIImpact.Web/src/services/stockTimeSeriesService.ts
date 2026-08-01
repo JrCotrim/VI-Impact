@@ -1,10 +1,9 @@
-import { fetchJson } from './apiClient'
+import { buildApiUrl, fetchJson } from './apiClient'
 import type {
   StockTimeSeries,
   StockTimeSeriesPeriod,
 } from '../types/dashboard'
 
-const apiBaseUrl = 'http://localhost:5170'
 
 interface GetStockTimeSeriesOptions {
   period: StockTimeSeriesPeriod
@@ -52,10 +51,11 @@ export async function getStockTimeSeries(
     )
   }
 
-  const endpoint =
-    `${apiBaseUrl}/api/stocks/` +
-    `${encodeURIComponent(normalizedSymbol)}/time-series` +
-    `?${searchParameters.toString()}`
+  const endpoint = buildApiUrl(
+    `/api/stocks/` +
+      `${encodeURIComponent(normalizedSymbol)}/time-series` +
+      `?${searchParameters.toString()}`,
+  )
 
   return fetchJson<StockTimeSeries>(
     endpoint,

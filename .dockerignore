@@ -1,30 +1,28 @@
-**/.classpath
-**/.dockerignore
-**/.env
-**/.git
-**/.gitignore
-**/.project
-**/.settings
-**/.toolstarget
-**/.vs
-**/.vscode
-**/*.*proj.user
-**/*.dbmdl
-**/*.jfm
-**/azds.yaml
+# Git and editor metadata
+.git
+.github
+.vs
+.vscode
+.idea
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# .NET outputs
 **/bin
-**/charts
-**/docker-compose*
-**/Dockerfile*
-**/node_modules
-**/npm-debug.log
 **/obj
-**/secrets.dev.yaml
-**/values.dev.yaml
-LICENSE
-README.md
-!**/.gitignore
-!.git/HEAD
-!.git/config
-!.git/packed-refs
-!.git/refs/heads/**
+**/TestResults
+**/*.user
+**/*.suo
+
+# Frontend outputs
+**/node_modules
+**/dist
+**/.vite
+
+# Logs and local artifacts
+**/*.log
+artifacts
+coverage
