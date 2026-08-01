@@ -1,4 +1,5 @@
-﻿using VIImpact.Application.Interfaces;
+﻿using System.Collections.Concurrent;
+using VIImpact.Application.Interfaces;
 using VIImpact.Application.Models;
 using VIImpact.Domain.Entities;
 using VIImpact.Domain.Enums;
@@ -15,15 +16,38 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
     private const int HistoricalWindowInDays = 120;
     private const int VolumeAverageSessionCount = 30;
 
+    private static readonly TimeSpan RankingCacheFreshness =
+        TimeSpan.FromMinutes(10);
+
+    private static readonly TimeSpan RankingCacheRetention =
+        TimeSpan.FromHours(24);
+
     private readonly IGtaEventRepository _gtaEventRepository;
     private readonly IStockMarketService _stockMarketService;
+    private readonly GtaEventImpactRankingCache _rankingCache;
+    private readonly TimeProvider _timeProvider;
 
     public GtaEventImpactService(
         IGtaEventRepository gtaEventRepository,
         IStockMarketService stockMarketService)
+        : this(
+            gtaEventRepository,
+            stockMarketService,
+            new GtaEventImpactRankingCache(),
+            TimeProvider.System)
+    {
+    }
+
+    public GtaEventImpactService(
+        IGtaEventRepository gtaEventRepository,
+        IStockMarketService stockMarketService,
+        GtaEventImpactRankingCache rankingCache,
+        TimeProvider timeProvider)
     {
         _gtaEventRepository = gtaEventRepository;
         _stockMarketService = stockMarketService;
+        _rankingCache = rankingCache;
+        _timeProvider = timeProvider;
     }
 
     public Task<GtaEventImpactResult?> CalculateAsync(
@@ -241,6 +265,148 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
             string benchmarkSymbol,
             CancellationToken cancellationToken = default)
     {
+        string normalizedSymbol =
+            NormalizeSymbol(symbol, "TTWO");
+
+        string normalizedBenchmarkSymbol =
+            NormalizeSymbol(
+                benchmarkSymbol,
+                DefaultBenchmarkSymbol);
+
+        string cacheKey = CreateRankingCacheKey(
+            normalizedSymbol,
+            normalizedBenchmarkSymbol);
+
+        DateTimeOffset now = _timeProvider.GetUtcNow();
+
+        if (
+            TryGetRankingCacheEntry(
+                cacheKey,
+                out RankingCacheEntry cachedEntry))
+        {
+            if (IsRankingCacheFresh(cachedEntry, now))
+            {
+                return cachedEntry.Results;
+            }
+
+            SemaphoreSlim refreshLock =
+                GetRankingRefreshLock(cacheKey);
+
+            bool acquiredRefreshLock =
+                await refreshLock.WaitAsync(
+                    0,
+                    cancellationToken);
+
+            if (!acquiredRefreshLock)
+            {
+                return cachedEntry.Results;
+            }
+
+            try
+            {
+                now = _timeProvider.GetUtcNow();
+
+                if (
+                    TryGetRankingCacheEntry(
+                        cacheKey,
+                        out RankingCacheEntry refreshedEntry) &&
+                    IsRankingCacheFresh(
+                        refreshedEntry,
+                        now))
+                {
+                    return refreshedEntry.Results;
+                }
+
+                try
+                {
+                    return await RefreshRankingCacheAsync(
+                        cacheKey,
+                        normalizedSymbol,
+                        normalizedBenchmarkSymbol,
+                        cancellationToken);
+                }
+                catch (OperationCanceledException)
+                    when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception)
+                {
+                    return cachedEntry.Results;
+                }
+            }
+            finally
+            {
+                refreshLock.Release();
+            }
+        }
+
+        SemaphoreSlim coldCacheLock =
+            GetRankingRefreshLock(cacheKey);
+
+        await coldCacheLock.WaitAsync(
+            cancellationToken);
+
+        try
+        {
+            now = _timeProvider.GetUtcNow();
+
+            if (
+                TryGetRankingCacheEntry(
+                    cacheKey,
+                    out RankingCacheEntry entryCreatedByAnotherRequest) &&
+                IsRankingCacheFresh(
+                    entryCreatedByAnotherRequest,
+                    now))
+            {
+                return entryCreatedByAnotherRequest.Results;
+            }
+
+            return await RefreshRankingCacheAsync(
+                cacheKey,
+                normalizedSymbol,
+                normalizedBenchmarkSymbol,
+                cancellationToken);
+        }
+        finally
+        {
+            coldCacheLock.Release();
+        }
+    }
+
+    private async Task<IReadOnlyList<GtaEventImpactResult>>
+        RefreshRankingCacheAsync(
+            string cacheKey,
+            string normalizedSymbol,
+            string normalizedBenchmarkSymbol,
+            CancellationToken cancellationToken)
+    {
+        IReadOnlyList<GtaEventImpactResult> results =
+            await CalculateRankingCoreAsync(
+                normalizedSymbol,
+                normalizedBenchmarkSymbol,
+                cancellationToken);
+
+        GtaEventImpactResult[] cachedResults =
+            results.ToArray();
+
+        var entry = new RankingCacheEntry(
+            cachedResults,
+            _timeProvider.GetUtcNow());
+
+        _rankingCache.Set(
+            cacheKey,
+            entry);
+
+        return cachedResults;
+    }
+
+    private async Task<IReadOnlyList<GtaEventImpactResult>>
+        CalculateRankingCoreAsync(
+            string normalizedSymbol,
+            string normalizedBenchmarkSymbol,
+            CancellationToken cancellationToken)
+    {
         IReadOnlyList<GtaEvent> storedEvents =
             await _gtaEventRepository.GetAllAsync(
                 cancellationToken);
@@ -258,14 +424,6 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
         {
             return Array.Empty<GtaEventImpactResult>();
         }
-
-        string normalizedSymbol =
-            NormalizeSymbol(symbol, "TTWO");
-
-        string normalizedBenchmarkSymbol =
-            NormalizeSymbol(
-                benchmarkSymbol,
-                DefaultBenchmarkSymbol);
 
         DateTime earliestAnalysisDate = eligibleEvents
             .Min(gtaEvent =>
@@ -378,7 +536,41 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
             results.Add(result);
         }
 
-        return results;
+        return results.ToArray();
+    }
+
+    private bool TryGetRankingCacheEntry(
+        string cacheKey,
+        out RankingCacheEntry entry)
+    {
+        return _rankingCache.TryGet(
+            cacheKey,
+            _timeProvider.GetUtcNow(),
+            RankingCacheRetention,
+            out entry);
+    }
+
+    private static bool IsRankingCacheFresh(
+        RankingCacheEntry entry,
+        DateTimeOffset now)
+    {
+        return now - entry.CreatedAtUtc <
+            RankingCacheFreshness;
+    }
+
+    private SemaphoreSlim GetRankingRefreshLock(
+        string cacheKey)
+    {
+        return _rankingCache.GetRefreshLock(
+            cacheKey);
+    }
+
+    private static string CreateRankingCacheKey(
+        string symbol,
+        string benchmarkSymbol)
+    {
+        return
+            $"gta-event-impact-ranking:{symbol}:{benchmarkSymbol}";
     }
 
     private static GtaEventImpactResult CalculateFromLoadedSeries(
@@ -1076,3 +1268,65 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
         DateTime MarketDate,
         bool? WasAfterMarketClose);
 }
+
+/// <summary>
+/// Stores ranking results in memory for the lifetime of the API process.
+/// The store is registered as a singleton so scoped impact-service
+/// instances share the same cached ranking.
+/// </summary>
+public sealed class GtaEventImpactRankingCache
+{
+    private readonly ConcurrentDictionary<string, RankingCacheEntry>
+        _entries =
+            new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly ConcurrentDictionary<string, SemaphoreSlim>
+        _refreshLocks =
+            new(StringComparer.OrdinalIgnoreCase);
+
+    internal bool TryGet(
+        string cacheKey,
+        DateTimeOffset now,
+        TimeSpan retention,
+        out RankingCacheEntry entry)
+    {
+        if (
+            _entries.TryGetValue(
+                cacheKey,
+                out RankingCacheEntry? cachedEntry))
+        {
+            if (now - cachedEntry.CreatedAtUtc <= retention)
+            {
+                entry = cachedEntry;
+                return true;
+            }
+
+            _entries.TryRemove(
+                cacheKey,
+                out _);
+        }
+
+        entry = null!;
+        return false;
+    }
+
+    internal void Set(
+        string cacheKey,
+        RankingCacheEntry entry)
+    {
+        _entries[cacheKey] = entry;
+    }
+
+    internal SemaphoreSlim GetRefreshLock(
+        string cacheKey)
+    {
+        return _refreshLocks.GetOrAdd(
+            cacheKey,
+            _ => new SemaphoreSlim(1, 1));
+    }
+}
+
+internal sealed record RankingCacheEntry(
+    IReadOnlyList<GtaEventImpactResult> Results,
+    DateTimeOffset CreatedAtUtc);
+

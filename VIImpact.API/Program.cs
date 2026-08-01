@@ -16,6 +16,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Controllers
 builder.Services.AddControllers();
 
+// Shared in-memory services
+builder.Services.AddSingleton<
+    GtaEventImpactRankingCache>();
+
+builder.Services.AddSingleton<TimeProvider>(
+    TimeProvider.System);
+
 // Frontend access
 builder.Services.AddCors(options =>
 {
