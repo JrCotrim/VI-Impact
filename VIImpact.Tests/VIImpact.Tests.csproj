@@ -15,9 +15,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\VIImpact.API\VIImpact.API.csproj" />
     <ProjectReference Include="..\VIImpact.Application\VIImpact.Application.csproj" />
     <ProjectReference Include="..\VIImpact.Domain\VIImpact.Domain.csproj" />
     <ProjectReference Include="..\VIImpact.Infrastructure\VIImpact.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>

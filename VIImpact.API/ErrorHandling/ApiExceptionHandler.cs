@@ -71,6 +71,9 @@ public sealed class ApiExceptionHandler : IExceptionHandler
         problemDetails.Extensions["errorCode"] =
             descriptor.ErrorCode;
 
+        problemDetails.Extensions["traceId"] =
+            httpContext.TraceIdentifier;
+
         var problemDetailsContext =
             new ProblemDetailsContext
             {
