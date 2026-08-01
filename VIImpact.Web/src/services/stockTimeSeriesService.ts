@@ -1,3 +1,4 @@
+import { fetchJson } from './apiClient'
 import type {
   StockTimeSeries,
   StockTimeSeriesPeriod,
@@ -10,30 +11,6 @@ interface GetStockTimeSeriesOptions {
   startDate?: string
   endDate?: string
   signal?: AbortSignal
-}
-
-interface ApiErrorResponse {
-  message?: string
-  detail?: string
-  title?: string
-}
-
-async function getErrorMessage(
-  response: Response,
-): Promise<string> {
-  try {
-    const errorResponse =
-      (await response.json()) as ApiErrorResponse
-
-    return (
-      errorResponse.message ??
-      errorResponse.detail ??
-      errorResponse.title ??
-      `A API retornou o status ${response.status}.`
-    )
-  } catch {
-    return `A API retornou o status ${response.status}.`
-  }
 }
 
 export async function getStockTimeSeries(
@@ -80,16 +57,9 @@ export async function getStockTimeSeries(
     `${encodeURIComponent(normalizedSymbol)}/time-series` +
     `?${searchParameters.toString()}`
 
-  const response = await fetch(endpoint, {
-    signal: options.signal,
-  })
-
-  if (!response.ok) {
-    const message =
-      await getErrorMessage(response)
-
-    throw new Error(message)
-  }
-
-  return response.json() as Promise<StockTimeSeries>
+  return fetchJson<StockTimeSeries>(
+    endpoint,
+    { signal: options.signal },
+    'Não foi possível carregar o histórico de cotações.',
+  )
 }

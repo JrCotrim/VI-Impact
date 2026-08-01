@@ -1,30 +1,7 @@
+import { fetchJson } from './apiClient'
 import type { GtaEventImpact } from '../types/dashboard'
 
 const apiBaseUrl = 'http://localhost:5170'
-
-interface ApiErrorResponse {
-  message?: string
-  detail?: string
-  title?: string
-}
-
-async function getErrorMessage(
-  response: Response,
-): Promise<string> {
-  try {
-    const errorResponse =
-      (await response.json()) as ApiErrorResponse
-
-    return (
-      errorResponse.message ??
-      errorResponse.detail ??
-      errorResponse.title ??
-      `A API retornou o status ${response.status}.`
-    )
-  } catch {
-    return `A API retornou o status ${response.status}.`
-  }
-}
 
 /**
  * Retrieves the observed stock-market movement associated with a GTA VI event.
@@ -72,18 +49,11 @@ export async function getGtaEventImpact(
     `${encodeURIComponent(normalizedEventId)}/impact` +
     `?${searchParameters.toString()}`
 
-  const response = await fetch(endpoint, {
-    signal,
-  })
-
-  if (!response.ok) {
-    const message =
-      await getErrorMessage(response)
-
-    throw new Error(message)
-  }
-
-  return response.json() as Promise<GtaEventImpact>
+  return fetchJson<GtaEventImpact>(
+    endpoint,
+    { signal },
+    'Não foi possível calcular o movimento observado.',
+  )
 }
 
 /**
@@ -124,16 +94,9 @@ export async function getGtaEventImpactRanking(
     `${apiBaseUrl}/api/gtaevents/impact-ranking` +
     `?${searchParameters.toString()}`
 
-  const response = await fetch(endpoint, {
-    signal,
-  })
-
-  if (!response.ok) {
-    const message =
-      await getErrorMessage(response)
-
-    throw new Error(message)
-  }
-
-  return response.json() as Promise<GtaEventImpact[]>
+  return fetchJson<GtaEventImpact[]>(
+    endpoint,
+    { signal },
+    'Não foi possível carregar o ranking de impacto.',
+  )
 }

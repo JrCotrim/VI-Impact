@@ -13,6 +13,11 @@ import {
 } from './services/gtaEventImpactService'
 import { getStockTimeSeries } from './services/stockTimeSeriesService'
 import {
+  getRetryHint,
+  toApiRequestError,
+} from './services/apiClient'
+import type { ApiRequestError } from './services/apiClient'
+import {
   formatGtaEventDate,
   getGtaEventCategoryLabel,
   getGtaEventConfirmationLabel,
@@ -1004,6 +1009,61 @@ function getVolumeComparisonClassName(
     : 'summary-card-context volume-comparison-negative'
 }
 
+
+interface ApiErrorNoticeProps {
+  error: ApiRequestError
+  onRetry?: () => void
+  compact?: boolean
+  staleMessage?: string
+  className?: string
+}
+
+function ApiErrorNotice({
+  error,
+  onRetry,
+  compact = false,
+  staleMessage,
+  className,
+}: ApiErrorNoticeProps) {
+  const retryHint = getRetryHint(error)
+
+  return (
+    <div
+      className={[
+        'api-error-notice',
+        compact ? 'compact' : '',
+        staleMessage ? 'stale-data' : '',
+        className ?? '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      role="alert"
+    >
+      <div className="api-error-copy">
+        <strong>{error.title}</strong>
+        <p>{error.message}</p>
+
+        {staleMessage && (
+          <small>{staleMessage}</small>
+        )}
+
+        {retryHint && (
+          <small>{retryHint}</small>
+        )}
+      </div>
+
+      {onRetry && error.canRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+        >
+          Tentar novamente
+        </button>
+      )}
+    </div>
+  )
+}
+
 function App() {
   const [dashboard, setDashboard] =
     useState<DashboardData | null>(null)
@@ -1062,12 +1122,22 @@ function App() {
   const [
     dashboardError,
     setDashboardError,
-  ] = useState<string | null>(null)
+  ] = useState<ApiRequestError | null>(null)
 
   const [
     chartError,
     setChartError,
-  ] = useState<string | null>(null)
+  ] = useState<ApiRequestError | null>(null)
+
+  const [
+    dashboardReloadRequest,
+    setDashboardReloadRequest,
+  ] = useState(0)
+
+  const [
+    chartReloadRequest,
+    setChartReloadRequest,
+  ] = useState(0)
 
   const [theme, setTheme] =
     useState<Theme>(getInitialTheme)
@@ -1148,7 +1218,12 @@ function App() {
   const [
     impactRankingError,
     setImpactRankingError,
-  ] = useState<string | null>(null)
+  ] = useState<ApiRequestError | null>(null)
+
+  const [
+    impactRankingReloadRequest,
+    setImpactRankingReloadRequest,
+  ] = useState(0)
 
   const [
     loadingEventImpactIds,
@@ -1158,7 +1233,9 @@ function App() {
   const [
     eventImpactErrors,
     setEventImpactErrors,
-  ] = useState<Record<string, string>>({})
+  ] = useState<
+    Record<string, ApiRequestError>
+  >({})
 
   const eventImpactRequestsRef =
     useRef<Set<string>>(new Set())
@@ -1289,6 +1366,9 @@ function App() {
     let isActive = true
 
     async function loadDashboard() {
+      setIsDashboardLoading(true)
+      setDashboardError(null)
+
       try {
         const dashboardData =
           await getDashboardData(
@@ -1302,9 +1382,10 @@ function App() {
       } catch (error) {
         if (isActive) {
           setDashboardError(
-            error instanceof Error
-              ? error.message
-              : 'Não foi possível carregar o dashboard.',
+            toApiRequestError(
+              error,
+              'Não foi possível carregar o dashboard.',
+            ),
           )
         }
       } finally {
@@ -1319,16 +1400,17 @@ function App() {
     return () => {
       isActive = false
     }
-  }, [])
+  }, [dashboardReloadRequest])
 
   useEffect(() => {
     const abortController =
       new AbortController()
 
     async function loadImpactRanking() {
-      try {
-        setImpactRankingError(null)
+      setIsImpactRankingLoading(true)
+      setImpactRankingError(null)
 
+      try {
         const ranking =
           await getGtaEventImpactRanking(
             'TTWO',
@@ -1346,9 +1428,10 @@ function App() {
         }
 
         setImpactRankingError(
-          error instanceof Error
-            ? error.message
-            : 'Não foi possível carregar o ranking.',
+          toApiRequestError(
+            error,
+            'Não foi possível carregar o ranking.',
+          ),
         )
       } finally {
         if (!abortController.signal.aborted) {
@@ -1362,7 +1445,7 @@ function App() {
     return () => {
       abortController.abort()
     }
-  }, [])
+  }, [impactRankingReloadRequest])
 
   useEffect(() => {
     let isActive = true
@@ -1439,6 +1522,9 @@ function App() {
   useEffect(() => {
     let isActive = true
 
+    setIsChartLoading(true)
+    setChartError(null)
+
     const timeoutId =
       window.setTimeout(() => {
         async function loadTimeSeries() {
@@ -1481,9 +1567,10 @@ function App() {
           } catch (error) {
             if (isActive) {
               setChartError(
-                error instanceof Error
-                  ? error.message
-                  : 'Não foi possível carregar o histórico.',
+                toApiRequestError(
+                  error,
+                  'Não foi possível carregar o histórico.',
+                ),
               )
             }
           } finally {
@@ -1504,12 +1591,34 @@ function App() {
     selectedPeriod,
     appliedCustomStartDate,
     appliedCustomEndDate,
+    chartReloadRequest,
   ])
 
   function prepareChartReload() {
     setIsChartLoading(true)
     setChartError(null)
-    setTimeSeries(null)
+  }
+
+  function retryChartLoad() {
+    prepareChartReload()
+    setChartReloadRequest(
+      (currentRequest) =>
+        currentRequest + 1,
+    )
+  }
+
+  function retryDashboardLoad() {
+    setDashboardReloadRequest(
+      (currentRequest) =>
+        currentRequest + 1,
+    )
+  }
+
+  function retryImpactRankingLoad() {
+    setImpactRankingReloadRequest(
+      (currentRequest) =>
+        currentRequest + 1,
+    )
   }
 
   function handlePeriodChange(
@@ -1670,9 +1779,10 @@ function App() {
         (currentErrors) => ({
           ...currentErrors,
           [gtaEvent.id]:
-            error instanceof Error
-              ? error.message
-              : 'Não foi possível calcular o movimento observado.',
+            toApiRequestError(
+              error,
+              'Não foi possível calcular o movimento observado.',
+            ),
         }),
       )
     } finally {
@@ -1772,12 +1882,14 @@ function App() {
     )
   }
 
-  if (dashboardError) {
+  if (dashboardError && !dashboard) {
     return (
       <main className="status-screen">
-        <div className="status-card error">
-          <p>Erro: {dashboardError}</p>
-        </div>
+        <ApiErrorNotice
+          error={dashboardError}
+          onRetry={retryDashboardLoad}
+          className="full-page"
+        />
       </main>
     )
   }
@@ -2516,41 +2628,67 @@ function App() {
             />
 
             <div className="chart-content">
-              {isChartLoading && (
-                <div className="chart-state-message">
-                  Carregando período...
-                </div>
-              )}
-
-              {!isChartLoading &&
-                chartError && (
-                  <div className="chart-state-message error">
-                    Erro: {chartError}
+              {!timeSeries &&
+                isChartLoading && (
+                  <div className="chart-state-message">
+                    Carregando período...
                   </div>
                 )}
 
-              {!isChartLoading &&
-                !chartError &&
-                timeSeries && (
-                  <StockChart
-                    values={
-                      timeSeries.values
-                    }
-                    events={
-                      occurredEvents
-                    }
-                    selectedEventId={
-                      selectedEventId
-                    }
-                    onEventSelect={
-                      handleChartEventSelect
-                    }
+              {!timeSeries &&
+                !isChartLoading &&
+                chartError && (
+                  <ApiErrorNotice
+                    error={chartError}
+                    onRetry={retryChartLoad}
+                    className="chart-error-notice"
                   />
+                )}
+
+              {timeSeries && (
+                <StockChart
+                  values={
+                    timeSeries.values
+                  }
+                  events={
+                    occurredEvents
+                  }
+                  selectedEventId={
+                    selectedEventId
+                  }
+                  onEventSelect={
+                    handleChartEventSelect
+                  }
+                />
+              )}
+
+              {timeSeries &&
+                isChartLoading && (
+                  <div
+                    className="data-refresh-indicator"
+                    role="status"
+                  >
+                    <span className="status-pulse" />
+                    Atualizando período...
+                  </div>
                 )}
             </div>
 
+            {timeSeries && chartError && (
+              <ApiErrorNotice
+                error={chartError}
+                onRetry={retryChartLoad}
+                compact
+                staleMessage="O gráfico continua exibindo os últimos dados carregados com sucesso."
+                className="chart-stale-notice"
+              />
+            )}
+
             <p className="chart-footnote">
-              Dados referentes ao período selecionado.
+              Dados referentes ao{' '}
+              {chartError && timeSeries
+                ? 'último período carregado'
+                : 'período selecionado'}.
               Cotações em{' '}
               {timeSeries?.currency ?? 'USD'}.
             </p>
@@ -2850,7 +2988,15 @@ function App() {
                                 </div>
                               ) : eventImpactError ? (
                                 <div className="event-impact-error">
-                                  <p>{eventImpactError}</p>
+                                  <div>
+                                    <strong>
+                                      {eventImpactError.title}
+                                    </strong>
+
+                                    <p>
+                                      {eventImpactError.message}
+                                    </p>
+                                  </div>
 
                                   <button
                                     type="button"
@@ -3305,19 +3451,36 @@ function App() {
                 </label>
 
                 <div className="impact-ranking-list">
-                  {isImpactRankingLoading && (
-                    <div className="impact-ranking-state">
-                      <span className="status-pulse" />
-                      <p>Calculando ranking...</p>
-                    </div>
+                  {isImpactRankingLoading &&
+                    impactRanking.length === 0 && (
+                      <div className="impact-ranking-state">
+                        <span className="status-pulse" />
+                        <p>Calculando ranking...</p>
+                      </div>
+                    )}
+
+                  {impactRankingError && (
+                    <ApiErrorNotice
+                      error={impactRankingError}
+                      onRetry={retryImpactRankingLoad}
+                      compact
+                      staleMessage={
+                        impactRanking.length > 0
+                          ? 'O ranking abaixo continua exibindo o último resultado carregado com sucesso.'
+                          : undefined
+                      }
+                      className="ranking-error-notice"
+                    />
                   )}
 
-                  {!isImpactRankingLoading &&
-                    impactRankingError && (
-                      <div className="impact-ranking-state error">
-                        <p>
-                          {impactRankingError}
-                        </p>
+                  {isImpactRankingLoading &&
+                    impactRanking.length > 0 && (
+                      <div
+                        className="impact-ranking-refreshing"
+                        role="status"
+                      >
+                        <span className="status-pulse" />
+                        Atualizando ranking...
                       </div>
                     )}
 
@@ -3331,9 +3494,7 @@ function App() {
                       </div>
                     )}
 
-                  {!isImpactRankingLoading &&
-                    !impactRankingError &&
-                    rankedEvents.map(
+                  {rankedEvents.map(
                       (
                         {
                           gtaEvent,

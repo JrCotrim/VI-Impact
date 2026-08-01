@@ -40,7 +40,7 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<TwelveDataStockMarketService>? _logger;
 
-    public TwelveDataStockMarketService(
+    internal TwelveDataStockMarketService(
         HttpClient httpClient,
         TwelveDataOptions options)
         : this(
@@ -1360,4 +1360,3 @@ public sealed class TwelveDataCircuitOpenException
 
     public TimeSpan RetryAfter { get; }
 }
-
