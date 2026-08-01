@@ -1,145 +1,410 @@
 # VI Impact
 
-O VI Impact é uma aplicação full-stack que analisa possíveis relações entre eventos relacionados ao GTA VI e as movimentações das ações da Take-Two Interactive.
+[![Continuous Integration](https://github.com/JrCotrim/VI-Impact/actions/workflows/ci.yml/badge.svg)](https://github.com/JrCotrim/VI-Impact/actions/workflows/ci.yml)
 
-A aplicação coleta cotações da ação `TTWO`, armazena o histórico, permite cadastrar eventos relacionados ao GTA VI e calcula a variação do preço da ação antes e depois de cada evento.
+Aplicação full-stack que relaciona eventos públicos ligados ao **GTA VI** com movimentações das ações da **Take-Two Interactive (`TTWO`)**.
 
-## Funcionalidades
+O projeto reúne dados de mercado, catálogo de eventos, comparação com o benchmark **QQQ**, visualizações interativas e uma infraestrutura completa com testes, Health Checks, Docker Compose e integração contínua.
 
-- Coleta automática de cotações da ação TTWO
-- Integração com a API da Twelve Data
-- Persistência de dados com SQL Server e Entity Framework Core
-- Cadastro e listagem de eventos relacionados ao GTA VI
-- Consulta do histórico de cotações
-- Cálculo do impacto de eventos sobre a ação
-- Endpoint com dados para o dashboard
-- Filtro para exibir ou ocultar eventos do GTA VI
-- Prevenção de cotações duplicadas
-- Respostas de erro padronizadas
-- Testes unitários automatizados
+> Projeto educacional e de portfólio. As informações exibidas não constituem recomendação de investimento.
+
+---
+
+## Visão geral
+
+O VI Impact permite:
+
+- acompanhar cotação, variação diária e volume negociado da TTWO;
+- visualizar o histórico de preços em diferentes períodos;
+- comparar TTWO com o ETF QQQ;
+- relacionar eventos do GTA VI ao gráfico de cotações;
+- calcular retornos da ação após cada evento;
+- comparar o desempenho da TTWO com o mercado;
+- ordenar eventos por impacto positivo ou negativo;
+- consultar detalhes, fontes e categorias dos eventos;
+- executar toda a aplicação localmente ou com Docker Compose.
+
+A aplicação não afirma que um evento causou determinada movimentação. Ela apresenta uma análise temporal dos dados disponíveis.
+
+---
+
+## Dashboard
+
+O dashboard possui:
+
+- cards de preço atual, variação diária, volume e última atualização;
+- mini gráficos de preço e volume;
+- gráfico de cotações com períodos de `1D` até `Máx.`;
+- comparação entre TTWO e QQQ;
+- marcadores de eventos sobre o gráfico;
+- linha do tempo com filtros;
+- ranking de impacto em 1, 5 e 30 pregões;
+- filtros por direção, categoria e pesquisa;
+- painel detalhado de cada evento;
+- temas claro e noturno;
+- estados de carregamento, erro e nova tentativa.
+
+---
+
+## Principais funcionalidades
+
+### Dados de mercado
+
+- integração com a API da Twelve Data;
+- coleta automática de cotações;
+- persistência das cotações no SQL Server;
+- prevenção de registros duplicados;
+- consulta de série histórica;
+- cache das séries históricas;
+- comparação com o benchmark QQQ.
+
+### Análise de impacto
+
+Para cada evento elegível, a aplicação pode calcular:
+
+- retorno no mesmo pregão;
+- retorno após 1 pregão;
+- retorno após 5 pregões;
+- retorno após 30 pregões;
+- variação de volume;
+- retorno do QQQ no mesmo período;
+- retorno excedente da TTWO em relação ao benchmark.
+
+### Catálogo de eventos
+
+- eventos relacionados ao GTA VI;
+- título, descrição, categoria e subcategoria;
+- prioridade e tipo de fonte;
+- data do acontecimento e publicação;
+- link para a fonte;
+- status e precisão da data;
+- sincronização automática do catálogo na inicialização.
+
+### Resiliência
+
+A integração com o provedor de mercado possui:
+
+- timeout por tentativa;
+- repetição automática de falhas transitórias;
+- atraso exponencial com jitter;
+- suporte ao cabeçalho `Retry-After`;
+- circuit breaker;
+- cache de respostas;
+- logs estruturados;
+- respostas seguras para o frontend.
+
+### Tratamento de erros
+
+A API utiliza o formato `ProblemDetails` e retorna campos como:
+
+```json
+{
+  "type": "https://httpstatuses.com/503",
+  "title": "Provedor temporariamente indisponível",
+  "status": 503,
+  "detail": "Não foi possível consultar os dados de mercado neste momento.",
+  "instance": "/api/stocks/TTWO/time-series",
+  "errorCode": "provider_unavailable",
+  "traceId": "identificador-da-requisicao"
+}
+```
+
+O frontend interpreta códigos como `429`, `502`, `503` e `504`, preserva dados anteriores quando possível e apresenta opção de nova tentativa.
+
+---
 
 ## Arquitetura
 
-O backend utiliza uma arquitetura dividida em camadas:
+O backend segue uma arquitetura em camadas:
 
 ```text
-VIImpact
+VI-Impact
 ├── VIImpact.API
 ├── VIImpact.Application
 ├── VIImpact.Domain
 ├── VIImpact.Infrastructure
-└── VIImpact.Tests
+├── VIImpact.Tests
+├── VIImpact.Web
+├── .github
+│   └── workflows
+├── docker-compose.yml
+└── README.md
 ```
 
-### VIImpact.API
+### `VIImpact.API`
 
-Contém os controllers, contratos da API, configurações e serviços executados em segundo plano.
+Responsável por:
 
-### VIImpact.Application
+- controllers e rotas HTTP;
+- configuração da aplicação;
+- tratamento global de erros;
+- Health Checks;
+- worker de coleta automática;
+- inicialização e migração do banco.
 
-Contém as interfaces, modelos e serviços responsáveis pelas regras da aplicação.
+### `VIImpact.Application`
 
-### VIImpact.Domain
+Responsável por:
 
-Contém as principais entidades do domínio.
+- interfaces;
+- modelos de aplicação;
+- serviços e regras de negócio;
+- cálculo de impacto dos eventos;
+- cache do ranking.
 
-### VIImpact.Infrastructure
+### `VIImpact.Domain`
 
-Contém a persistência com Entity Framework Core, os repositórios e as integrações com serviços externos.
+Contém as entidades centrais do domínio, como:
 
-### VIImpact.Tests
+- cotações;
+- eventos do GTA VI;
+- categorias e demais tipos relacionados.
 
-Contém os testes automatizados das regras de negócio da aplicação.
+### `VIImpact.Infrastructure`
 
-## Tecnologias utilizadas
+Responsável por:
+
+- Entity Framework Core;
+- SQL Server;
+- repositórios;
+- integração com a Twelve Data;
+- política de resiliência;
+- seed do catálogo de eventos.
+
+### `VIImpact.Tests`
+
+Contém testes automatizados para:
+
+- cálculo de impacto;
+- cache do ranking;
+- integração resiliente com a Twelve Data;
+- tratamento global de exceções;
+- Health Check do banco.
+
+### `VIImpact.Web`
+
+Frontend construído com React, TypeScript e Vite.
+
+No ambiente Docker, o build estático é servido pelo Nginx, que também encaminha as rotas `/api` e `/health` para a API.
+
+---
+
+## Tecnologias
+
+### Backend
 
 - C#
-- .NET
+- .NET 10
 - ASP.NET Core Web API
 - Entity Framework Core
-- SQL Server LocalDB
-- Twelve Data API
+- SQL Server
 - xUnit
+- HttpClient
+- Background Services
+- ProblemDetails
+- Health Checks
+
+### Frontend
+
+- React 19
+- TypeScript
+- Vite 8
+- Recharts
+- ESLint
+- Nginx
+
+### Infraestrutura
+
+- Docker
+- Docker Compose
+- GitHub Actions
 - Git
 - GitHub
 
+---
+
 ## Principais endpoints
 
-### Consultar uma cotação em tempo real
-
-```http
-GET /api/stocks/TTWO
-```
-
-Esse endpoint consulta a cotação diretamente na API da Twelve Data, sem salvar o resultado no banco de dados.
-
-### Consultar o histórico de cotações
-
-```http
-GET /api/stocks/TTWO/history?limit=100
-```
-
-### Listar eventos do GTA VI
-
-```http
-GET /api/gtaevents
-```
-
-### Cadastrar um evento do GTA VI
-
-```http
-POST /api/gtaevents
-Content-Type: application/json
-```
-
-Exemplo de requisição:
-
-```json
-{
-  "title": "Novo evento relacionado ao GTA VI",
-  "description": "Descrição do evento.",
-  "sourceUrl": "https://example.com",
-  "occurredAtUtc": "2026-07-28T19:46:36Z"
-}
-```
-
-### Calcular o impacto de um evento
-
-```http
-GET /api/gtaevents/{eventId}/impact?symbol=TTWO
-```
-
-O endpoint localiza a cotação mais próxima antes e depois do evento e calcula:
-
-- preço anterior;
-- preço posterior;
-- variação em valor;
-- variação percentual.
-
-### Consultar os dados do dashboard
+### Dashboard
 
 ```http
 GET /api/dashboard/TTWO?includeGtaEvents=true&limit=500
 ```
 
-Para ocultar os eventos do GTA VI:
+### Cotação atual
 
 ```http
-GET /api/dashboard/TTWO?includeGtaEvents=false&limit=500
+GET /api/stocks/TTWO
 ```
 
-## Como executar o projeto
+### Histórico armazenado
+
+```http
+GET /api/stocks/TTWO/history?limit=100
+```
+
+### Série histórica
+
+```http
+GET /api/stocks/TTWO/time-series?period=1Y
+```
+
+### Eventos
+
+```http
+GET /api/gtaevents
+```
+
+### Detalhes de impacto
+
+```http
+GET /api/gtaevents/{eventId}/impact?symbol=TTWO&benchmarkSymbol=QQQ
+```
+
+### Ranking de impacto
+
+```http
+GET /api/gtaevents/impact-ranking?symbol=TTWO&benchmarkSymbol=QQQ
+```
+
+### Health Checks
+
+```http
+GET /health/live
+GET /health/ready
+```
+
+O endpoint `/health/ready` também verifica a conexão com o SQL Server.
+
+---
+
+## Executar com Docker
 
 ### Requisitos
 
-- .NET SDK
-- Visual Studio
-- SQL Server LocalDB
-- Chave de API da Twelve Data
+- Docker Desktop;
+- virtualização habilitada;
+- WSL 2 no Windows;
+- chave da Twelve Data.
 
-### Configuração do banco de dados
+### 1. Clone o repositório
 
-Durante o desenvolvimento, o projeto utiliza SQL Server LocalDB:
+```powershell
+git clone https://github.com/JrCotrim/VI-Impact.git
+cd VI-Impact
+```
+
+### 2. Crie o arquivo de ambiente
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Edite o `.env`:
+
+```env
+SQL_SA_PASSWORD=UMA_SENHA_FORTE
+TWELVE_DATA_API_KEY=SUA_CHAVE_AQUI
+```
+
+O arquivo `.env` está ignorado pelo Git e não deve ser enviado ao repositório.
+
+### 3. Inicie a aplicação
+
+```powershell
+docker compose up --build
+```
+
+Serviços disponíveis:
+
+| Serviço | Endereço |
+|---|---|
+| Frontend | `http://localhost:5173` |
+| API | `http://localhost:5170` |
+| SQL Server | `localhost:1433` |
+
+### 4. Verifique os containers
+
+```powershell
+docker compose ps
+```
+
+### 5. Teste a prontidão
+
+```powershell
+curl.exe -i "http://localhost:5170/health/ready"
+curl.exe -i "http://localhost:5173/health/ready"
+```
+
+### 6. Encerre os containers
+
+```powershell
+docker compose down
+```
+
+O volume `sqlserver-data` preserva os dados do banco.
+
+Para remover também o volume:
+
+```powershell
+docker compose down -v
+```
+
+---
+
+## Executar sem Docker
+
+### Requisitos
+
+- .NET SDK 10;
+- Node.js;
+- SQL Server LocalDB;
+- chave da Twelve Data.
+
+### 1. Configure a chave da API
+
+```powershell
+dotnet user-secrets set `
+  "TwelveData:ApiKey" `
+  "SUA_CHAVE_AQUI" `
+  --project .\VIImpact.API\VIImpact.API.csproj
+```
+
+### 2. Execute a API
+
+```powershell
+dotnet run --project .\VIImpact.API\VIImpact.API.csproj
+```
+
+A API estará disponível em:
+
+```text
+http://localhost:5170
+```
+
+### 3. Execute o frontend
+
+Em outro terminal:
+
+```powershell
+cd .\VIImpact.Web
+npm install
+npm run dev
+```
+
+O frontend estará disponível em:
+
+```text
+http://localhost:5173
+```
+
+O Vite encaminha as rotas `/api` e `/health` para a API local.
+
+---
+
+## Banco de dados
+
+No desenvolvimento sem Docker, a aplicação usa SQL Server LocalDB:
 
 ```json
 {
@@ -149,35 +414,20 @@ Durante o desenvolvimento, o projeto utiliza SQL Server LocalDB:
 }
 ```
 
-Para criar ou atualizar o banco de dados, abra o Console do Gerenciador de Pacotes e execute:
+Na inicialização, a API:
 
-```powershell
-Update-Database -StartupProject VIImpact.API
-```
+1. cria um escopo de banco;
+2. aplica migrações pendentes;
+3. remove dados antigos de teste;
+4. sincroniza o catálogo de eventos.
 
-O projeto padrão do Console do Gerenciador de Pacotes deve ser:
+No Docker, a string de conexão é substituída por variável de ambiente.
 
-```text
-VIImpact.Infrastructure
-```
+---
 
-### Configuração da chave da Twelve Data
+## Coleta automática
 
-A chave da API deve ser armazenada com o .NET User Secrets.
-
-Ela não deve ser adicionada ao `appsettings.json` nem enviada para o GitHub.
-
-```powershell
-dotnet user-secrets set "TwelveData:ApiKey" "SUA_CHAVE_AQUI" --project VIImpact.API
-```
-
-### Iniciar a aplicação
-
-Defina o projeto `VIImpact.API` como projeto de inicialização e execute pelo Visual Studio.
-
-## Coleta automática de cotações
-
-O serviço de coleta automática pode ser configurado no arquivo `appsettings.json`:
+O worker de cotações pode ser configurado por `appsettings.json` ou variáveis de ambiente:
 
 ```json
 {
@@ -189,96 +439,176 @@ O serviço de coleta automática pode ser configurado no arquivo `appsettings.js
 }
 ```
 
-O worker consulta periodicamente a cotação configurada e salva apenas dados que ainda não estejam armazenados.
+No Docker, os equivalentes são:
 
-Uma cotação é considerada duplicada quando possui os mesmos valores de:
-
-```text
-Symbol
-Price
-ChangePercent
-Volume
-MarketTimestampUtc
+```env
+STOCK_COLLECTION_ENABLED=true
+STOCK_SYMBOL=TTWO
+STOCK_INTERVAL_MINUTES=5
 ```
 
-## Datas das cotações
-
-Cada cotação possui duas informações de data:
-
-```text
-RecordedAtUtc
-```
-
-Representa o momento em que o VI Impact coletou e registrou a cotação.
-
-```text
-MarketTimestampUtc
-```
-
-Representa o horário da cotação informado pela fonte de dados do mercado.
-
-## Tratamento de erros
-
-A API utiliza respostas padronizadas no formato `ProblemDetails`.
-
-Exemplo de resposta para uma rota inexistente:
-
-```json
-{
-  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
-  "title": "Not Found",
-  "status": 404,
-  "traceId": "identificador-da-requisicao"
-}
-```
-
-O `traceId` permite relacionar uma resposta de erro aos registros internos da aplicação.
+---
 
 ## Testes
 
-Os testes podem ser executados pelo Gerenciador de Testes do Visual Studio ou pelo terminal:
+Execute:
 
 ```powershell
-dotnet test
+dotnet test VIImpact.slnx
 ```
 
-Atualmente, os testes verificam:
-
-- o cálculo da variação do preço da ação antes e depois de um evento;
-- o comportamento do serviço quando o evento informado não existe.
-
-## Status do projeto
-
-O MVP do backend está funcional.
-
-Atualmente, o sistema já consegue:
+Estado atual:
 
 ```text
-Coletar cotações da TTWO
-→ armazenar o histórico
-→ cadastrar eventos do GTA VI
-→ localizar cotações antes e depois
-→ calcular o impacto do evento
-→ fornecer dados para um dashboard
+18 testes
+0 falhas
 ```
 
-A próxima etapa será o desenvolvimento da interface interativa do dashboard.
+As principais áreas cobertas são:
 
-## Objetivo
+- cálculo de impacto;
+- retornos em diferentes janelas;
+- comparação com benchmark;
+- cache do ranking;
+- timeout e repetição de requisições;
+- rate limit;
+- circuit breaker;
+- respostas `ProblemDetails`;
+- Health Check do banco.
 
-Este projeto está sendo desenvolvido para aprendizado e composição de portfólio, aplicando conceitos como:
+---
+
+## Build do frontend
+
+```powershell
+cd .\VIImpact.Web
+npm run lint
+npm run build
+```
+
+---
+
+## Integração contínua
+
+O workflow está localizado em:
+
+```text
+.github/workflows/ci.yml
+```
+
+Ele é executado em Pull Requests, manualmente e nos pushes configurados.
+
+Jobs atuais:
+
+```text
+Backend build and tests
+Frontend lint and build
+Validate Docker Compose
+```
+
+Cada execução valida:
+
+- restore do backend;
+- build em modo `Release`;
+- testes automatizados;
+- lint do frontend;
+- build do frontend;
+- sintaxe e interpolação do Docker Compose.
+
+---
+
+## Segurança
+
+- a chave da Twelve Data não fica no código;
+- o `.env` não é versionado;
+- os valores usados na CI são fictícios;
+- mensagens internas de exceção não são expostas ao cliente;
+- o `traceId` permite correlacionar erros com os logs;
+- a API executa no container com usuário sem privilégios.
+
+---
+
+## Fluxo simplificado
+
+```text
+Twelve Data
+    │
+    ▼
+VIImpact.Infrastructure
+    │
+    ▼
+VIImpact.Application
+    │
+    ▼
+VIImpact.API
+    │
+    ├── SQL Server
+    │
+    ▼
+Nginx
+    │
+    ▼
+React Dashboard
+```
+
+---
+
+## Status
+
+O projeto possui um MVP full-stack funcional com:
+
+- backend em camadas;
+- dashboard interativo;
+- análise de eventos;
+- comparação com benchmark;
+- persistência;
+- resiliência;
+- tratamento de erros;
+- Health Checks;
+- testes automatizados;
+- Docker Compose;
+- integração contínua.
+
+Próximas evoluções possíveis:
+
+- autenticação e autorização;
+- painel administrativo de eventos;
+- cobertura de testes de integração;
+- deploy em ambiente de nuvem;
+- observabilidade com métricas e tracing;
+- suporte a novos ativos e benchmarks.
+
+---
+
+## Objetivo do projeto
+
+O VI Impact foi desenvolvido para aprendizado e composição de portfólio, aplicando na prática:
 
 - arquitetura em camadas;
 - injeção de dependência;
 - integração com APIs externas;
 - persistência de dados;
-- serviços em segundo plano;
-- tratamento de erros;
+- processamento em segundo plano;
+- cache;
+- resiliência;
+- análise de séries temporais;
 - testes automatizados;
+- containerização;
+- integração contínua;
 - boas práticas com Git e GitHub.
+
+---
+
+## Autor
+
+Desenvolvido por **Júnior Cotrim**.
+
+GitHub: [@JrCotrim](https://github.com/JrCotrim)
+
+---
 
 ## Aviso
 
 Este projeto possui finalidade educacional e de portfólio.
 
-As informações do mercado financeiro apresentadas pela aplicação não devem ser consideradas recomendações de investimento.
+Os dados financeiros podem apresentar atraso, indisponibilidade ou diferenças em relação a outras fontes. Os movimentos observados não comprovam causalidade e não devem ser interpretados como recomendação de investimento.
