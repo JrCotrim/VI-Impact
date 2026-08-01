@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using VIImpact.API.BackgroundServices;
 using VIImpact.API.Configuration;
 using VIImpact.API.ErrorHandling;
+using VIImpact.API.HealthChecks;
 using VIImpact.Application.Interfaces;
 using VIImpact.Application.Services;
 using VIImpact.Infrastructure.Configuration;
@@ -67,6 +70,17 @@ string connectionString =
 builder.Services.AddDbContext<VIImpactDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+builder.Services.AddScoped<
+    IDatabaseConnectivityProbe,
+    EfDatabaseConnectivityProbe>();
+
+builder.Services
+    .AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>(
+        "sql_server",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: new[] { "ready" });
+
 // Repositories
 builder.Services.AddScoped<
     IStockQuoteRepository,
@@ -122,6 +136,26 @@ if (!app.Environment.IsDevelopment())
 
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthorization();
+
+app.MapHealthChecks(
+    "/health/live",
+    new HealthCheckOptions
+    {
+        Predicate = _ => false,
+        ResponseWriter =
+            HealthCheckResponseWriter.WriteAsync
+    });
+
+app.MapHealthChecks(
+    "/health/ready",
+    new HealthCheckOptions
+    {
+        Predicate = registration =>
+            registration.Tags.Contains("ready"),
+        ResponseWriter =
+            HealthCheckResponseWriter.WriteAsync
+    });
+
 app.MapControllers();
 
 app.Run();
