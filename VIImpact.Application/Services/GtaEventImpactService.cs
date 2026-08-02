@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using VIImpact.Application.Interfaces;
 using VIImpact.Application.Models;
 using VIImpact.Domain.Entities;
@@ -114,6 +114,27 @@ public sealed class GtaEventImpactService : IGtaEventImpactService
             return MarkUnavailable(
                 result,
                 "Este evento não está elegível para análise de impacto.");
+        }
+
+        string rankingCacheKey =
+            CreateRankingCacheKey(
+                normalizedSymbol,
+                normalizedBenchmarkSymbol);
+
+        if (
+            TryGetRankingCacheEntry(
+                rankingCacheKey,
+                out RankingCacheEntry cachedRanking))
+        {
+            GtaEventImpactResult? cachedImpact =
+                cachedRanking.Results.FirstOrDefault(
+                    impact =>
+                        impact.EventId == eventId);
+
+            if (cachedImpact is not null)
+            {
+                return cachedImpact;
+            }
         }
 
         DateTime queryDate = analysisTimestampUtc.Date;

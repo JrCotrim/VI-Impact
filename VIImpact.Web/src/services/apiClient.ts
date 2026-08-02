@@ -4,6 +4,14 @@ const configuredApiBaseUrl = (
   .trim()
   .replace(/\/+$/, '')
 
+const RATE_LIMIT_ERROR_CODES = new Set([
+  'provider_rate_limit',
+])
+
+const CIRCUIT_OPEN_ERROR_CODES = new Set([
+  'provider_circuit_open',
+])
+
 export function buildApiUrl(
   path: string,
 ): string {
@@ -52,6 +60,8 @@ export class ApiRequestError extends Error {
       options.retryAfterSeconds ?? null
     this.traceId = options.traceId ?? null
     this.canRetry =
+      RATE_LIMIT_ERROR_CODES.has(options.errorCode) ||
+      CIRCUIT_OPEN_ERROR_CODES.has(options.errorCode) ||
       options.status === 0 ||
       options.status === 408 ||
       options.status === 429 ||
@@ -61,11 +71,40 @@ export class ApiRequestError extends Error {
   }
 }
 
-function getDefaultTitle(status: number): string {
-  if (status === 429) {
-    return 'Limite temporário atingido'
+function isRateLimitError(
+  status: number,
+  errorCode: string,
+): boolean {
+  return (
+    status === 429 ||
+    RATE_LIMIT_ERROR_CODES.has(errorCode)
+  )
+}
+
+function isCircuitOpenError(
+  errorCode: string,
+): boolean {
+  return CIRCUIT_OPEN_ERROR_CODES.has(errorCode)
+}
+
+function getKnownProviderTitle(
+  status: number,
+  errorCode: string,
+): string | null {
+  if (isRateLimitError(status, errorCode)) {
+    return 'Limite temporário da fonte de dados'
   }
 
+  if (isCircuitOpenError(errorCode)) {
+    return 'Fonte de dados em recuperação'
+  }
+
+  return null
+}
+
+function getDefaultTitle(
+  status: number,
+): string {
   if (status === 502) {
     return 'Resposta inválida do provedor'
   }
@@ -91,13 +130,21 @@ function getDefaultTitle(status: number): string {
 
 function getUserMessage(
   status: number,
+  errorCode: string,
   problemDetails: ApiProblemDetails | null,
   fallbackMessage: string,
 ): string {
-  if (status === 429) {
+  if (isRateLimitError(status, errorCode)) {
     return (
-      'O limite temporário de consultas ao provedor foi atingido. ' +
-      'Aguarde alguns instantes e tente novamente.'
+      'O limite temporário de consultas à fonte de dados foi atingido. ' +
+      'Aguarde alguns segundos antes de tentar novamente.'
+    )
+  }
+
+  if (isCircuitOpenError(errorCode)) {
+    return (
+      'As consultas externas foram pausadas por alguns segundos para ' +
+      'evitar novas falhas. Os dados já carregados continuam disponíveis.'
     )
   }
 
@@ -168,6 +215,21 @@ function parseRetryAfterSeconds(
       (retryAt - Date.now()) / 1000,
     ),
   )
+}
+
+function getDefaultRetryAfterSeconds(
+  status: number,
+  errorCode: string,
+): number | null {
+  if (isRateLimitError(status, errorCode)) {
+    return 60
+  }
+
+  if (isCircuitOpenError(errorCode)) {
+    return 30
+  }
+
+  return null
 }
 
 async function readProblemDetails(
@@ -259,21 +321,34 @@ export async function fetchJson<T>(
     const problemDetails =
       await readProblemDetails(response)
 
+    const errorCode =
+      problemDetails?.errorCode ??
+      `http_${response.status}`
+
+    const retryAfterSeconds =
+      parseRetryAfterSeconds(response) ??
+      getDefaultRetryAfterSeconds(
+        response.status,
+        errorCode,
+      )
+
     throw new ApiRequestError({
       status: response.status,
       title:
+        getKnownProviderTitle(
+          response.status,
+          errorCode,
+        ) ??
         problemDetails?.title ??
         getDefaultTitle(response.status),
       message: getUserMessage(
         response.status,
+        errorCode,
         problemDetails,
         fallbackMessage,
       ),
-      errorCode:
-        problemDetails?.errorCode ??
-        `http_${response.status}`,
-      retryAfterSeconds:
-        parseRetryAfterSeconds(response),
+      errorCode,
+      retryAfterSeconds,
       traceId:
         problemDetails?.traceId ?? null,
     })

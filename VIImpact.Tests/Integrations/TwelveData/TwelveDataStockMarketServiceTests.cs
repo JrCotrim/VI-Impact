@@ -91,12 +91,10 @@ public sealed class TwelveDataStockMarketServiceTests
     }
 
     [Fact]
-    public async Task GetLatestQuoteAsync_WhenRateLimited_RetriesAndThrowsSpecificException()
+    public async Task GetLatestQuoteAsync_WhenRateLimited_DoesNotRetryAndStartsCooldown()
     {
         var handler =
             new SequenceHttpMessageHandler(
-                CreateRateLimitResponse(),
-                CreateRateLimitResponse(),
                 CreateRateLimitResponse());
 
         TwelveDataStockMarketService service =
@@ -112,13 +110,28 @@ public sealed class TwelveDataStockMarketServiceTests
                         service.GetLatestQuoteAsync(
                             "TTWO"));
 
-        Assert.Equal(3, handler.CallCount);
+        Assert.Equal(1, handler.CallCount);
         Assert.Equal(
             HttpStatusCode.TooManyRequests,
             exception.StatusCode);
+        Assert.True(
+            exception.RetryAfter >
+            TimeSpan.Zero);
         Assert.Contains(
             "request limit",
             exception.Message.ToLowerInvariant());
+
+        TwelveDataRateLimitException blockedException =
+            await Assert.ThrowsAsync<
+                TwelveDataRateLimitException>(
+                    () =>
+                        service.GetLatestQuoteAsync(
+                            "QQQ"));
+
+        Assert.Equal(1, handler.CallCount);
+        Assert.True(
+            blockedException.RetryAfter >
+            TimeSpan.Zero);
     }
 
     [Fact]

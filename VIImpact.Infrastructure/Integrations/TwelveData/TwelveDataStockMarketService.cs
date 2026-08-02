@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net;
@@ -25,6 +25,9 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
         "yyyy-MM-dd HH:mm",
         "yyyy-MM-dd"
     ];
+
+    private static readonly TimeSpan DefaultRateLimitCooldown =
+        TimeSpan.FromMinutes(1);
 
     private static readonly ConcurrentDictionary<
         string,
@@ -267,6 +270,13 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
                     ? "Twelve Data returned an error response."
                     : responseBody.Message;
 
+            if (IsRateLimitMessage(message))
+            {
+                throw new TwelveDataRateLimitException(
+                    message,
+                    DefaultRateLimitCooldown);
+            }
+
             throw new TwelveDataApiException(
                 message,
                 response.StatusCode);
@@ -335,6 +345,23 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
         DateTimeOffset now =
             _timeProvider.GetUtcNow();
 
+        if (_resilienceState.TryGetRateLimitDelay(
+                now,
+                out TimeSpan rateLimitRetryAfter))
+        {
+            _logger?.LogWarning(
+                "The Twelve Data request limit is still active. "
+                + "The {Operation} request was blocked for another "
+                + "{RetryAfterSeconds:F1} seconds.",
+                operationName,
+                rateLimitRetryAfter.TotalSeconds);
+
+            throw new TwelveDataRateLimitException(
+                "Twelve Data request limit reached. "
+                + "Wait until the current provider window resets.",
+                rateLimitRetryAfter);
+        }
+
         if (!_resilienceState.TryEnter(
                 now,
                 out bool isHalfOpenProbe,
@@ -374,6 +401,29 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
         {
             _resilienceState.RecordCancellation(
                 isHalfOpenProbe);
+
+            throw;
+        }
+        catch (TwelveDataRateLimitException exception)
+        {
+            _resilienceState.RecordCancellation(
+                isHalfOpenProbe);
+
+            TimeSpan providerRetryAfter =
+                exception.RetryAfter ??
+                DefaultRateLimitCooldown;
+
+            _resilienceState.RecordRateLimit(
+                _timeProvider.GetUtcNow(),
+                providerRetryAfter);
+
+            _logger?.LogWarning(
+                exception,
+                "The Twelve Data request limit was reached during "
+                + "{Operation}. New provider calls will be blocked for "
+                + "{RetryAfterSeconds:F1} seconds.",
+                operationName,
+                providerRetryAfter.TotalSeconds);
 
             throw;
         }
@@ -461,7 +511,7 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
                 }
 
                 bool shouldRetry =
-                    IsTransientStatusCode(
+                    IsRetryableStatusCode(
                         response.StatusCode);
 
                 if (
@@ -600,21 +650,19 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
 
         if (response.StatusCode == HttpStatusCode.TooManyRequests)
         {
-            TimeSpan? retryAfter =
+            TimeSpan retryAfter =
                 TryGetRetryAfter(
-                    response);
+                    response) ??
+                DefaultRateLimitCooldown;
 
             string message =
                 string.IsNullOrWhiteSpace(providerMessage)
                     ? "Twelve Data request limit reached."
                     : providerMessage;
 
-            if (retryAfter.HasValue)
-            {
-                message +=
-                    $" Try again in approximately "
-                    + $"{Math.Ceiling(retryAfter.Value.TotalSeconds)} seconds.";
-            }
+            message +=
+                $" Try again in approximately "
+                + $"{Math.Ceiling(retryAfter.TotalSeconds)} seconds.";
 
             return new TwelveDataRateLimitException(
                 message,
@@ -811,21 +859,49 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
             durationSeconds);
     }
 
+    private static bool IsRateLimitMessage(
+        string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return false;
+        }
+
+        return
+            message.Contains(
+                "api credits",
+                StringComparison.OrdinalIgnoreCase) ||
+            message.Contains(
+                "request limit",
+                StringComparison.OrdinalIgnoreCase) ||
+            message.Contains(
+                "rate limit",
+                StringComparison.OrdinalIgnoreCase) ||
+            message.Contains(
+                "current minute",
+                StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool ShouldRecordCircuitFailure(
         Exception exception)
     {
+        if (exception is TwelveDataRateLimitException)
+        {
+            return false;
+        }
+
         if (
             exception is TwelveDataApiException apiException &&
             apiException.StatusCode.HasValue)
         {
-            return IsTransientStatusCode(
+            return IsRetryableStatusCode(
                 apiException.StatusCode.Value);
         }
 
         return true;
     }
 
-    private static bool IsTransientStatusCode(
+    private static bool IsRetryableStatusCode(
         HttpStatusCode statusCode)
     {
         int numericStatusCode =
@@ -834,8 +910,6 @@ public sealed class TwelveDataStockMarketService : IStockMarketService
         return
             statusCode ==
                 HttpStatusCode.RequestTimeout ||
-            statusCode ==
-                HttpStatusCode.TooManyRequests ||
             numericStatusCode >= 500;
     }
 
@@ -1202,7 +1276,59 @@ public sealed class TwelveDataResilienceState
 
     private int _consecutiveFailures;
     private DateTimeOffset? _openUntilUtc;
+    private DateTimeOffset? _rateLimitedUntilUtc;
     private bool _halfOpenProbeInProgress;
+
+    internal bool TryGetRateLimitDelay(
+        DateTimeOffset now,
+        out TimeSpan retryAfter)
+    {
+        lock (_syncRoot)
+        {
+            retryAfter = TimeSpan.Zero;
+
+            if (!_rateLimitedUntilUtc.HasValue)
+            {
+                return false;
+            }
+
+            if (_rateLimitedUntilUtc.Value <= now)
+            {
+                _rateLimitedUntilUtc = null;
+                return false;
+            }
+
+            retryAfter =
+                _rateLimitedUntilUtc.Value - now;
+
+            return true;
+        }
+    }
+
+    internal void RecordRateLimit(
+        DateTimeOffset now,
+        TimeSpan retryAfter)
+    {
+        lock (_syncRoot)
+        {
+            TimeSpan effectiveDelay =
+                retryAfter > TimeSpan.Zero
+                    ? retryAfter
+                    : TimeSpan.FromSeconds(1);
+
+            DateTimeOffset nextAllowedAtUtc =
+                now.Add(effectiveDelay);
+
+            if (
+                !_rateLimitedUntilUtc.HasValue ||
+                nextAllowedAtUtc >
+                    _rateLimitedUntilUtc.Value)
+            {
+                _rateLimitedUntilUtc =
+                    nextAllowedAtUtc;
+            }
+        }
+    }
 
     internal bool TryEnter(
         DateTimeOffset now,
@@ -1249,10 +1375,12 @@ public sealed class TwelveDataResilienceState
             bool recovered =
                 _consecutiveFailures > 0 ||
                 _openUntilUtc.HasValue ||
+                _rateLimitedUntilUtc.HasValue ||
                 _halfOpenProbeInProgress;
 
             _consecutiveFailures = 0;
             _openUntilUtc = null;
+            _rateLimitedUntilUtc = null;
             _halfOpenProbeInProgress = false;
 
             return recovered;

@@ -36,7 +36,7 @@ public sealed class ApiExceptionHandlerTests
             expectedStatus:
                 StatusCodes.Status429TooManyRequests,
             expectedTitle:
-                "Limite do provedor atingido",
+                "Limite temporário da fonte de dados",
             expectedErrorCode:
                 "provider_rate_limit",
             expectedType:

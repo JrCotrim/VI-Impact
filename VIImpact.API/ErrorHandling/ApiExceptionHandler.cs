@@ -92,14 +92,14 @@ public sealed class ApiExceptionHandler : IExceptionHandler
         return exception switch
         {
             TwelveDataRateLimitException rateLimitException =>
-                new ApiErrorDescriptor(
-                    StatusCodes.Status429TooManyRequests,
-                    "Limite do provedor atingido",
-                    "O provedor de dados de mercado atingiu o limite "
-                    + "de requisições. Tente novamente em instantes.",
-                    "provider_rate_limit",
-                    "https://httpstatuses.com/429",
+                CreateRateLimitDescriptor(
                     rateLimitException.RetryAfter),
+
+            TwelveDataApiException providerException
+                when IsRateLimitException(
+                    providerException) =>
+                CreateRateLimitDescriptor(
+                    retryAfter: null),
 
             TwelveDataCircuitOpenException circuitOpenException =>
                 new ApiErrorDescriptor(
@@ -168,6 +168,47 @@ public sealed class ApiExceptionHandler : IExceptionHandler
                     "internal_error",
                     "https://httpstatuses.com/500")
         };
+    }
+
+    private static ApiErrorDescriptor CreateRateLimitDescriptor(
+        TimeSpan? retryAfter)
+    {
+        return new ApiErrorDescriptor(
+            StatusCodes.Status429TooManyRequests,
+            "Limite temporário da fonte de dados",
+            "O limite de consultas da fonte de dados foi atingido. "
+            + "Aguarde alguns segundos e tente novamente.",
+            "provider_rate_limit",
+            "https://httpstatuses.com/429",
+            retryAfter);
+    }
+
+    private static bool IsRateLimitException(
+        TwelveDataApiException exception)
+    {
+        if (
+            exception.StatusCode ==
+                HttpStatusCode.TooManyRequests)
+        {
+            return true;
+        }
+
+        string message =
+            exception.Message.Trim();
+
+        return
+            message.Contains(
+                "rate limit",
+                StringComparison.OrdinalIgnoreCase) ||
+            message.Contains(
+                "credits per minute",
+                StringComparison.OrdinalIgnoreCase) ||
+            message.Contains(
+                "API credits",
+                StringComparison.OrdinalIgnoreCase) ||
+            message.Contains(
+                "too many requests",
+                StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsProviderUnavailable(
