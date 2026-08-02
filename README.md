@@ -352,7 +352,7 @@ Essas escolhas são adequadas ao escopo atual do MVP e podem ser evoluídas com 
 - testes de integração com PostgreSQL;
 - métricas e tracing;
 - worker independente da API;
-- novos ativos e benchmarks.
+- importação automática de eventos.
 
 ---
 
