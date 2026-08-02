@@ -7,154 +7,70 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111111)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)
 
-Aplicação full-stack que relaciona eventos públicos ligados ao **GTA VI** com movimentações das ações da **Take-Two Interactive (`TTWO`)**.
+O **VI Impact** mostra como eventos públicos relacionados ao **GTA VI** coincidem com movimentações das ações da **Take-Two Interactive (`TTWO`)**.
 
-O projeto reúne dados de mercado, catálogo de eventos, comparação com o benchmark **QQQ**, visualizações interativas, persistência em PostgreSQL, tratamento de falhas, testes automatizados, containers e deploy completo em nuvem.
+A aplicação combina dados de mercado, um catálogo de eventos verificados e o benchmark **QQQ** para apresentar retornos observados após cada acontecimento — sem afirmar que um evento foi a causa direta da variação.
 
-> Projeto educacional e de portfólio. As informações exibidas não constituem recomendação de investimento.
+> Projeto educacional e de portfólio. Não constitui recomendação de investimento.
 
----
+## Acesse o projeto
 
-## Demonstração online
-
-| Serviço | Endereço |
+| Serviço | Link |
 |---|---|
-| Dashboard | [https://vi-impact.vercel.app](https://vi-impact.vercel.app) |
-| API | [https://vi-impact-api.onrender.com](https://vi-impact-api.onrender.com) |
-| Health Check | [https://vi-impact-api.onrender.com/health/ready](https://vi-impact-api.onrender.com/health/ready) |
+| Dashboard | [vi-impact.vercel.app](https://vi-impact.vercel.app) |
+| API | [vi-impact-api.onrender.com](https://vi-impact-api.onrender.com) |
+| Health Check | [health/ready](https://vi-impact-api.onrender.com/health/ready) |
 
-A infraestrutura de produção utiliza:
-
-- **Vercel** para o frontend React;
-- **Render** para a API ASP.NET Core;
-- **Neon** para o PostgreSQL 18;
-- **Twelve Data** como fonte dos dados de mercado.
-
-No plano gratuito atualmente utilizado no Render, o primeiro acesso pode demorar mais por causa do cold start. A coleta em segundo plano também depende de a instância da API estar ativa.
+A API utiliza o plano gratuito do Render. O primeiro acesso após um período de inatividade pode levar alguns segundos.
 
 ---
 
-## Visão geral
+## Funcionalidades
 
-O VI Impact permite:
-
-- acompanhar cotação, variação diária e volume negociado da TTWO;
-- visualizar o histórico de preços em diferentes períodos;
-- comparar o desempenho da TTWO com o ETF QQQ;
-- posicionar eventos relacionados ao GTA VI sobre o gráfico;
-- calcular retornos observados após cada evento;
-- medir retorno excedente em relação ao benchmark;
-- ordenar e filtrar eventos pelo impacto;
-- consultar detalhes, categorias e fontes;
-- alternar entre os temas claro e noturno;
-- executar a aplicação localmente, com Docker ou em nuvem.
-
-A aplicação não afirma que um evento causou determinada movimentação. Ela apresenta uma análise temporal dos dados disponíveis.
-
----
-
-## Dashboard
-
-O dashboard possui:
-
-- cards de preço atual, variação diária, volume e última atualização;
-- mini gráficos de preço e volume;
-- gráfico interativo com períodos de `1D` até `Máx.`;
-- seleção de período personalizado;
+- cotação, variação diária e volume da TTWO;
+- histórico interativo com períodos de `1D` até `Máx.`;
 - comparação normalizada entre TTWO e QQQ;
-- zoom, navegação e preservação do estado do gráfico;
-- marcadores de eventos sobre a série histórica;
-- linha do tempo com filtros;
-- ranking completo de impacto;
-- análise em 1, 5 e 30 pregões;
+- marcadores de eventos do GTA VI sobre o gráfico;
+- ranking de impacto em 1, 5 e 30 pregões;
 - filtros por direção, categoria e pesquisa;
-- painel detalhado de cada evento;
-- estados de carregamento, indisponibilidade e nova tentativa.
-
----
-
-## Principais funcionalidades
-
-### Dados de mercado
-
-- integração com a API da Twelve Data;
-- consulta da cotação mais recente;
+- detalhes do evento com fonte original;
+- temas claro e noturno;
 - coleta automática de cotações;
-- persistência no PostgreSQL;
-- prevenção de registros duplicados;
-- consulta de histórico armazenado;
-- consulta de séries temporais;
-- cache das séries históricas;
-- comparação com o benchmark QQQ.
+- tratamento de indisponibilidade, rate limit e novas tentativas.
 
-A cotação atual é consultada diretamente no provedor. O worker em segundo plano é responsável por salvar periodicamente as cotações no banco.
+## Análise de impacto
 
-### Análise de impacto
-
-Para cada evento elegível, a aplicação pode calcular:
+Para cada evento elegível, a aplicação identifica o pregão correspondente e calcula:
 
 - retorno no mesmo pregão;
-- retorno após 1 pregão;
-- retorno após 5 pregões;
-- retorno após 30 pregões;
+- retorno após 1, 5 e 30 pregões;
 - variação de volume;
 - retorno do QQQ nos mesmos intervalos;
-- retorno excedente da TTWO em relação ao benchmark;
-- pregão efetivamente utilizado na análise;
-- disponibilidade ou indisponibilidade dos dados necessários.
+- retorno excedente da TTWO em relação ao benchmark.
 
-### Catálogo de eventos
-
-- eventos relacionados ao GTA VI;
-- título e descrição;
-- categoria e subcategoria;
-- prioridade;
-- tipo e nome da fonte;
-- data do acontecimento;
-- data de publicação;
-- precisão da data;
-- status do evento;
-- indicação de fonte oficial;
-- elegibilidade para análise de impacto;
-- link para a publicação original;
-- sincronização automática do catálogo na inicialização.
-
-### Resiliência
-
-A integração com o provedor de mercado possui:
-
-- timeout por tentativa;
-- repetição automática de falhas transitórias;
-- atraso exponencial com jitter;
-- suporte ao cabeçalho `Retry-After`;
-- tratamento específico de rate limit;
-- circuit breaker;
-- cache de respostas;
-- bloqueio de requisições duplicadas simultâneas;
-- logs estruturados;
-- respostas seguras para o frontend.
-
-### Tratamento de erros
-
-A API utiliza o padrão `ProblemDetails` e retorna campos como:
-
-```json
-{
-  "type": "https://httpstatuses.com/503",
-  "title": "Provedor temporariamente indisponível",
-  "status": 503,
-  "detail": "Não foi possível consultar os dados de mercado neste momento.",
-  "instance": "/api/stocks/TTWO/time-series",
-  "errorCode": "provider_unavailable",
-  "traceId": "identificador-da-requisicao"
-}
+```text
+Retorno excedente = Retorno da TTWO - Retorno do QQQ
 ```
 
-O frontend interpreta erros como `429`, `502`, `503` e `504`, preserva dados anteriores quando possível e apresenta uma opção de nova tentativa.
+A comparação ajuda a separar parte do movimento específico da ação de movimentos mais amplos do mercado. O resultado representa correlação temporal, não causalidade.
 
 ---
 
-## Arquitetura de produção
+## Tecnologias
+
+| Área | Tecnologias |
+|---|---|
+| Backend | C#, .NET 10, ASP.NET Core, Entity Framework Core, Npgsql |
+| Banco | PostgreSQL 18 |
+| Frontend | React 19, TypeScript, Vite 8, Recharts |
+| Testes | xUnit |
+| Infraestrutura | Docker, Docker Compose, GitHub Actions |
+| Produção | Vercel, Render e Neon |
+| Dados de mercado | Twelve Data |
+
+---
+
+## Arquitetura
 
 ```mermaid
 flowchart LR
@@ -163,23 +79,23 @@ flowchart LR
     R --> N[Neon<br/>PostgreSQL 18]
     R --> T[Twelve Data<br/>Dados de mercado]
 
-    G[GitHub] --> A[GitHub Actions]
-    A --> R
+    G[GitHub] --> CI[GitHub Actions]
+    CI --> R
     G --> V
 ```
 
 Fluxo principal:
 
-1. o frontend hospedado na Vercel consulta a API;
-2. a API lê e grava dados no PostgreSQL do Neon;
-3. a API consulta cotações e séries históricas na Twelve Data;
-4. migrations e catálogo de eventos são sincronizados na inicialização;
-5. o Render publica novas versões após a aprovação dos checks da CI;
-6. a Vercel cria novos deployments a partir do repositório.
+1. o frontend consulta a API;
+2. a API lê e grava dados no PostgreSQL;
+3. cotações e séries históricas são obtidas na Twelve Data;
+4. migrations e eventos são sincronizados na inicialização;
+5. a CI valida backend, frontend e Docker Compose;
+6. os serviços publicam novas versões a partir do repositório.
 
 ---
 
-## Estrutura do repositório
+## Organização do código
 
 ```text
 VI-Impact
@@ -196,196 +112,107 @@ VI-Impact
 └── README.md
 ```
 
-### `VIImpact.API`
-
-Responsável por:
-
-- controllers e rotas HTTP;
-- configuração e injeção de dependência;
-- tratamento global de erros;
-- Health Checks;
-- worker de coleta automática;
-- CORS;
-- inicialização, migration e seed.
-
-### `VIImpact.Application`
-
-Responsável por:
-
-- interfaces;
-- modelos de aplicação;
-- serviços e regras de negócio;
-- cálculo de impacto;
-- comparação com benchmark;
-- cache do ranking.
-
-### `VIImpact.Domain`
-
-Contém as entidades centrais do domínio:
-
-- cotações;
-- eventos do GTA VI;
-- categorias;
-- prioridades;
-- tipos de fonte;
-- demais tipos relacionados.
-
-### `VIImpact.Infrastructure`
-
-Responsável por:
-
-- Entity Framework Core;
-- provedor Npgsql;
-- PostgreSQL;
-- repositórios;
-- integração com a Twelve Data;
-- políticas de resiliência;
-- migrations;
-- seed do catálogo de eventos.
-
-### `VIImpact.Tests`
-
-Contém testes automatizados para:
-
-- cálculo de impacto;
-- retornos em diferentes janelas;
-- comparação com benchmark;
-- cache do ranking;
-- integração resiliente;
-- rate limit e circuit breaker;
-- tratamento global de exceções;
-- Health Check do PostgreSQL.
-
-### `VIImpact.Web`
-
-Frontend construído com React, TypeScript e Vite.
-
-No ambiente Docker, os arquivos estáticos são servidos pelo Nginx, que também encaminha as rotas locais `/api` e `/health` para a API.
+| Projeto | Responsabilidade |
+|---|---|
+| `VIImpact.API` | Rotas HTTP, configuração, CORS, Health Checks e worker |
+| `VIImpact.Application` | Casos de uso, contratos e análise de impacto |
+| `VIImpact.Domain` | Entidades e tipos centrais do domínio |
+| `VIImpact.Infrastructure` | PostgreSQL, repositórios, migrations e Twelve Data |
+| `VIImpact.Tests` | Testes automatizados |
+| `VIImpact.Web` | Dashboard React |
 
 ---
 
-## Tecnologias
+## Decisões técnicas
 
-### Backend
+### PostgreSQL
 
-- C#;
-- .NET 10;
-- ASP.NET Core Web API;
-- Entity Framework Core;
-- Npgsql;
-- PostgreSQL 18;
-- xUnit;
-- HttpClient;
-- Background Services;
-- ProblemDetails;
-- Health Checks.
+A aplicação utiliza PostgreSQL 18 com Entity Framework Core e Npgsql.
 
-### Frontend
+Na inicialização, a API:
 
-- React 19;
-- TypeScript;
-- Vite 8;
-- Recharts;
-- ESLint;
-- Nginx.
+1. aplica migrations pendentes;
+2. sincroniza o catálogo de eventos;
+3. inicia o worker de coleta.
 
-### Infraestrutura
+| Ambiente | Banco |
+|---|---|
+| Desenvolvimento com Docker | `postgres:18-alpine` |
+| Produção | Neon PostgreSQL 18 |
 
-- Docker;
-- Docker Compose;
-- GitHub Actions;
-- Neon;
-- Render;
-- Vercel;
-- Git;
-- GitHub.
+### Coleta automática
+
+Um `BackgroundService` consulta periodicamente a cotação configurada e salva apenas registros ainda não armazenados.
+
+```json
+{
+  "StockCollection": {
+    "Enabled": true,
+    "Symbol": "TTWO",
+    "IntervalMinutes": 5
+  }
+}
+```
+
+### Resiliência
+
+A integração com a Twelve Data possui:
+
+- timeout e repetição de falhas transitórias;
+- atraso exponencial com jitter;
+- suporte a `Retry-After`;
+- tratamento de rate limit;
+- circuit breaker;
+- cache de séries históricas;
+- logs estruturados.
+
+### Tratamento de erros
+
+A API utiliza o padrão `ProblemDetails`:
+
+```json
+{
+  "type": "https://httpstatuses.com/503",
+  "title": "Provedor temporariamente indisponível",
+  "status": 503,
+  "detail": "Não foi possível consultar os dados de mercado neste momento.",
+  "errorCode": "provider_unavailable",
+  "traceId": "identificador-da-requisicao"
+}
+```
+
+O frontend interpreta respostas como `429`, `502`, `503` e `504`, preserva dados anteriores quando possível e oferece nova tentativa.
 
 ---
 
 ## Principais endpoints
 
-Base da API em produção:
+Base de produção:
 
 ```text
 https://vi-impact-api.onrender.com
 ```
 
-### Dashboard
-
-```http
-GET /api/dashboard/TTWO?includeGtaEvents=true&limit=500
-```
-
-### Cotação atual
-
-```http
-GET /api/stocks/TTWO
-```
-
-### Histórico armazenado
-
-```http
-GET /api/stocks/TTWO/history?limit=100
-```
-
-### Série histórica
-
-```http
-GET /api/stocks/TTWO/time-series?period=1Y
-```
-
-### Eventos
-
-```http
-GET /api/gtaevents
-```
-
-### Detalhes de impacto
-
-```http
-GET /api/gtaevents/{eventId}/impact?symbol=TTWO&benchmarkSymbol=QQQ
-```
-
-### Ranking de impacto
-
-```http
-GET /api/gtaevents/impact-ranking?symbol=TTWO&benchmarkSymbol=QQQ
-```
-
-### Health Checks
-
-```http
-GET /health/live
-GET /health/ready
-```
-
-- `/health/live` confirma que o processo da API está respondendo;
-- `/health/ready` também verifica a conexão com o PostgreSQL.
-
-Exemplo de resposta do endpoint de prontidão:
-
-```json
-{
-  "status": "healthy",
-  "checks": [
-    {
-      "name": "postgresql",
-      "status": "healthy",
-      "description": "PostgreSQL connection is available."
-    }
-  ]
-}
-```
+| Recurso | Endpoint |
+|---|---|
+| Dashboard | `GET /api/dashboard/TTWO?includeGtaEvents=true&limit=500` |
+| Cotação atual | `GET /api/stocks/TTWO` |
+| Histórico armazenado | `GET /api/stocks/TTWO/history?limit=100` |
+| Série histórica | `GET /api/stocks/TTWO/time-series?period=1Y` |
+| Eventos | `GET /api/gtaevents` |
+| Impacto de um evento | `GET /api/gtaevents/{eventId}/impact?symbol=TTWO&benchmarkSymbol=QQQ` |
+| Ranking de impacto | `GET /api/gtaevents/impact-ranking?symbol=TTWO&benchmarkSymbol=QQQ` |
+| Processo da API | `GET /health/live` |
+| API e PostgreSQL | `GET /health/ready` |
 
 ---
 
-## Executar com Docker
+## Executar localmente
 
 ### Requisitos
 
 - Docker Desktop;
-- virtualização habilitada;
-- WSL 2 no Windows;
+- virtualização e WSL 2 habilitados no Windows;
 - chave da Twelve Data.
 
 ### 1. Clone o repositório
@@ -401,48 +228,20 @@ cd VI-Impact
 Copy-Item .env.example .env
 ```
 
-Preencha pelo menos:
+Preencha no `.env`:
 
 ```env
 POSTGRES_PASSWORD=UMA_SENHA_FORTE
 TWELVE_DATA_API_KEY=SUA_CHAVE_DA_TWELVE_DATA
 ```
 
-Os demais valores possuem padrões adequados para o ambiente local:
+O `.env` não deve ser enviado ao GitHub.
 
-```env
-POSTGRES_USER=viimpact
-POSTGRES_DB=VIImpactDb
-POSTGRES_PORT=5432
-
-API_PORT=5170
-WEB_PORT=5173
-
-CORS_ALLOWED_ORIGINS=http://localhost:5173
-
-TWELVE_DATA_BASE_URL=https://api.twelvedata.com
-STOCK_COLLECTION_ENABLED=true
-STOCK_SYMBOL=TTWO
-STOCK_INTERVAL_MINUTES=5
-
-VITE_API_BASE_URL=
-```
-
-O arquivo `.env` está ignorado pelo Git e não deve ser versionado.
-
-### 3. Inicie os serviços
+### 3. Inicie a aplicação
 
 ```powershell
 docker compose up -d --build
 ```
-
-### 4. Verifique os containers
-
-```powershell
-docker compose ps
-```
-
-Serviços locais:
 
 | Serviço | Endereço |
 |---|---|
@@ -450,22 +249,20 @@ Serviços locais:
 | API | `http://localhost:5170` |
 | PostgreSQL | `localhost:5432` |
 
-### 5. Teste a aplicação
+### 4. Verifique a execução
 
 ```powershell
+docker compose ps
 curl.exe -i "http://localhost:5170/health/ready"
-curl.exe -i "http://localhost:5173/health/ready"
 ```
 
-### 6. Encerre os containers
+### 5. Encerre os serviços
 
 ```powershell
 docker compose down
 ```
 
-O volume `postgres-data` preserva os dados do PostgreSQL.
-
-Para remover também os dados:
+Para remover também os dados locais:
 
 ```powershell
 docker compose down -v
@@ -473,242 +270,16 @@ docker compose down -v
 
 ---
 
-## Executar sem Docker
+## Testes e qualidade
 
-### Requisitos
-
-- .NET SDK 10;
-- Node.js;
-- PostgreSQL 18;
-- chave da Twelve Data.
-
-### 1. Prepare o PostgreSQL
-
-Crie um banco e um usuário compatíveis com a connection string que será utilizada pela API.
-
-Exemplo local:
-
-```text
-Database: VIImpactDb
-Username: viimpact
-Port: 5432
-```
-
-### 2. Configure a conexão no terminal
-
-No PowerShell:
-
-```powershell
-$env:ConnectionStrings__DefaultConnection = `
-  "Host=localhost;Port=5432;Database=VIImpactDb;Username=viimpact;Password=SUA_SENHA;SSL Mode=Disable"
-```
-
-### 3. Configure a chave da Twelve Data
-
-```powershell
-dotnet user-secrets set `
-  "TwelveData:ApiKey" `
-  "SUA_CHAVE_AQUI" `
-  --project .\VIImpact.API\VIImpact.API.csproj
-```
-
-### 4. Execute a API
-
-```powershell
-dotnet run --project .\VIImpact.API\VIImpact.API.csproj
-```
-
-Na inicialização, a API aplica migrations pendentes e sincroniza o catálogo de eventos.
-
-Endereço local:
-
-```text
-http://localhost:5170
-```
-
-### 5. Execute o frontend
-
-Em outro terminal:
-
-```powershell
-cd .\VIImpact.Web
-npm install
-npm run dev
-```
-
-Endereço local:
-
-```text
-http://localhost:5173
-```
-
-O Vite encaminha as rotas locais `/api` e `/health` para a API.
-
-Para remover a connection string da sessão atual do PowerShell:
-
-```powershell
-Remove-Item Env:\ConnectionStrings__DefaultConnection
-```
-
----
-
-## Banco de dados
-
-O projeto utiliza PostgreSQL 18 com Entity Framework Core e Npgsql.
-
-Na inicialização, a API:
-
-1. cria um escopo de banco;
-2. aplica migrations pendentes com `MigrateAsync`;
-3. sincroniza o catálogo de eventos;
-4. inicia o worker de coleta.
-
-Tabelas principais:
-
-```text
-GtaEvents
-StockQuotes
-__EFMigrationsHistory
-```
-
-Ambientes utilizados:
-
-| Ambiente | PostgreSQL |
-|---|---|
-| Desenvolvimento com Docker | Container `postgres:18-alpine` |
-| Produção | Neon PostgreSQL 18 |
-
-Em produção, a connection string é armazenada nas variáveis de ambiente do Render e não faz parte do repositório.
-
----
-
-## Coleta automática
-
-O worker pode ser configurado por `appsettings.json` ou por variáveis de ambiente:
-
-```json
-{
-  "StockCollection": {
-    "Enabled": true,
-    "Symbol": "TTWO",
-    "IntervalMinutes": 5
-  }
-}
-```
-
-Equivalentes no formato de configuração do ASP.NET Core:
-
-```text
-StockCollection__Enabled
-StockCollection__Symbol
-StockCollection__IntervalMinutes
-```
-
-Equivalentes usados pelo `.env` do Docker Compose:
-
-```env
-STOCK_COLLECTION_ENABLED=true
-STOCK_SYMBOL=TTWO
-STOCK_INTERVAL_MINUTES=5
-```
-
-O worker consulta a cotação configurada e salva apenas dados que ainda não estejam armazenados.
-
----
-
-## Configuração de produção
-
-### Neon
-
-- PostgreSQL 18;
-- banco `neondb`;
-- conexão SSL;
-- migrations aplicadas pelo Entity Framework Core;
-- credenciais armazenadas somente no Render.
-
-### Render
-
-O serviço da API utiliza:
-
-```text
-Runtime: Docker
-Dockerfile: VIImpact.API/Dockerfile
-Port: 8080
-Health Check: /health/ready
-```
-
-Variáveis principais:
-
-```text
-ASPNETCORE_ENVIRONMENT=Production
-ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
-PORT=8080
-
-ConnectionStrings__DefaultConnection=CONNECTION_STRING_DO_NEON
-Cors__AllowedOrigins=https://vi-impact.vercel.app
-
-TwelveData__ApiKey=CHAVE_DA_TWELVE_DATA
-TwelveData__BaseUrl=https://api.twelvedata.com
-
-StockCollection__Enabled=true
-StockCollection__Symbol=TTWO
-StockCollection__IntervalMinutes=5
-```
-
-Segredos não devem conter aspas externas nem ser enviados ao repositório.
-
-### Vercel
-
-Configuração do frontend:
-
-```text
-Framework: Vite
-Root Directory: VIImpact.Web
-Build Command: npm run build
-Output Directory: dist
-```
-
-Variável de produção:
-
-```text
-VITE_API_BASE_URL=https://vi-impact-api.onrender.com
-```
-
-A origem autorizada no Render deve coincidir exatamente com a URL da Vercel, sem barra no final.
-
----
-
-## Testes
-
-Execute os testes do backend:
+Backend:
 
 ```powershell
 dotnet test .\VIImpact.slnx `
   --configuration Release
 ```
 
-Estado validado durante o desenvolvimento:
-
-```text
-18 testes
-0 falhas
-```
-
-As principais áreas cobertas são:
-
-- cálculo de impacto;
-- retornos em diferentes janelas;
-- comparação com benchmark;
-- cache;
-- timeout e repetição;
-- rate limit;
-- circuit breaker;
-- respostas `ProblemDetails`;
-- Health Check do PostgreSQL.
-
----
-
-## Build e qualidade do frontend
+Frontend:
 
 ```powershell
 cd .\VIImpact.Web
@@ -717,17 +288,26 @@ npm run lint
 npm run build
 ```
 
+Estado validado:
+
+```text
+18 testes
+0 falhas
+```
+
+A cobertura inclui cálculo de impacto, benchmark, cache, timeout, rate limit, circuit breaker, `ProblemDetails` e Health Check do PostgreSQL.
+
 ---
 
 ## Integração contínua
 
-O workflow está localizado em:
+O workflow está em:
 
 ```text
 .github/workflows/ci.yml
 ```
 
-Jobs atuais:
+Jobs executados:
 
 ```text
 Backend build and tests
@@ -735,85 +315,44 @@ Frontend lint and build
 Validate Docker Compose
 ```
 
-Cada execução valida:
-
-- restore do backend;
-- build em modo `Release`;
-- testes automatizados;
-- lint do frontend;
-- build do frontend;
-- sintaxe e interpolação do Docker Compose.
-
-O Render está configurado para publicar a API depois que os checks da CI forem aprovados.
+O Render está configurado para publicar a API somente depois da aprovação dos checks da CI.
 
 ---
 
-## Segurança
+## Deploy
 
-- a chave da Twelve Data não fica no código;
-- a connection string de produção não fica no repositório;
-- o `.env` não é versionado;
-- os valores usados na CI são fictícios;
-- mensagens internas de exceção não são expostas ao cliente;
-- o `traceId` permite correlacionar respostas com os logs;
-- CORS restringe as origens autorizadas;
-- a API executa no container com usuário sem privilégios;
-- senhas e chaves são configuradas nas plataformas de deploy.
+| Camada | Serviço |
+|---|---|
+| Frontend | Vercel |
+| API | Render |
+| PostgreSQL | Neon |
+| Dados de mercado | Twelve Data |
+
+Chaves e connection strings são configuradas diretamente nas plataformas de deploy e não ficam no repositório.
 
 ---
 
-## Status
+## Limitações conhecidas
 
-O projeto possui um MVP full-stack funcional e publicado com:
+- o plano gratuito do Render pode suspender a API por inatividade;
+- o primeiro acesso após a suspensão pode demorar;
+- o worker só executa enquanto a instância da API está ativa;
+- a chave gratuita da Twelve Data possui limite de requisições;
+- caches em memória não são compartilhados entre múltiplas instâncias;
+- a análise mostra correlação temporal, não causalidade.
 
-- backend em camadas;
-- dashboard interativo;
-- PostgreSQL;
-- catálogo de eventos;
-- análise de impacto;
-- comparação com benchmark;
-- persistência;
-- cache e resiliência;
-- tratamento padronizado de erros;
-- Health Checks;
-- testes automatizados;
-- Docker Compose;
-- integração contínua;
-- frontend publicado na Vercel;
-- API publicada no Render;
-- banco publicado no Neon.
+Essas escolhas são adequadas ao escopo atual do MVP e podem ser evoluídas com o crescimento do projeto.
 
-Próximas evoluções possíveis:
+---
+
+## Próximas evoluções
 
 - autenticação e autorização;
 - painel administrativo de eventos;
-- testes de integração com banco;
-- observabilidade com métricas e tracing;
-- coleta independente de instâncias que entram em suspensão;
-- suporte a novos ativos e benchmarks;
-- domínio personalizado.
-
----
-
-## Objetivo do projeto
-
-O VI Impact foi desenvolvido para aprendizado e composição de portfólio, aplicando na prática:
-
-- arquitetura em camadas;
-- injeção de dependência;
-- integração com APIs externas;
-- persistência de dados;
-- migrations;
-- processamento em segundo plano;
-- cache;
-- resiliência;
-- análise de séries temporais;
-- testes automatizados;
-- containerização;
-- integração contínua;
-- deploy em nuvem;
-- configuração segura por ambiente;
-- boas práticas com Git e GitHub.
+- testes de integração com PostgreSQL;
+- métricas e tracing;
+- worker independente da API;
+- novos ativos e benchmarks.
 
 ---
 
@@ -827,6 +366,6 @@ GitHub: [@JrCotrim](https://github.com/JrCotrim)
 
 ## Aviso
 
-Este projeto possui finalidade educacional e de portfólio.
+Os dados financeiros podem apresentar atraso, indisponibilidade ou diferenças em relação a outras fontes.
 
-Os dados financeiros podem apresentar atraso, indisponibilidade ou diferenças em relação a outras fontes. Os movimentos observados não comprovam causalidade e não devem ser interpretados como recomendação de investimento.
+Os movimentos observados não comprovam causalidade e não devem ser interpretados como recomendação de investimento.
