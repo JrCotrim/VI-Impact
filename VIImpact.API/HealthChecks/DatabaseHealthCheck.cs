@@ -3,7 +3,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 namespace VIImpact.API.HealthChecks;
 
 /// <summary>
-/// Reports whether the API can establish a connection to SQL Server.
+/// Reports whether the API can establish a connection to PostgreSQL.
 /// </summary>
 public sealed class DatabaseHealthCheck : IHealthCheck
 {
@@ -36,16 +36,16 @@ public sealed class DatabaseHealthCheck : IHealthCheck
             if (canConnect)
             {
                 return HealthCheckResult.Healthy(
-                    "SQL Server connection is available.");
+                    "PostgreSQL connection is available.");
             }
 
             return HealthCheckResult.Unhealthy(
-                "SQL Server connection is unavailable.");
+                "PostgreSQL connection is unavailable.");
         }
         catch (Exception exception)
         {
             return HealthCheckResult.Unhealthy(
-                "SQL Server connectivity check failed.",
+                "PostgreSQL connectivity check failed.",
                 exception);
         }
     }

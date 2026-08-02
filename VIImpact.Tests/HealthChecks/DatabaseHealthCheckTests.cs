@@ -5,7 +5,7 @@ using VIImpact.API.HealthChecks;
 namespace VIImpact.Tests.HealthChecks;
 
 /// <summary>
-/// Verifies the SQL Server readiness health check.
+/// Verifies the PostgreSQL readiness health check.
 /// </summary>
 public sealed class DatabaseHealthCheckTests
 {
@@ -21,7 +21,7 @@ public sealed class DatabaseHealthCheckTests
             result.Status);
 
         Assert.Equal(
-            "SQL Server connection is available.",
+            "PostgreSQL connection is available.",
             result.Description);
     }
 
@@ -37,7 +37,7 @@ public sealed class DatabaseHealthCheckTests
             result.Status);
 
         Assert.Equal(
-            "SQL Server connection is unavailable.",
+            "PostgreSQL connection is unavailable.",
             result.Description);
     }
 

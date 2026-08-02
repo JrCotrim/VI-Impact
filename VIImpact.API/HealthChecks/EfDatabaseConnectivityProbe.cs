@@ -3,7 +3,7 @@ using VIImpact.Infrastructure.Persistence;
 namespace VIImpact.API.HealthChecks;
 
 /// <summary>
-/// Checks SQL Server connectivity through the application's DbContext.
+/// Checks PostgreSQL connectivity through the application's DbContext.
 /// </summary>
 public sealed class EfDatabaseConnectivityProbe
     : IDatabaseConnectivityProbe
