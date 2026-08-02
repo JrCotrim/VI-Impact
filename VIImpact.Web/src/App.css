@@ -8008,8 +8008,8 @@ a {
   .impact-ranking-list {
   min-height: 0;
   padding-right: 5px;
-  padding-bottom: 24px;
-  scroll-padding-bottom: 24px;
+  padding-bottom: 18px;
+  scroll-padding-bottom: 18px;
   overflow-y: auto;
 }
 
@@ -8018,10 +8018,9 @@ a {
   position: static;
   z-index: 2;
   margin: 0;
-  padding: 12px 0 14px;
+  padding: 12px 0 0;
   border-top: 1px solid rgba(131, 153, 199, 0.16);
   background: transparent;
-  line-height: 1.5;
 }
 
 /* Collapsed state: remove the third grid column and float a
@@ -9776,3 +9775,12 @@ a {
   }
 }
 
+
+
+
+@media (min-width: 1451px) {
+  .dashboard-content.ranking-collapsed
+    .events-panel {
+    margin-right: 16px;
+  }
+}
