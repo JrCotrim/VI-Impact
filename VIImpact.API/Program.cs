@@ -28,6 +28,17 @@ builder.Services.AddSingleton<TimeProvider>(
     TimeProvider.System);
 
 // Frontend access
+string[] allowedOrigins =
+    (builder.Configuration["Cors:AllowedOrigins"]
+        ?? "http://localhost:5173")
+    .Split(
+        ',',
+        StringSplitOptions.RemoveEmptyEntries |
+        StringSplitOptions.TrimEntries)
+    .Append("http://localhost:5173")
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(
@@ -35,7 +46,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("http://localhost:5173")
+                .WithOrigins(allowedOrigins)
                 .AllowAnyHeader()
                 .AllowAnyMethod();
         });
@@ -61,14 +72,17 @@ builder.Services.Configure<StockCollectionOptions>(
 
 builder.Services.AddHostedService<StockQuoteCollectionWorker>();
 
-// Database configuration
+// PostgreSQL configuration
 string connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
         "The database connection string was not configured.");
 
 builder.Services.AddDbContext<VIImpactDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(
+        connectionString,
+        npgsqlOptions =>
+            npgsqlOptions.SetPostgresVersion(18, 0)));
 
 builder.Services.AddScoped<
     IDatabaseConnectivityProbe,
@@ -77,7 +91,7 @@ builder.Services.AddScoped<
 builder.Services
     .AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>(
-        "sql_server",
+        "postgresql",
         failureStatus: HealthStatus.Unhealthy,
         tags: new[] { "ready" });
 
@@ -161,36 +175,18 @@ app.MapControllers();
 app.Run();
 
 /// <summary>
-/// Applies pending migrations and synchronizes the GTA VI event catalog.
+/// Applies pending PostgreSQL migrations and synchronizes
+/// the GTA VI event catalog.
 /// </summary>
 static async Task InitializeDatabaseAsync(
     WebApplication application)
 {
-    const string legacyGtaEventCleanupSql = """
-        IF OBJECT_ID(N'[dbo].[GtaEvents]', N'U') IS NOT NULL
-        BEGIN
-            DELETE FROM [dbo].[GtaEvents]
-            WHERE [Title] IN
-            (
-                N'GTA VI event test',
-                N'GTA VI impact calculation test'
-            )
-            OR [SourceUrl] LIKE N'https://example.com/gta-vi-%';
-        END
-        """;
-
     await using AsyncServiceScope scope =
         application.Services.CreateAsyncScope();
 
     VIImpactDbContext dbContext =
         scope.ServiceProvider
             .GetRequiredService<VIImpactDbContext>();
-
-    if (await dbContext.Database.CanConnectAsync())
-    {
-        await dbContext.Database.ExecuteSqlRawAsync(
-            legacyGtaEventCleanupSql);
-    }
 
     await dbContext.Database.MigrateAsync();
     await GtaEventSeeder.SeedAsync(dbContext);
