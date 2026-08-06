@@ -612,6 +612,24 @@
     "isImpactAnalysisEligible": false
   },
   {
+    "slug": "gta-vi-extended-look-announced",
+    "title": "Rockstar anuncia Grand Theft Auto VI: An Extended Look",
+    "description": "A Rockstar anunciou que a apresentação estrearia primeiro na Netflix em 27 de agosto de 2026, às 15h no horário do leste dos Estados Unidos, e seria publicada seis horas depois no canal oficial da Rockstar no YouTube e no site de GTA VI.",
+    "category": "Announcement",
+    "subcategory": "Anúncio de apresentação estendida",
+    "priority": "Primary",
+    "sourceType": "Official",
+    "sourceName": "Rockstar Games",
+    "sourceUrl": "https://www.rockstargames.com/newswire/article/9k2kaa1o3297k9/grand-theft-auto-vi-an-extended-look",
+    "occurredAtUtc": "2026-08-06T00:00:00Z",
+    "occurredUntilUtc": null,
+    "publishedAtUtc": null,
+    "datePrecision": "DateOnly",
+    "status": "Occurred",
+    "isOfficial": true,
+    "isImpactAnalysisEligible": true
+  },
+  {
     "slug": "gta-vi-preload-begins",
     "title": "Início do pré-carregamento",
     "description": "Início futuro confirmado do pré-carregamento de GTA VI.",
