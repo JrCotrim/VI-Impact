@@ -80,7 +80,7 @@ const presentationByCategory: Record<
     className: 'category-trailer',
     color: '#8f42dd',
     iconKey: 'trailer',
-    symbol: '▶',
+    symbol: 'TR',
   },
   Leak: {
     label: 'Vazamento',
@@ -136,7 +136,7 @@ const presentationByCategory: Record<
     className: 'category-labor-legal',
     color: '#c98a16',
     iconKey: 'labor-legal',
-    symbol: '⚖',
+    symbol: 'LAW',
   },
   PreOrder: {
     label: 'Pré-venda',
@@ -164,14 +164,14 @@ const presentationByCategory: Record<
     className: 'category-market-analysis',
     color: '#12a59c',
     iconKey: 'market-analysis',
-    symbol: '↗',
+    symbol: 'MKT',
   },
   Launch: {
     label: 'Lançamento',
     className: 'category-launch',
     color: '#0aa564',
     iconKey: 'launch',
-    symbol: '★',
+    symbol: 'GTA',
   },
   GameInformation: {
     label: 'Informações do jogo',

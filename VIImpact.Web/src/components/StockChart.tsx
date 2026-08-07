@@ -9,6 +9,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { EventIcon } from './EventIcon'
 import {
   CartesianGrid,
   Line,
@@ -1117,6 +1118,55 @@ function findNearestPointIndex(
     : upperIndex
 }
 
+function findEventPointIndex(
+  points: ChartPoint[],
+  eventTimestamp: number,
+): number {
+  if (
+    points.length === 0 ||
+    !Number.isFinite(eventTimestamp)
+  ) {
+    return -1
+  }
+
+  const eventDateKey =
+    getUtcDateKeyFromTimestamp(
+      eventTimestamp,
+    )
+  const minimumDateKey =
+    getUtcDateKeyFromTimestamp(
+      points[0].timestamp,
+    )
+  const maximumDateKey =
+    getUtcDateKeyFromTimestamp(
+      points[points.length - 1].timestamp,
+    )
+
+  if (
+    eventDateKey < minimumDateKey ||
+    eventDateKey > maximumDateKey
+  ) {
+    return -1
+  }
+
+  const sameDatePointIndex =
+    points.findIndex(
+      (point) =>
+        getUtcDateKeyFromTimestamp(
+          point.timestamp,
+        ) === eventDateKey,
+    )
+
+  if (sameDatePointIndex >= 0) {
+    return sameDatePointIndex
+  }
+
+  return findNearestPointIndex(
+    points,
+    eventTimestamp,
+  )
+}
+
 function createEligibleEvents(
   events: GtaEvent[],
   chartData: ChartPoint[],
@@ -1124,11 +1174,6 @@ function createEligibleEvents(
   if (chartData.length === 0) {
     return []
   }
-
-  const minimumTimestamp =
-    chartData[0].timestamp
-  const maximumTimestamp =
-    chartData[chartData.length - 1].timestamp
 
   return [...events]
     .sort(
@@ -1147,16 +1192,8 @@ function createEligibleEvents(
       const eventTimestamp =
         eventDate.getTime()
 
-      if (
-        !Number.isFinite(eventTimestamp) ||
-        eventTimestamp < minimumTimestamp ||
-        eventTimestamp > maximumTimestamp
-      ) {
-        return null
-      }
-
       const nearestPointIndex =
-        findNearestPointIndex(
+        findEventPointIndex(
           chartData,
           eventTimestamp,
         )
@@ -1816,7 +1853,10 @@ function EventTooltipCard({
           }}
           aria-hidden="true"
         >
-          {marker.presentation.symbol}
+          <EventIcon
+            iconKey={marker.presentation.iconKey}
+            className="event-category-icon"
+          />
         </span>
 
         <div>
@@ -2395,7 +2435,7 @@ export function StockChart({
         selectedEvent.occurredAtUtc,
       ).getTime()
     const selectedPointIndex =
-      findNearestPointIndex(
+      findEventPointIndex(
         chartData,
         selectedTimestamp,
       )
@@ -3050,7 +3090,7 @@ export function StockChart({
         minHeight: 0,
         contain: 'layout paint style',
         isolation: 'isolate',
-        touchAction: 'none',
+        touchAction: 'pan-y',
       }}
       tabIndex={0}
       aria-label={

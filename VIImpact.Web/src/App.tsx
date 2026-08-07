@@ -6,6 +6,7 @@ import {
 import './App.css'
 import { ChartPeriodSelector } from './components/ChartPeriodSelector'
 import { StockChart } from './components/StockChart'
+import { EventIcon } from './components/EventIcon'
 import { getDashboardData } from './services/dashboardService'
 import {
   getGtaEventImpact,
@@ -57,6 +58,103 @@ type ImpactRankingSort =
 type TimelineMode =
   | 'PERIOD'
   | 'ALL'
+
+type InterfaceIconName =
+  | 'external-link'
+  | 'expand'
+  | 'collapse'
+  | 'search'
+  | 'chevron-right'
+
+interface InterfaceIconProps {
+  name: InterfaceIconName
+  className?: string
+}
+
+/**
+ * Renders interface controls as SVGs so mobile browsers never substitute emojis.
+ */
+function InterfaceIcon({
+  name,
+  className,
+}: InterfaceIconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {name === 'external-link' && (
+        <>
+          <path
+            d="M13 5h6v6M19 5l-8 8"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M17 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </>
+      )}
+
+      {name === 'expand' && (
+        <path
+          d="M7 17 17 7M10 7h7v7"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+
+      {name === 'collapse' && (
+        <path
+          d="M6 12h12"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      )}
+
+      {name === 'search' && (
+        <>
+          <circle
+            cx="10.5"
+            cy="10.5"
+            r="5.5"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+          <path
+            d="m15 15 4 4"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </>
+      )}
+
+      {name === 'chevron-right' && (
+        <path
+          d="m9 6 6 6-6 6"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+    </svg>
+  )
+}
 
 const impactRankingPeriodOptions: Array<{
   value: ImpactRankingPeriod
@@ -2001,40 +2099,48 @@ function App() {
           ).getTime(),
       )
 
-  const chartTimestamps =
+  const chartDateKeys =
     timeSeries?.values.map((value) =>
-      parseUtcDate(
-        value.dateTimeUtc,
-      ).getTime(),
+      getUtcDateKey(value.dateTimeUtc),
     ) ?? []
 
-  const chartStartTimestamp =
-    chartTimestamps.length > 0
-      ? Math.min(...chartTimestamps)
+  const chartStartDateKey =
+    chartDateKeys.length > 0
+      ? chartDateKeys.reduce(
+          (earliestDateKey, dateKey) =>
+            dateKey < earliestDateKey
+              ? dateKey
+              : earliestDateKey,
+        )
       : null
 
-  const chartEndTimestamp =
-    chartTimestamps.length > 0
-      ? Math.max(...chartTimestamps)
+  const chartEndDateKey =
+    chartDateKeys.length > 0
+      ? chartDateKeys.reduce(
+          (latestDateKey, dateKey) =>
+            dateKey > latestDateKey
+              ? dateKey
+              : latestDateKey,
+        )
       : null
 
   const timelineEvents =
     timelineMode === 'ALL' ||
-    chartStartTimestamp === null ||
-    chartEndTimestamp === null
+    chartStartDateKey === null ||
+    chartEndDateKey === null
       ? occurredEvents
       : occurredEvents.filter(
           (gtaEvent) => {
-            const eventTimestamp =
-              parseUtcDate(
+            const eventDateKey =
+              getUtcDateKey(
                 gtaEvent.occurredAtUtc,
-              ).getTime()
+              )
 
             return (
-              eventTimestamp >=
-                chartStartTimestamp &&
-              eventTimestamp <=
-                chartEndTimestamp
+              eventDateKey >=
+                chartStartDateKey &&
+              eventDateKey <=
+                chartEndDateKey
             )
           },
         )
@@ -2884,9 +2990,10 @@ function App() {
                             className={`event-thumbnail ${eventStyle.className}`}
                             aria-hidden="true"
                           >
-                            <span>
-                              {eventStyle.symbol}
-                            </span>
+                            <EventIcon
+                              iconKey={eventStyle.iconKey}
+                              className="event-category-icon"
+                            />
                           </div>
 
                           <div className="event-card-content">
@@ -2911,7 +3018,10 @@ function App() {
                             className="event-expand-indicator"
                             aria-hidden="true"
                           >
-                            ›
+                            <InterfaceIcon
+                              name="chevron-right"
+                              className="inline-action-icon"
+                            />
                           </span>
                         </button>
 
@@ -3163,9 +3273,10 @@ function App() {
                                   rel="noreferrer"
                                 >
                                   Ver fonte original
-                                  <span aria-hidden="true">
-                                    ↗
-                                  </span>
+                                  <InterfaceIcon
+                                    name="external-link"
+                                    className="inline-action-icon"
+                                  />
                                 </a>
                               ) : (
                                 <span className="event-detail-source-missing">
@@ -3230,7 +3341,10 @@ function App() {
                 aria-label="Abrir ranking completo de impacto"
                 title="Abrir ranking completo de impacto"
               >
-                <span aria-hidden="true">↗</span>
+                <InterfaceIcon
+                  name="expand"
+                  className="inline-action-icon"
+                />
                 <strong>Abrir ranking</strong>
               </button>
             ) : (
@@ -3307,7 +3421,10 @@ function App() {
                     title="Recolher ranking"
                     aria-label="Recolher ranking"
                   >
-                    <span aria-hidden="true">−</span>
+                    <InterfaceIcon
+                      name="collapse"
+                      className="inline-action-icon"
+                    />
                     Recolher
                   </button>
                 </div>
@@ -3461,7 +3578,10 @@ function App() {
                 </div>
 
                 <label className="impact-ranking-search">
-                  <span aria-hidden="true">⌕</span>
+                  <InterfaceIcon
+                    name="search"
+                    className="inline-action-icon"
+                  />
                   <input
                     type="search"
                     value={impactRankingSearch}
@@ -3589,7 +3709,10 @@ function App() {
                               className={`impact-ranking-icon ${eventStyle.className}`}
                               aria-hidden="true"
                             >
-                              {eventStyle.symbol}
+                              <EventIcon
+                                iconKey={eventStyle.iconKey}
+                                className="event-category-icon"
+                              />
                             </span>
 
                             <span className="impact-ranking-copy">
