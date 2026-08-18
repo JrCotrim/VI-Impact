@@ -630,6 +630,24 @@
     "isImpactAnalysisEligible": true
   },
   {
+    "slug": "gta-vi-gameplay-map-leak-august-2026",
+    "title": "Novo vazamento atribuído a GTA VI mostra gameplay e partes do mapa",
+    "description": "Novos vídeos e imagens atribuídos a Grand Theft Auto VI começaram a circular online, mostrando Jason jogando basquete, dirigindo e se envolvendo em combate, além de imagens supostamente ligadas ao mapa de Leonida. A Rockstar Games não confirmou oficialmente a autenticidade do material; relatos de remoções por DMCA aumentaram sua credibilidade, embora haja indicação de que os vídeos possam ser de uma build antiga e não representem o estado final do jogo.",
+    "category": "Leak",
+    "subcategory": "Vazamento de gameplay e mapa",
+    "priority": "Relevant",
+    "sourceType": "Journalism",
+    "sourceName": "Dexerto",
+    "sourceUrl": "https://www.dexerto.com/gta/gta-6-gameplay-and-map-seemingly-leaked-ahead-of-netflix-extended-look-3399751/",
+    "occurredAtUtc": "2026-08-18T00:00:00Z",
+    "occurredUntilUtc": null,
+    "publishedAtUtc": null,
+    "datePrecision": "DateOnly",
+    "status": "Occurred",
+    "isOfficial": false,
+    "isImpactAnalysisEligible": true
+  },
+  {
     "slug": "gta-vi-preload-begins",
     "title": "Início do pré-carregamento",
     "description": "Início futuro confirmado do pré-carregamento de GTA VI.",
