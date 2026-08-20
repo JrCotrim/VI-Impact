@@ -2848,7 +2848,7 @@ export function StockChart({
   function handlePointerDown(
     event: ReactPointerEvent<HTMLDivElement>,
   ) {
-    if (!isZoomed || event.button !== 0) {
+    if (event.button !== 0) {
       return
     }
 
@@ -2860,6 +2860,14 @@ export function StockChart({
         '[data-event-marker="true"]',
       )
     ) {
+      return
+    }
+
+    // Pointer interaction should not move focus to the chart.
+    // Keyboard navigation can still focus the container via Tab.
+    event.preventDefault()
+
+    if (!isZoomed) {
       return
     }
 
@@ -3112,6 +3120,7 @@ export function StockChart({
       {chartSize.width > 0 &&
       chartSize.height > 0 ? (
         <LineChart
+          accessibilityLayer={false}
           width={chartSize.width}
           height={chartSize.height}
           data={renderPoints}
