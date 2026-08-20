@@ -684,6 +684,24 @@
     "isImpactAnalysisEligible": true
   },
   {
+    "slug": "gta-vi-plane-radio-gameplay-leak-august-2026",
+    "title": "Novo vazamento mostra voo sobre Leonida e menu de rádio",
+    "description": "Um novo vídeo atribuído a Grand Theft Auto VI começou a circular online, mostrando Jason pilotando um biplano sobre Leonida em direção a Vice City, além de uma nova interface para seleção de rádios e uma opção de música sob demanda. O vídeo também termina com Jason disparando contra uma parede e formando a palavra “Leek”, reforçando a hipótese de que o responsável pelos vazamentos tenha acesso direto a uma build jogável. A Rockstar Games não confirmou oficialmente a autenticidade do material, e a gravação aparenta vir de uma build de desenvolvimento anterior à versão final.",
+    "category": "Leak",
+    "subcategory": "Vazamento de voo e interface de rádio",
+    "priority": "Relevant",
+    "sourceType": "Journalism",
+    "sourceName": "RockstarINTEL",
+    "sourceUrl": "https://rockstarintel.com/new-gta-6-gameplay-leak-shows-radio-station-menu-and-flying-in-planes/",
+    "occurredAtUtc": "2026-08-20T00:00:00Z",
+    "occurredUntilUtc": null,
+    "publishedAtUtc": null,
+    "datePrecision": "DateOnly",
+    "status": "Occurred",
+    "isOfficial": false,
+    "isImpactAnalysisEligible": true
+  },
+  {
     "slug": "gta-vi-preload-begins",
     "title": "Início do pré-carregamento",
     "description": "Início futuro confirmado do pré-carregamento de GTA VI.",
