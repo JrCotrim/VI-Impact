@@ -3042,7 +3042,7 @@ function App() {
               Take-Two × GTA VI
             </span>
 
-            <strong>Market Impact Dashboard</strong>
+            <strong>Análise de eventos e mercado</strong>
           </div>
 
           <div
@@ -3657,7 +3657,7 @@ function App() {
                 id="event-analysis-chart"
               >
                 <div className="event-analysis-card-heading">
-                  <h2>Preço ao redor do evento</h2>
+                  <h2>Preço da TTWO ao redor do evento</h2>
 
                   <span className="event-analysis-period-chip">
                     −14 a +14 dias
@@ -3718,7 +3718,7 @@ function App() {
               {analysisImpact?.isAvailable && (
                 <article className="event-analysis-market-panel">
                   <div className="event-analysis-card-heading">
-                    <h2>Métricas do evento</h2>
+                    <h2>Métricas de mercado</h2>
                   </div>
 
                   <div className="event-analysis-market-grid">
@@ -4289,7 +4289,7 @@ function App() {
         <section className="hero-banner">
           <div className="hero-copy">
             <p className="hero-eyebrow">
-              VI Impact · Mercado e entretenimento
+              VI Impact · GTA VI × mercado
             </p>
 
             <h1>
@@ -4297,7 +4297,7 @@ function App() {
             </h1>
 
             <p>
-              Impacto de notícias do GTA 6 no mercado
+              Eventos de GTA VI e o desempenho da TTWO
             </p>
           </div>
 
@@ -4619,7 +4619,7 @@ function App() {
                     'NASDAQ'}
                 </p>
 
-                <h2>Gráfico de cotações</h2>
+                <h2>Desempenho no período</h2>
               </div>
 
             </div>
@@ -4724,11 +4724,11 @@ function App() {
             <div className="panel-header">
               <div>
                 <p className="panel-eyebrow">
-                  Linha do tempo
+                  Eventos de GTA VI
                 </p>
 
                 <h2>
-                  Eventos relacionados ao GTA 6
+                  Linha do tempo
                 </h2>
               </div>
 
@@ -5122,15 +5122,13 @@ function App() {
                 <div className="panel-header impact-ranking-header">
                   <div>
                     <p className="panel-eyebrow">
-                      {isImpactRankingOrder
-                        ? 'Ranking completo'
-                        : 'Eventos analisados'}
+                      Análise comparativa
                     </p>
 
                     <div className="impact-ranking-title-row">
                       <h2>
                         {isImpactRankingOrder
-                          ? 'Ranking de impacto'
+                          ? 'Ranking por reação da TTWO'
                           : 'Eventos analisados'}
                       </h2>
 
