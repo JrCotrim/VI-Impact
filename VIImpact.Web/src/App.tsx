@@ -373,6 +373,26 @@ function formatSignedPercent(
   return `${formattedValue}%`
 }
 
+function formatSignedPercentagePoints(
+  value: number,
+): string {
+  const formattedValue = Math.abs(value)
+    .toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+
+  if (value > 0) {
+    return `+${formattedValue} p.p.`
+  }
+
+  if (value < 0) {
+    return `-${formattedValue} p.p.`
+  }
+
+  return `${formattedValue} p.p.`
+}
+
 function formatCompactVolume(
   value: number,
 ): string {
@@ -722,6 +742,122 @@ function getTradingDateExplanation(
   )
 }
 
+interface BenchmarkComparisonRow {
+  key: '1D' | '5D' | '30D'
+  label: string
+  ttwoReturnPercent: number | null
+  benchmarkReturnPercent: number | null
+  excessReturnPercent: number | null
+}
+
+function getBenchmarkComparisonRows(
+  impact: GtaEventImpact | undefined,
+): BenchmarkComparisonRow[] {
+  if (!impact?.isAvailable) {
+    return []
+  }
+
+  return [
+    {
+      key: '1D',
+      label: '1 pregão',
+      ttwoReturnPercent: impact.day1ReturnPercent,
+      benchmarkReturnPercent:
+        impact.benchmarkDay1ReturnPercent,
+      excessReturnPercent:
+        impact.day1ExcessReturnPercent,
+    },
+    {
+      key: '5D',
+      label: '5 pregões',
+      ttwoReturnPercent: impact.day5ReturnPercent,
+      benchmarkReturnPercent:
+        impact.benchmarkDay5ReturnPercent,
+      excessReturnPercent:
+        impact.day5ExcessReturnPercent,
+    },
+    {
+      key: '30D',
+      label: '30 pregões',
+      ttwoReturnPercent: impact.day30ReturnPercent,
+      benchmarkReturnPercent:
+        impact.benchmarkDay30ReturnPercent,
+      excessReturnPercent:
+        impact.day30ExcessReturnPercent,
+    },
+  ]
+}
+
+function getBenchmarkRelativeReading(
+  impact: GtaEventImpact | undefined,
+  rows: BenchmarkComparisonRow[],
+): string | null {
+  if (
+    !impact?.isAvailable ||
+    !impact.benchmarkIsAvailable
+  ) {
+    return null
+  }
+
+  const preferredOrder: BenchmarkComparisonRow['key'][] = [
+    '5D',
+    '1D',
+    '30D',
+  ]
+
+  const referenceRow = preferredOrder
+    .map((key) =>
+      rows.find((row) => row.key === key),
+    )
+    .find(
+      (row) =>
+        row !== undefined &&
+        row.ttwoReturnPercent !== null &&
+        row.benchmarkReturnPercent !== null &&
+        row.excessReturnPercent !== null,
+    )
+
+  if (
+    !referenceRow ||
+    referenceRow.ttwoReturnPercent === null ||
+    referenceRow.benchmarkReturnPercent === null ||
+    referenceRow.excessReturnPercent === null
+  ) {
+    return 'Os horizontes comparáveis de 1, 5 e 30 pregões ainda estão em formação para este evento.'
+  }
+
+  const benchmarkSymbol =
+    impact.benchmarkSymbol?.trim() || 'QQQ'
+
+  const ttwoReturn =
+    referenceRow.ttwoReturnPercent
+  const benchmarkReturn =
+    referenceRow.benchmarkReturnPercent
+  const excessReturn =
+    referenceRow.excessReturnPercent
+
+  const absoluteExcess = Math.abs(excessReturn)
+    .toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+
+  const relativeReading =
+    Math.abs(excessReturn) < 0.1
+      ? `ficou praticamente alinhada ao ${benchmarkSymbol}`
+      : excessReturn > 0
+        ? `teve desempenho relativo ${absoluteExcess} p.p. acima do ${benchmarkSymbol}`
+        : `ficou ${absoluteExcess} p.p. abaixo do ${benchmarkSymbol}`
+
+  return (
+    `Em ${referenceRow.label}, a TTWO registrou ${formatSignedPercent(
+      ttwoReturn,
+    )}, enquanto o ${benchmarkSymbol} marcou ${formatSignedPercent(
+      benchmarkReturn,
+    )}; a ação ${relativeReading}.`
+  )
+}
+
 function getAnalysisMarketHighlights(
   impact: GtaEventImpact | undefined,
   isLoading: boolean,
@@ -754,34 +890,44 @@ function getAnalysisMarketHighlights(
 
   const highlights: string[] = []
 
-  if (impact.day1ReturnPercent !== null) {
-    highlights.push(
-      `Após 1 pregão, a TTWO registrou ${formatSignedPercent(
-        impact.day1ReturnPercent,
-      )}.`,
-    )
-  }
+  if (impact.benchmarkIsAvailable) {
+    if (impact.sameDayReturnPercent !== null) {
+      highlights.push(
+        `No mesmo pregão, a TTWO registrou ${formatSignedPercent(
+          impact.sameDayReturnPercent,
+        )}.`,
+      )
+    }
+  } else {
+    if (impact.day1ReturnPercent !== null) {
+      highlights.push(
+        `Após 1 pregão, a TTWO registrou ${formatSignedPercent(
+          impact.day1ReturnPercent,
+        )}.`,
+      )
+    }
 
-  if (impact.day5ReturnPercent !== null) {
-    highlights.push(
-      `Em 5 pregões, o movimento acumulado chegou a ${formatSignedPercent(
-        impact.day5ReturnPercent,
-      )}.`,
-    )
-  } else if (impact.sameDayReturnPercent !== null) {
-    highlights.push(
-      `No mesmo pregão, a variação observada foi ${formatSignedPercent(
-        impact.sameDayReturnPercent,
-      )}.`,
-    )
-  }
+    if (impact.day5ReturnPercent !== null) {
+      highlights.push(
+        `Em 5 pregões, o movimento acumulado chegou a ${formatSignedPercent(
+          impact.day5ReturnPercent,
+        )}.`,
+      )
+    } else if (impact.sameDayReturnPercent !== null) {
+      highlights.push(
+        `No mesmo pregão, a variação observada foi ${formatSignedPercent(
+          impact.sameDayReturnPercent,
+        )}.`,
+      )
+    }
 
-  if (impact.day30ReturnPercent !== null) {
-    highlights.push(
-      `Em 30 pregões, a variação observada foi ${formatSignedPercent(
-        impact.day30ReturnPercent,
-      )}.`,
-    )
+    if (impact.day30ReturnPercent !== null) {
+      highlights.push(
+        `Em 30 pregões, a variação observada foi ${formatSignedPercent(
+          impact.day30ReturnPercent,
+        )}.`,
+      )
+    }
   }
 
   if (impact.volumeChangePercent !== null) {
@@ -3104,6 +3250,21 @@ function App() {
         Boolean(analysisImpactError),
       )
 
+    const benchmarkComparisonRows =
+      getBenchmarkComparisonRows(
+        analysisImpact,
+      )
+
+    const benchmarkRelativeReading =
+      getBenchmarkRelativeReading(
+        analysisImpact,
+        benchmarkComparisonRows,
+      )
+
+    const analysisBenchmarkSymbol =
+      analysisImpact?.benchmarkSymbol?.trim() ||
+      'QQQ'
+
     const analysisMetricCards = [
       {
         label: '1 pregão',
@@ -3677,21 +3838,118 @@ function App() {
                     Leitura de mercado
                   </h3>
 
-                  <ul className="event-analysis-highlight-list">
-                    {analysisMarketHighlights.map(
-                      (highlight) => (
-                        <li key={highlight}>
-                          <span
-                            className="event-analysis-highlight-check"
-                            aria-hidden="true"
-                          >
-                            ✓
+                  {analysisImpact?.isAvailable && (
+                    <div className="event-analysis-benchmark">
+                      <div className="event-analysis-benchmark-heading">
+                        <div>
+                          <span>Comparação relativa</span>
+                          <strong>TTWO × {analysisBenchmarkSymbol}</strong>
+                        </div>
+                        <span className="event-analysis-benchmark-chip">
+                          Benchmark
+                        </span>
+                      </div>
+
+                      {analysisImpact.benchmarkIsAvailable ? (
+                        <>
+                          <div className="event-analysis-benchmark-table-wrap">
+                            <table className="event-analysis-benchmark-table">
+                              <thead>
+                                <tr>
+                                  <th scope="col">Período</th>
+                                  <th scope="col">TTWO</th>
+                                  <th scope="col">
+                                    {analysisBenchmarkSymbol}
+                                  </th>
+                                  <th scope="col">Excesso</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {benchmarkComparisonRows.map(
+                                  (row) => (
+                                    <tr key={row.key}>
+                                      <th scope="row">
+                                        {row.label}
+                                      </th>
+                                      <td
+                                        className={getImpactValueClassName(
+                                          row.ttwoReturnPercent,
+                                        )}
+                                      >
+                                        {row.ttwoReturnPercent === null
+                                          ? '—'
+                                          : formatSignedPercent(
+                                              row.ttwoReturnPercent,
+                                            )}
+                                      </td>
+                                      <td
+                                        className={getImpactValueClassName(
+                                          row.benchmarkReturnPercent,
+                                        )}
+                                      >
+                                        {row.benchmarkReturnPercent === null
+                                          ? '—'
+                                          : formatSignedPercent(
+                                              row.benchmarkReturnPercent,
+                                            )}
+                                      </td>
+                                      <td
+                                        className={getImpactValueClassName(
+                                          row.excessReturnPercent,
+                                        )}
+                                      >
+                                        {row.excessReturnPercent === null
+                                          ? 'Ainda não disponível'
+                                          : formatSignedPercentagePoints(
+                                              row.excessReturnPercent,
+                                            )}
+                                      </td>
+                                    </tr>
+                                  ),
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          <p className="event-analysis-benchmark-note">
+                            Excesso = retorno da TTWO − retorno do {analysisBenchmarkSymbol}. “—” indica horizonte ainda sem dados.
+                          </p>
+
+                          {benchmarkRelativeReading && (
+                            <p className="event-analysis-benchmark-reading">
+                              {benchmarkRelativeReading}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <div className="event-analysis-benchmark-unavailable">
+                          <strong>Comparação indisponível</strong>
+                          <span>
+                            {analysisImpact.benchmarkUnavailableReason ??
+                              `Ainda não existem dados suficientes do ${analysisBenchmarkSymbol} para comparar este evento.`}
                           </span>
-                          <span>{highlight}</span>
-                        </li>
-                      ),
-                    )}
-                  </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {analysisMarketHighlights.length > 0 && (
+                    <ul className="event-analysis-highlight-list">
+                      {analysisMarketHighlights.map(
+                        (highlight) => (
+                          <li key={highlight}>
+                            <span
+                              className="event-analysis-highlight-check"
+                              aria-hidden="true"
+                            >
+                              ✓
+                            </span>
+                            <span>{highlight}</span>
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  )}
 
                   {tradingDateExplanation && (
                     <p className="event-analysis-explanation">

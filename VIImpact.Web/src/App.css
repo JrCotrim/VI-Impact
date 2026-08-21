@@ -13976,3 +13976,463 @@ a {
     stroke-width: 2px;
   }
 }
+
+/* =========================================================
+   Event analysis V1.24 — TTWO × benchmark relative reading
+   ========================================================= */
+
+.event-analysis-benchmark {
+  margin: 0 0 11px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: rgba(7, 18, 38, 0.5);
+}
+
+:root:not([data-theme='night'])
+  .event-analysis-benchmark {
+  background: rgba(249, 247, 253, 0.92);
+}
+
+.event-analysis-benchmark-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.event-analysis-benchmark-heading > div {
+  min-width: 0;
+}
+
+.event-analysis-benchmark-heading span,
+.event-analysis-benchmark-heading strong {
+  display: block;
+}
+
+.event-analysis-benchmark-heading > div > span {
+  color: var(--muted-text);
+  font-size: 0.54rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.event-analysis-benchmark-heading > div > strong {
+  margin-top: 2px;
+  color: var(--primary-text);
+  font-size: 0.72rem;
+  line-height: 1.15;
+}
+
+.event-analysis-benchmark-chip {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border: 1px solid rgba(76, 164, 255, 0.2);
+  border-radius: 999px;
+  color: var(--accent-blue);
+  background: rgba(76, 164, 255, 0.08);
+  font-size: 0.5rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.event-analysis-benchmark-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.event-analysis-benchmark-table {
+  width: 100%;
+  min-width: 292px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+
+.event-analysis-benchmark-table th,
+.event-analysis-benchmark-table td {
+  padding: 6px 5px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.event-analysis-benchmark-table thead th {
+  color: var(--muted-text);
+  font-size: 0.49rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.event-analysis-benchmark-table thead th:first-child,
+.event-analysis-benchmark-table tbody th {
+  width: 27%;
+  text-align: left;
+}
+
+.event-analysis-benchmark-table tbody th {
+  color: var(--secondary-text);
+  font-size: 0.58rem;
+  font-weight: 750;
+}
+
+.event-analysis-benchmark-table tbody td {
+  color: var(--primary-text);
+  font-size: 0.58rem;
+  font-weight: 850;
+}
+
+.event-analysis-benchmark-table tbody td.impact-positive {
+  color: var(--positive);
+}
+
+.event-analysis-benchmark-table tbody td.impact-negative {
+  color: var(--negative);
+}
+
+.event-analysis-benchmark-table tbody td.impact-neutral {
+  color: var(--muted-text);
+}
+
+.event-analysis-benchmark-table tbody tr:last-child th,
+.event-analysis-benchmark-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.event-analysis-benchmark-note {
+  margin: 7px 0 0 !important;
+  color: var(--muted-text) !important;
+  font-size: 0.54rem !important;
+  line-height: 1.35 !important;
+}
+
+.event-analysis-benchmark-reading {
+  margin: 9px 0 0 !important;
+  padding: 8px 9px;
+  border-left: 2px solid var(--accent-blue);
+  border-radius: 0 8px 8px 0;
+  color: var(--secondary-text) !important;
+  background: rgba(76, 164, 255, 0.06);
+  font-size: 0.62rem !important;
+  line-height: 1.45 !important;
+}
+
+.event-analysis-benchmark-unavailable {
+  display: grid;
+  gap: 4px;
+  padding: 8px 9px;
+  border: 1px dashed var(--border-color);
+  border-radius: 9px;
+}
+
+.event-analysis-benchmark-unavailable strong {
+  color: var(--primary-text);
+  font-size: 0.62rem;
+}
+
+.event-analysis-benchmark-unavailable span {
+  color: var(--muted-text);
+  font-size: 0.57rem;
+  line-height: 1.4;
+}
+
+.event-analysis-benchmark
+  + .event-analysis-highlight-list {
+  margin-top: 10px;
+}
+
+@media (max-width: 700px) {
+  .event-analysis-benchmark {
+    padding: 10px 9px;
+  }
+
+  .event-analysis-benchmark-table {
+    min-width: 300px;
+  }
+
+  .event-analysis-benchmark-table th,
+  .event-analysis-benchmark-table td {
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .event-analysis-benchmark-reading {
+    font-size: 0.66rem !important;
+  }
+}
+
+/* =========================================================
+   Event analysis V1.25 — compact context footer
+   ========================================================= */
+
+@media (min-width: 1181px) and (min-height: 780px) {
+  .event-analysis-facts-list.compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 8px;
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .event-analysis-facts-list.compact > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    align-items: start;
+    gap: 3px;
+    min-width: 0;
+    min-height: 42px;
+    padding: 6px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .event-analysis-facts-list.compact span {
+    color: var(--muted-text);
+    font-size: 0.52rem;
+    font-weight: 780;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.055em;
+  }
+
+  .event-analysis-facts-list.compact strong {
+    width: 100%;
+    max-width: none;
+    overflow-wrap: anywhere;
+    color: var(--primary-text);
+    font-size: 0.61rem;
+    line-height: 1.25;
+    text-align: left;
+  }
+
+  /* The chart already carries the causal-language disclaimer on this
+     viewport. Removing the duplicated sidebar copy keeps all four facts
+     visible without introducing a nested scrollbar. */
+  .event-analysis-context-card .event-analysis-disclaimer {
+    display: none;
+  }
+
+  :root:not([data-theme='night'])
+    .event-analysis-facts-list.compact
+    > div {
+    background: rgba(248, 247, 252, 0.92);
+  }
+}
+
+/* =========================================================
+   Event analysis V1.26 — scrollable context card
+   ========================================================= */
+
+/* On the fixed desktop composition, the context column can become taller
+   than the chart after richer market analysis is added. Keep the card inside
+   the viewport and make its own vertical scroll explicit instead of clipping
+   the final facts. Shorter and narrower layouts continue using page scroll. */
+@media (min-width: 1181px) and (min-height: 780px) {
+  .event-analysis-context-card {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+  }
+
+  .event-analysis-context-card::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .event-analysis-context-card::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .event-analysis-context-card::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: var(--border-color);
+    background-clip: padding-box;
+  }
+
+  .event-analysis-context-card::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-pink);
+    background-clip: padding-box;
+  }
+
+  /* With internal scrolling available there is no reason to crop the full
+     editorial description on large desktop layouts. */
+  .event-analysis-description {
+    display: block;
+    overflow: visible;
+    -webkit-box-orient: initial;
+    -webkit-line-clamp: unset;
+  }
+}
+
+/* =========================================================
+   Site-wide V1.27 — microcopy readability pass
+   ========================================================= */
+
+/* The interface uses many compact labels, captions and explanatory lines.
+   Keep those elements visibly subordinate without letting them drop into
+   8–9 px territory on desktop displays. */
+.theme-toggle-subtitle,
+.event-detail-grid span,
+.event-impact-heading > span,
+.impact-ranking-note,
+.impact-ranking-expand-button small,
+.impact-ranking-category,
+.impact-ranking-selected-label,
+.impact-ranking-selected-label span,
+.impact-ranking-periods button,
+.impact-ranking-select > span,
+.impact-ranking-date-order,
+.timeline-mode-selector button,
+.impact-ranking-eligible-summary > span,
+.impact-ranking-unavailable-count,
+.impact-ranking-filtered-count,
+.impact-ranking-panel.complete .impact-ranking-note,
+.summary-card-footer small,
+.price-card-footer small,
+.update-card-footer small,
+.summary-card-context,
+.event-badge,
+.event-date-heading time,
+.event-preview-metadata small,
+.event-preview-impact > span,
+.event-preview-impact > small,
+.event-marker-tooltip-impact span {
+  font-size: 0.66rem;
+}
+
+.event-impact-price-grid span,
+.event-impact-disclaimer,
+.volume-average-marker em {
+  font-size: 0.63rem;
+}
+
+/* Event analysis: keep labels and secondary explanations readable even in
+   the dense fixed-height desktop composition. */
+.event-analysis-badge,
+.event-analysis-section-heading p,
+.event-analysis-card-heading p,
+.event-analysis-metric-card > span,
+.event-analysis-editorial-copy > span,
+.event-analysis-period-chip,
+.event-analysis-chart-note,
+.event-analysis-reading-label,
+.event-analysis-context-tag,
+.event-analysis-priority-gauge-low,
+.event-analysis-priority-gauge-high {
+  font-size: 0.66rem;
+}
+
+.event-analysis-metric-card > small,
+.event-analysis-editorial-copy > small,
+.event-analysis-reading .event-analysis-explanation,
+.event-analysis-highlight-list li,
+.event-analysis-context-card .event-analysis-disclaimer {
+  font-size: 0.68rem;
+}
+
+.event-analysis-market-grid
+  .event-analysis-market-card-heading
+  > span:not(.event-analysis-market-icon) {
+  font-size: 0.64rem;
+  line-height: 1.3;
+}
+
+.event-analysis-market-card > small {
+  font-size: 0.64rem;
+  line-height: 1.35;
+}
+
+.event-analysis-benchmark-heading > div > span,
+.event-analysis-benchmark-chip,
+.event-analysis-benchmark-table thead th,
+.event-analysis-benchmark-note,
+.event-analysis-benchmark-unavailable span {
+  font-size: 0.62rem !important;
+}
+
+.event-analysis-benchmark-heading > div > strong {
+  font-size: 0.78rem;
+}
+
+.event-analysis-benchmark-table tbody th,
+.event-analysis-benchmark-table tbody td {
+  font-size: 0.66rem;
+}
+
+.event-analysis-benchmark-reading {
+  font-size: 0.68rem !important;
+  line-height: 1.5 !important;
+}
+
+.event-analysis-facts-list.compact span {
+  font-size: 0.62rem;
+}
+
+.event-analysis-facts-list.compact strong {
+  font-size: 0.69rem;
+}
+
+/* Desktop-specific rules earlier in the stylesheet intentionally compress
+   the analysis view. Reassert the readability floor after those rules. */
+@media (min-width: 1181px) and (min-height: 780px) {
+  .event-analysis-metric-card > span,
+  .event-analysis-editorial-copy > span,
+  .event-analysis-card-heading p,
+  .event-analysis-chart-note,
+  .event-analysis-reading-label {
+    font-size: 0.66rem;
+  }
+
+  .event-analysis-metric-card > small,
+  .event-analysis-editorial-copy > small,
+  .event-analysis-highlight-list li,
+  .event-analysis-reading .event-analysis-explanation {
+    font-size: 0.68rem;
+  }
+
+  .event-analysis-market-grid span {
+    font-size: 0.64rem;
+  }
+
+  .event-analysis-market-card > small {
+    font-size: 0.64rem;
+  }
+
+  .event-analysis-facts-list.compact span {
+    font-size: 0.62rem;
+  }
+
+  .event-analysis-facts-list.compact strong {
+    font-size: 0.69rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .event-analysis-benchmark-table tbody th,
+  .event-analysis-benchmark-table tbody td {
+    font-size: 0.68rem;
+  }
+
+  .event-analysis-benchmark-table thead th,
+  .event-analysis-benchmark-note {
+    font-size: 0.63rem !important;
+  }
+
+  .event-analysis-market-card > small,
+  .summary-card-footer small,
+  .price-card-footer small,
+  .update-card-footer small,
+  .summary-card-context {
+    font-size: 0.66rem;
+  }
+}
