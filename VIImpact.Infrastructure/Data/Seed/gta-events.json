@@ -2,7 +2,8 @@
   {
     "slug": "gta-next-entry-development-confirmed",
     "title": "Rockstar confirma oficialmente o desenvolvimento do próximo GTA",
-    "description": "Foi a primeira confirmação pública de que o próximo jogo da franquia estava em desenvolvimento ativo.",
+    "summary": "A Rockstar Games confirmou publicamente que o próximo jogo da série Grand Theft Auto estava em desenvolvimento ativo.",
+    "description": "A Rockstar Games confirmou publicamente que o próximo jogo da série Grand Theft Auto estava em desenvolvimento ativo. Até então, a existência do projeto era tratada principalmente por rumores, reportagens e expectativas em torno da sucessão de GTA V. A declaração não revelou nome oficial, protagonistas, cenário ou data de lançamento, mas estabeleceu pela primeira vez uma confirmação direta da própria desenvolvedora. Na cronologia do GTA VI, esse anúncio funciona como o ponto em que o projeto deixou de ser apenas uma expectativa pública e passou a ter existência oficialmente reconhecida.",
     "category": "Development",
     "subcategory": "Confirmação de desenvolvimento",
     "priority": "Primary",
@@ -20,7 +21,8 @@
   {
     "slug": "gta-vi-female-protagonist-vice-city-report",
     "title": "Reportagem revela protagonista feminina e retorno a Vice City",
-    "description": "A reportagem indicou uma dupla inspirada em Bonnie e Clyde, uma protagonista latina e uma versão fictícia de Miami. Esses elementos acabariam sendo confirmados posteriormente.",
+    "summary": "Uma reportagem da Bloomberg antecipou que GTA VI teria uma protagonista feminina latina, uma dupla inspirada em Bonnie e Clyde e um cenário baseado em Miami.",
+    "description": "Uma reportagem da Bloomberg antecipou elementos centrais do projeto que ainda não haviam sido anunciados pela Rockstar: uma protagonista feminina latina, uma dupla inspirada na dinâmica de Bonnie e Clyde e um cenário baseado em uma versão fictícia de Miami. Naquele momento, as informações eram jornalísticas e não uma confirmação oficial, portanto ainda carregavam incerteza. Com os anúncios posteriores de GTA VI, vários desses elementos se mostraram consistentes com o produto apresentado pela Rockstar, tornando a reportagem um marco importante na formação pública da imagem do jogo antes do Trailer 1.",
     "category": "GameInformation",
     "subcategory": "Reportagem sobre o jogo",
     "priority": "Relevant",
@@ -38,7 +40,8 @@
   {
     "slug": "gta-vi-development-videos-leak",
     "title": "Grande vazamento de vídeos de desenvolvimento",
-    "description": "Mais de 90 vídeos de uma versão em desenvolvimento apareceram publicamente, revelando jogabilidade, Lucia, Jason e Vice City.",
+    "summary": "Mais de 90 vídeos de uma versão de desenvolvimento de GTA VI vazaram na internet, expondo material interno antes da apresentação oficial do jogo.",
+    "description": "Mais de 90 vídeos de uma versão de desenvolvimento de GTA VI foram divulgados publicamente, expondo material interno de produção em uma escala incomum para um projeto ainda não apresentado oficialmente. As gravações mostravam sistemas de jogabilidade em construção, ambientes associados a Vice City e personagens que seriam reconhecidos posteriormente como Lucia e Jason. Como se tratava de material de desenvolvimento, interfaces, animações, cenários e mecânicas não deveriam ser interpretados como representação do produto final. O vazamento foi relevante porque revelou prematuramente uma grande quantidade de informações sobre o jogo e forçou a Rockstar a responder publicamente ao incidente.",
     "category": "Leak",
     "subcategory": "Vazamento de desenvolvimento",
     "priority": "Primary",
@@ -56,7 +59,8 @@
   {
     "slug": "rockstar-confirms-security-breach-and-leak",
     "title": "Rockstar confirma a invasão e o vazamento",
-    "description": "A empresa afirmou que terceiros obtiveram informações confidenciais, mas que não esperava interrupção dos serviços ou mudança nos planos de desenvolvimento.",
+    "summary": "A Rockstar confirmou uma intrusão de rede que resultou no vazamento de informações confidenciais e material de desenvolvimento do próximo Grand Theft Auto.",
+    "description": "Após a circulação dos vídeos de desenvolvimento, a Rockstar confirmou que sofreu uma intrusão de rede na qual um terceiro obteve e divulgou ilegalmente informações confidenciais de seus sistemas, incluindo material do próximo Grand Theft Auto. A empresa afirmou que não esperava interrupções em seus serviços nem efeitos de longo prazo sobre os projetos em desenvolvimento e disse que o trabalho no jogo continuaria conforme planejado. A declaração transformou o episódio de um vazamento não verificado em um incidente de segurança reconhecido oficialmente e estabeleceu a posição pública da Rockstar sobre a autenticidade e o impacto operacional do material exposto.",
     "category": "Security",
     "subcategory": "Comunicado oficial sobre vazamento",
     "priority": "Primary",
@@ -74,7 +78,8 @@
   {
     "slug": "cfxre-joins-rockstar-games",
     "title": "Cfx.re, responsável por FiveM e RedM, passa a fazer parte da Rockstar",
-    "description": "Não foi anunciado como parte do GTA VI, mas é um evento relevante para o futuro de roleplay, conteúdo criado por usuários e GTA Online.",
+    "summary": "A Rockstar Games anunciou que a equipe Cfx.re, responsável pelas plataformas FiveM e RedM, passou a fazer parte da companhia.",
+    "description": "A Rockstar Games anunciou que a equipe Cfx.re, responsável pelas plataformas FiveM e RedM, passou a fazer parte da companhia. A aquisição não foi apresentada como um recurso específico de GTA VI e não confirma que FiveM, RedM ou suas tecnologias estarão integrados ao jogo. Ainda assim, o movimento é relevante para a evolução do ecossistema de roleplay e conteúdo criado pela comunidade em torno das franquias Grand Theft Auto e Red Dead. Dentro da cronologia do VI Impact, o evento é tratado como contexto estratégico da Rockstar, e não como anúncio direto de uma funcionalidade de GTA VI.",
     "category": "Corporate",
     "subcategory": "Aquisição estratégica",
     "priority": "Relevant",
@@ -92,7 +97,8 @@
   {
     "slug": "gta-vi-first-trailer-announced-for-december",
     "title": "Rockstar anuncia que o primeiro trailer sairia em dezembro",
-    "description": "A notícia encerrou anos de espera e foi associada a uma forte reação positiva das ações da Take-Two no dia.",
+    "summary": "A Rockstar anunciou que o primeiro trailer do próximo Grand Theft Auto seria publicado no início de dezembro de 2023.",
+    "description": "A Rockstar Games anunciou que o primeiro trailer do próximo Grand Theft Auto seria publicado no início de dezembro de 2023, encerrando um período prolongado sem apresentação oficial do jogo. O anúncio ainda não revelou o nome Grand Theft Auto VI, protagonistas, cenário ou plataformas, mas definiu uma data próxima para a primeira divulgação formal do projeto. Isso marcou a transição da fase de desenvolvimento confirmado para o início efetivo da campanha pública do jogo. A forte atenção em torno da notícia também transformou o evento em um dos primeiros grandes catalisadores de expectativa observáveis antes do Trailer 1.",
     "category": "Announcement",
     "subcategory": "Anúncio do primeiro trailer",
     "priority": "Primary",
@@ -110,7 +116,8 @@
   {
     "slug": "gta-vi-trailer-one-date-and-time-announced",
     "title": "Data e horário do Trailer 1 são anunciados",
-    "description": "A estreia estava marcada para 5 de dezembro de 2023, às 9h no horário do leste dos Estados Unidos.",
+    "summary": "A Rockstar confirmou que o primeiro trailer seria lançado em 5 de dezembro de 2023, às 9h no horário do leste dos Estados Unidos.",
+    "description": "A Rockstar confirmou que o primeiro trailer seria lançado em 5 de dezembro de 2023, às 9h no horário do leste dos Estados Unidos. Diferentemente do anúncio anterior, que mencionava apenas o mês de dezembro, esta publicação estabeleceu o momento exato da estreia e concentrou a expectativa do público em uma janela específica. O evento é importante na cronologia porque antecede diretamente a apresentação oficial de GTA VI e permite separar a reação à confirmação de data e horário da reação ao conteúdo do trailer em si.",
     "category": "Trailer",
     "subcategory": "Agendamento do Trailer 1",
     "priority": "Relevant",
@@ -128,7 +135,8 @@
   {
     "slug": "gta-vi-trailer-one-leaks-before-premiere",
     "title": "Trailer 1 vaza antes da estreia",
-    "description": "Uma versão de baixa qualidade apareceu na internet antes do horário oficial.",
+    "summary": "Pouco antes do horário planejado para a estreia, uma versão de baixa qualidade do Trailer 1 começou a circular na internet.",
+    "description": "Pouco antes do horário planejado para a estreia, uma versão de baixa qualidade do Trailer 1 começou a circular na internet. O vazamento revelou antecipadamente material que a Rockstar pretendia apresentar de forma controlada algumas horas depois e alterou a sequência normal do lançamento. Naquele momento, a circulação do vídeo era um evento não oficial; a confirmação definitiva veio quando a Rockstar decidiu publicar a versão oficial antecipadamente. Para a análise do VI Impact, o vazamento e a publicação oficial são eventos distintos porque ocorreram em momentos diferentes e podem ter produzido reações diferentes de atenção e mercado.",
     "category": "Leak",
     "subcategory": "Vazamento do Trailer 1",
     "priority": "Relevant",
@@ -146,7 +154,8 @@
   {
     "slug": "gta-vi-trailer-one-published-early",
     "title": "Rockstar publica antecipadamente o Trailer 1",
-    "description": "O trailer confirmou o nome Grand Theft Auto VI, Lucia, Vice City, o estado de Leonida e uma janela de lançamento em 2025 para PlayStation 5 e Xbox Series X|S. O vídeo oficial foi publicado antecipadamente devido ao vazamento.",
+    "summary": "Em resposta ao vazamento que antecipou o Trailer 1, a Rockstar publicou oficialmente o vídeo antes do horário planejado.",
+    "description": "Em resposta ao vazamento que antecipou o Trailer 1, a Rockstar publicou oficialmente o vídeo antes do horário planejado. O trailer confirmou o nome Grand Theft Auto VI, apresentou Lucia, estabeleceu Vice City e o estado de Leonida como cenário e indicou lançamento em 2025 para PlayStation 5 e Xbox Series X|S. Foi a primeira apresentação pública ampla do jogo com identidade, personagens, ambientação e janela de lançamento consolidados em material oficial. Por isso, este é um dos eventos mais importantes da cronologia: ele substituiu anos de rumores e vazamentos por uma referência oficial sobre o que GTA VI seria.",
     "category": "Trailer",
     "subcategory": "Trailer 1",
     "priority": "Primary",
@@ -164,7 +173,8 @@
   {
     "slug": "gta-vi-hacker-sentenced",
     "title": "Hacker responsável pelo vazamento recebe sentença",
-    "description": "Arion Kurtaj, integrante do grupo Lapsus$, recebeu detenção hospitalar por tempo indeterminado no Reino Unido.",
+    "summary": "Arion Kurtaj, integrante do grupo Lapsus$, recebeu detenção hospitalar por tempo indeterminado no Reino Unido.",
+    "description": "Arion Kurtaj, integrante do grupo Lapsus$, recebeu detenção hospitalar por tempo indeterminado no Reino Unido. A fonte de referência cadastrada é The Guardian; como o registro não é oficial, o conteúdo deve ser interpretado como informação atribuída ou reportada, e não como confirmação da Rockstar Games.",
     "category": "Security",
     "subcategory": "Sentença judicial",
     "priority": "Contextual",
@@ -182,7 +192,8 @@
   {
     "slug": "rockstar-five-day-office-return",
     "title": "Rockstar determina retorno presencial cinco dias por semana",
-    "description": "A decisão foi atribuída a preocupações com segurança, produtividade e a etapa final de produção do GTA VI.",
+    "summary": "Uma reportagem da Bloomberg informou que a Rockstar determinou o retorno presencial de seus funcionários cinco dias por semana a partir de abril de 2024.",
+    "description": "Uma reportagem da Bloomberg informou que a Rockstar determinou o retorno presencial de seus funcionários cinco dias por semana a partir de abril de 2024. A decisão foi associada internamente a preocupações com segurança, produtividade e à fase de produção de GTA VI, em um contexto no qual a companhia já havia sofrido vazamentos relevantes. O episódio não alterou oficialmente a janela de lançamento nem confirmou problemas de desenvolvimento. Sua importância está no sinal operacional: mostra mudanças na organização do trabalho da Rockstar durante uma etapa crítica do projeto, sem que isso por si só prove atraso ou dificuldade de produção.",
     "category": "Development",
     "subcategory": "Política de trabalho presencial",
     "priority": "Relevant",
@@ -200,7 +211,8 @@
   {
     "slug": "gta-vi-late-2025-or-2026-delay-report",
     "title": "Reportagem aponta possível atraso para o fim de 2025 ou 2026",
-    "description": "A reportagem não confirmada levantou a possibilidade de atraso e foi associada a uma queda relevante das ações da Take-Two no dia.",
+    "summary": "Uma reportagem da Kotaku levantou a possibilidade de GTA VI sair da janela esperada e chegar apenas no fim de 2025 ou até em 2026.",
+    "description": "Uma reportagem da Kotaku levantou a possibilidade de que GTA VI pudesse sair da janela originalmente esperada e chegar apenas no fim de 2025, com 2026 citado como cenário de contingência. A informação não era uma confirmação da Rockstar ou da Take-Two e surgiu enquanto o mercado ainda trabalhava com a janela oficial de 2025. O valor do evento está justamente na divergência entre a orientação oficial e um relato sobre possíveis dificuldades de cronograma. Por ser uma reportagem não confirmada, o VI Impact a trata como sinal de risco e mudança de expectativa, não como alteração efetiva da data de lançamento.",
     "category": "Rumor",
     "subcategory": "Rumor de atraso",
     "priority": "Primary",
@@ -218,7 +230,8 @@
   {
     "slug": "gta-vi-fall-2025-release-window",
     "title": "Take-Two reduz a janela de lançamento para o outono de 2025",
-    "description": "Antes, o lançamento estava previsto apenas para algum momento do ano-calendário de 2025.",
+    "summary": "A Take-Two estreitou oficialmente a janela de lançamento de GTA VI para o outono de 2025 no hemisfério norte.",
+    "description": "A Take-Two estreitou oficialmente a janela de lançamento de GTA VI: em vez de apenas indicar algum momento do ano-calendário de 2025, a companhia passou a apontar o outono de 2025 no hemisfério norte. A mudança reduziu a incerteza sobre o cronograma e colocou o lançamento em uma faixa temporal mais específica, ainda sem estabelecer um dia exato. Esse tipo de orientação é relevante porque passa a integrar as projeções financeiras e comerciais da controladora. Na cronologia, o evento funciona como a primeira definição oficial mais precisa da janela após o Trailer 1.",
     "category": "ReleaseWindow",
     "subcategory": "Janela de lançamento",
     "priority": "Primary",
@@ -236,7 +249,8 @@
   {
     "slug": "gta-vi-fall-2025-reaffirmed-august-2024",
     "title": "Take-Two reafirma o lançamento no outono de 2025",
-    "description": "GTA VI continuou listado para PlayStation 5 e Xbox Series X|S no outono de 2025.",
+    "summary": "Nos resultados de agosto de 2024, a Take-Two manteve GTA VI programado para o outono de 2025 no PlayStation 5 e Xbox Series X|S.",
+    "description": "Nos resultados divulgados em agosto de 2024, a Take-Two manteve GTA VI programado para o outono de 2025 no PlayStation 5 e Xbox Series X|S. A reafirmação ocorreu depois de meses de rumores sobre possíveis atrasos, por isso teve valor principalmente como manutenção da orientação oficial existente. Não houve anúncio de uma data específica nem mudança material no cronograma naquele momento. Para a análise histórica, o evento mostra que, naquela etapa, a controladora continuava comunicando publicamente confiança na janela de 2025.",
     "category": "FinancialResults",
     "subcategory": "Reafirmação da janela de lançamento",
     "priority": "Relevant",
@@ -254,7 +268,8 @@
   {
     "slug": "gta-vi-internal-delay-to-2026-rumor",
     "title": "Surge rumor de atraso interno para 2026",
-    "description": "Uma fonte não confirmada afirmou que o projeto teria sofrido um atraso interno para 2026.",
+    "summary": "Um rumor passou a afirmar que GTA VI teria sido adiado internamente para 2026, apesar de a orientação oficial ainda apontar para 2025.",
+    "description": "Um rumor passou a afirmar que GTA VI teria sido adiado internamente para 2026, apesar de a orientação oficial ainda apontar para 2025. A informação não veio da Rockstar nem da Take-Two e não foi acompanhada de confirmação independente suficiente para ser tratada como mudança real do cronograma. O episódio é relevante porque reabriu a discussão sobre risco de atraso em um período de grande sensibilidade às expectativas de lançamento. No VI Impact, ele permanece classificado como rumor: registra a mudança de narrativa pública, mas não substitui a data ou janela comunicada oficialmente.",
     "category": "Rumor",
     "subcategory": "Rumor de atraso interno",
     "priority": "Relevant",
@@ -272,7 +287,8 @@
   {
     "slug": "gta-vi-employees-unaware-of-delay",
     "title": "Funcionários consultados dizem não ter conhecimento do atraso",
-    "description": "Jason Schreier informou ter conversado com seis funcionários que não haviam sido informados sobre um adiamento, embora tenha ressaltado que o projeto ainda poderia sofrer mudanças.",
+    "summary": "Jason Schreier relatou que seis funcionários da Rockstar não haviam sido informados de um suposto adiamento interno de GTA VI para 2026.",
+    "description": "Após o rumor de um atraso interno para 2026, Jason Schreier relatou ter conversado com seis funcionários da Rockstar que não haviam sido informados de uma mudança desse tipo. A apuração não equivalia a uma garantia de que o cronograma permaneceria intacto; o próprio relato reconhecia que um projeto dessa escala ainda poderia sofrer alterações. O evento é importante porque funcionou como contraponto jornalístico a um rumor que havia ganhado ampla circulação. Em vez de confirmar ou negar definitivamente um atraso, ele reduziu a força da alegação naquele momento e reforçou a necessidade de distinguir informação interna verificada de especulação.",
     "category": "Rumor",
     "subcategory": "Contraponto ao rumor de atraso",
     "priority": "Relevant",
@@ -290,7 +306,8 @@
   {
     "slug": "gta-vi-fall-2025-reaffirmed-november-2024",
     "title": "Take-Two volta a manter o outono de 2025",
-    "description": "A programação futura da companhia continuou listando GTA VI para esse período.",
+    "summary": "A Take-Two voltou a listar GTA VI para o outono de 2025, preservando a mesma janela comunicada anteriormente.",
+    "description": "A Take-Two voltou a listar GTA VI para o outono de 2025 em sua programação futura, preservando a mesma janela comunicada nos resultados anteriores. A reafirmação não trouxe uma data exata nem novo material do jogo, mas manteve a orientação oficial diante de especulações recorrentes sobre o cronograma. Esses eventos de manutenção são úteis na análise porque mostram em quais momentos a empresa teve oportunidade formal de revisar a previsão e optou por mantê-la. Assim, o registro representa continuidade de expectativa, não um novo lançamento ou anúncio de conteúdo.",
     "category": "FinancialResults",
     "subcategory": "Reafirmação da janela de lançamento",
     "priority": "Relevant",
@@ -308,7 +325,8 @@
   {
     "slug": "gta-vi-fall-2025-reaffirmed-february-2025",
     "title": "Take-Two reafirma novamente o outono de 2025",
-    "description": "A empresa ainda esperava lançar o jogo naquele ano.",
+    "summary": "Nos resultados seguintes, a Take-Two continuou indicando GTA VI para o outono de 2025.",
+    "description": "Nos resultados seguintes, a Take-Two continuou indicando GTA VI para o outono de 2025. A empresa ainda trabalhava publicamente com lançamento naquele ano, apesar de o projeto já carregar um histórico de rumores sobre possíveis atrasos. Não houve definição de um dia específico nem mudança na plataforma anunciada. Na cronologia do VI Impact, essa reafirmação é importante porque registra uma das últimas confirmações formais da janela de 2025 antes de a Rockstar anunciar posteriormente o primeiro adiamento oficial.",
     "category": "FinancialResults",
     "subcategory": "Reafirmação da janela de lançamento",
     "priority": "Relevant",
@@ -326,7 +344,8 @@
   {
     "slug": "gta-vi-first-official-delay-may-2026",
     "title": "Primeiro adiamento oficial: 26 de maio de 2026",
-    "description": "Rockstar retirou o jogo do outono de 2025 e marcou o lançamento para 26 de maio de 2026.",
+    "summary": "A Rockstar anunciou o primeiro adiamento oficial de GTA VI, estabelecendo 26 de maio de 2026 como nova data de lançamento.",
+    "description": "A Rockstar Games anunciou o primeiro adiamento oficial de GTA VI, retirando o jogo da janela de outono de 2025 e estabelecendo 26 de maio de 2026 como nova data de lançamento. Diferentemente dos rumores anteriores, essa mudança veio diretamente da desenvolvedora e, portanto, alterou formalmente o cronograma do produto. O anúncio representou uma extensão significativa do período de desenvolvimento e modificou as expectativas comerciais associadas ao jogo. Na cronologia, ele é o ponto em que o risco de atraso deixou de ser especulação e se tornou uma revisão oficial de calendário.",
     "category": "Delay",
     "subcategory": "Primeiro adiamento oficial",
     "priority": "Primary",
@@ -344,7 +363,8 @@
   {
     "slug": "gta-vi-trailer-two-released",
     "title": "Trailer 2 é publicado",
-    "description": "O vídeo mostrou mais da história de Jason e Lucia e foi capturado inteiramente dentro do jogo em um PlayStation 5, combinando jogabilidade e cenas cinematográficas.",
+    "summary": "A Rockstar publicou o Trailer 2 de GTA VI, ampliando a visão oficial sobre a história, os personagens e o mundo do jogo.",
+    "description": "A Rockstar publicou o Trailer 2 de GTA VI, ampliando substancialmente a visão oficial sobre a história, os personagens e o mundo do jogo. O vídeo aprofundou a relação entre Jason e Lucia e mostrou mais ambientes e situações em Leonida. Segundo a Rockstar, o material foi capturado inteiramente em um PlayStation 5 e combina cenas de gameplay com sequências cinematográficas. O lançamento aconteceu poucos dias após o primeiro adiamento oficial, tornando o trailer também uma demonstração concreta do estado visual e narrativo do projeto em um momento de forte atenção sobre o cronograma.",
     "category": "Trailer",
     "subcategory": "Trailer 2",
     "priority": "Primary",
@@ -362,7 +382,8 @@
   {
     "slug": "gta-vi-official-site-information-drop",
     "title": "Grande atualização do site oficial",
-    "description": "Rockstar publicou novas imagens, personagens, regiões de Leonida e detalhes da narrativa.",
+    "summary": "A Rockstar atualizou o site oficial de GTA VI com novas informações sobre personagens, locais, Leonida e diversas imagens oficiais.",
+    "description": "A Rockstar realizou uma grande atualização do site oficial de GTA VI, publicando novas informações sobre personagens, locais e o estado de Leonida, além de um volume relevante de imagens oficiais. A atualização complementou o Trailer 2 e transformou o site em uma fonte mais detalhada sobre o universo, a ambientação e o elenco do jogo. Diferentemente de vazamentos ou reportagens, o material representa informação selecionada e confirmada diretamente pela desenvolvedora. Na cronologia, esse evento marca uma expansão da comunicação oficial além dos trailers, com mais contexto sobre o conteúdo do produto.",
     "category": "GameInformation",
     "subcategory": "Atualização do site oficial",
     "priority": "Primary",
@@ -380,7 +401,8 @@
   {
     "slug": "take-two-results-reflect-gta-vi-delay",
     "title": "Resultados da Take-Two refletem o adiamento",
-    "description": "A previsão de reservas líquidas do ano fiscal seguinte ficou abaixo das expectativas revisadas do mercado, e a ação apresentou reação negativa após o fechamento.",
+    "summary": "Após o adiamento de GTA VI para maio de 2026, a Take-Two divulgou resultados e projeções que já refletiam o novo cronograma.",
+    "description": "Após o adiamento de GTA VI para maio de 2026, a Take-Two divulgou resultados e projeções que já refletiam o novo cronograma. A mudança de data deslocou parte das expectativas comerciais associadas ao lançamento para um período fiscal posterior, tornando os resultados corporativos um ponto importante para observar como a companhia incorporou a revisão de calendário em sua orientação financeira. O evento não corresponde a um novo adiamento, mas à absorção formal das consequências do adiamento anterior nas comunicações da controladora aos investidores.",
     "category": "FinancialResults",
     "subcategory": "Resultados após adiamento",
     "priority": "Primary",
@@ -398,7 +420,8 @@
   {
     "slug": "gta-vi-may-2026-date-reaffirmed-august-2025",
     "title": "Take-Two mantém a data de 26 de maio de 2026",
-    "description": "O jogo permaneceu na programação futura da companhia.",
+    "summary": "Em agosto de 2025, a Take-Two manteve GTA VI em sua programação para 26 de maio de 2026.",
+    "description": "Em agosto de 2025, a Take-Two manteve GTA VI em sua programação para 26 de maio de 2026. A reafirmação ocorreu meses depois do primeiro adiamento oficial e indicou que, naquele relatório, a companhia ainda trabalhava com a nova data comunicada pela Rockstar. Não houve mudança de plataforma nem anúncio de nova janela. Para o VI Impact, esse tipo de confirmação é relevante porque mostra a evolução da confiança pública no cronograma entre um adiamento e outro, especialmente em períodos nos quais rumores podem divergir da orientação oficial.",
     "category": "FinancialResults",
     "subcategory": "Reafirmação da data de lançamento",
     "priority": "Relevant",
@@ -416,7 +439,8 @@
   {
     "slug": "rockstar-layoffs-union-dispute",
     "title": "Demissões em estúdios da Rockstar geram disputa sindical",
-    "description": "Entre 30 e 40 funcionários no Reino Unido e Canadá foram demitidos. A Rockstar alegou falta grave relacionada ao compartilhamento de informações confidenciais; o sindicato alegou repressão à organização sindical.",
+    "summary": "Demissões em estúdios da Rockstar no Reino Unido e no Canadá geraram uma disputa pública entre a companhia e representantes sindicais.",
+    "description": "Entre o fim de outubro de 2025, demissões em estúdios da Rockstar no Reino Unido e no Canadá geraram uma disputa pública entre a companhia e representantes sindicais. A Rockstar afirmou que as demissões estavam ligadas a falta grave envolvendo compartilhamento de informações confidenciais, enquanto o sindicato alegou repressão à organização dos trabalhadores. O episódio não foi anunciado como uma alteração direta no desenvolvimento ou na data de GTA VI. Seu interesse para a cronologia está no possível risco operacional e trabalhista em torno da empresa durante a produção do jogo, mantendo separadas as alegações de cada lado.",
     "category": "LaborAndLegal",
     "subcategory": "Demissões e disputa sindical",
     "priority": "Relevant",
@@ -434,7 +458,8 @@
   {
     "slug": "gta-vi-second-official-delay-november-2026",
     "title": "Segundo adiamento oficial: 19 de novembro de 2026",
-    "description": "O lançamento saiu de maio para novembro de 2026. A reação inicial foi associada a uma queda relevante das ações da Take-Two no pregão seguinte.",
+    "summary": "A Rockstar anunciou um segundo adiamento oficial de GTA VI, transferindo o lançamento para 19 de novembro de 2026.",
+    "description": "A Rockstar anunciou um segundo adiamento oficial de GTA VI, transferindo o lançamento de 26 de maio para 19 de novembro de 2026. A desenvolvedora justificou os meses adicionais como necessários para concluir o jogo com o nível de polimento esperado e agradeceu a paciência do público. A alteração prolongou novamente o ciclo de desenvolvimento e deslocou a principal expectativa comercial da Take-Two para mais tarde no ano. Na cronologia, este evento é especialmente relevante porque substituiu uma data exata já estabelecida por outra data exata, produzindo uma nova revisão formal das expectativas.",
     "category": "Delay",
     "subcategory": "Segundo adiamento oficial",
     "priority": "Primary",
@@ -452,7 +477,8 @@
   {
     "slug": "gta-vi-november-2026-date-reaffirmed-february-2026",
     "title": "Take-Two reafirma 19 de novembro de 2026",
-    "description": "A empresa manteve o jogo em sua programação e voltou a projetar resultados recordes para o ano fiscal de lançamento.",
+    "summary": "A Take-Two manteve GTA VI programado para 19 de novembro de 2026 nos resultados do terceiro trimestre fiscal.",
+    "description": "Nos resultados do terceiro trimestre fiscal, a Take-Two manteve GTA VI programado para 19 de novembro de 2026, a data definida no segundo adiamento oficial. A companhia também continuou associando o período de lançamento a expectativas financeiras elevadas para o exercício correspondente. A comunicação não introduziu uma nova data; sua função foi reafirmar que a controladora ainda baseava seu planejamento público no cronograma de novembro. Para a análise, isso ajuda a distinguir manutenção de guidance de uma verdadeira alteração de calendário.",
     "category": "FinancialResults",
     "subcategory": "Reafirmação da data de lançamento",
     "priority": "Relevant",
@@ -470,7 +496,8 @@
   {
     "slug": "take-two-fiscal-2027-launch-year-guidance",
     "title": "Take-Two mantém a data e apresenta projeções para o ano do lançamento",
-    "description": "A companhia manteve 19 de novembro e apresentou uma previsão inicial de US$ 8 bilhões a US$ 8,2 bilhões em reservas líquidas para o ano fiscal de 2027.",
+    "summary": "A Take-Two manteve GTA VI para 19 de novembro de 2026 e projetou entre US$ 8 bilhões e US$ 8,2 bilhões em reservas líquidas no ano fiscal de 2027.",
+    "description": "A Take-Two voltou a manter o lançamento de GTA VI em 19 de novembro de 2026 e apresentou uma previsão inicial de US$ 8 bilhões a US$ 8,2 bilhões em reservas líquidas para o ano fiscal de 2027. Como GTA VI é o principal lançamento previsto para o período, essa orientação forneceu um contexto financeiro mais concreto sobre a escala esperada para o exercício, sem atribuir todo o valor projetado exclusivamente ao jogo. O evento conecta a manutenção do cronograma do produto às expectativas corporativas da controladora e antecede a fase comercial mais intensa de pré-venda e marketing.",
     "category": "FinancialResults",
     "subcategory": "Projeções para o ano de lançamento",
     "priority": "Primary",
@@ -488,7 +515,8 @@
   {
     "slug": "rockstar-workers-union-public-announcement",
     "title": "Trabalhadores tornam pública uma organização sindical ligada à Rockstar",
-    "description": "É um evento de risco operacional secundário e deve ficar separado dos anúncios oficiais do jogo.",
+    "summary": "Trabalhadores ligados à Rockstar tornaram pública uma organização sindical em meio às tensões trabalhistas nos estúdios.",
+    "description": "É um evento de risco operacional secundário e deve ficar separado dos anúncios oficiais do jogo. A fonte de referência cadastrada é Rockstar Game Workers Union (IWGB); como o registro não é oficial, o conteúdo deve ser interpretado como informação atribuída ou reportada, e não como confirmação da Rockstar Games.",
     "category": "LaborAndLegal",
     "subcategory": "Organização sindical",
     "priority": "Contextual",
@@ -506,7 +534,8 @@
   {
     "slug": "rockstar-labor-dispute-full-trial",
     "title": "Disputa trabalhista avança para julgamento completo",
-    "description": "O processo relacionado às demissões foi autorizado a avançar, com audiência prevista para perto do lançamento.",
+    "summary": "A disputa judicial relacionada às demissões em estúdios da Rockstar foi autorizada a avançar para julgamento.",
+    "description": "O processo relacionado às demissões foi autorizado a avançar, com audiência prevista para perto do lançamento. A fonte de referência cadastrada é IWGB; como o registro não é oficial, o conteúdo deve ser interpretado como informação atribuída ou reportada, e não como confirmação da Rockstar Games.",
     "category": "LaborAndLegal",
     "subcategory": "Risco jurídico",
     "priority": "Contextual",
@@ -524,7 +553,8 @@
   {
     "slug": "gta-vi-preorders-announced",
     "title": "Rockstar anuncia que as pré-vendas começariam em 25 de junho",
-    "description": "O anúncio foi interpretado como um sinal de maior confiança na data de novembro.",
+    "summary": "Em 18 de junho de 2026, a Rockstar Games anunciou que as pré-vendas de GTA VI começariam em 25 de junho.",
+    "description": "Em 18 de junho de 2026, a Rockstar Games anunciou que as pré-vendas de GTA VI começariam em 25 de junho. O comunicado transformou a intenção de compra em um marco comercial com data definida e veio depois de a data de lançamento de 19 de novembro já ter sido reafirmada. O anúncio ainda não representava a abertura efetiva das vendas; ele estabelecia quando os pedidos antecipados passariam a ser aceitos. O VI Impact separa os dois momentos para que a reação ao anúncio da pré-venda não seja confundida com a reação ao início real das compras uma semana depois.",
     "category": "PreOrder",
     "subcategory": "Anúncio da pré-venda",
     "priority": "Primary",
@@ -542,7 +572,8 @@
   {
     "slug": "gta-vi-prices-and-editions-revealed",
     "title": "Preços e edições são revelados",
-    "description": "A edição padrão foi anunciada por US$ 79,99 e a Ultimate Edition por US$ 99,99. O anúncio foi associado a uma reação positiva da ação no pré-mercado.",
+    "summary": "Em 24 de junho de 2026, a Rockstar detalhou preços e edições de GTA VI antes da abertura das pré-vendas.",
+    "description": "Em 24 de junho de 2026, a Rockstar detalhou preços e edições de GTA VI antes da abertura das pré-vendas. A edição padrão foi anunciada por US$ 79,99 e a Ultimate Edition por US$ 99,99, definindo publicamente o posicionamento comercial do jogo e permitindo que consumidores e investidores avaliassem ticket médio, composição das versões e estratégia de monetização inicial. O evento é diferente do simples anúncio de que haveria pré-venda: aqui, o mercado recebeu informações concretas sobre quanto o produto custaria e como as edições seriam estruturadas.",
     "category": "Pricing",
     "subcategory": "Preços e edições",
     "priority": "Primary",
@@ -560,7 +591,8 @@
   {
     "slug": "gta-vi-preorder-bonuses-preload-physical-format",
     "title": "Bônus, pré-carregamento e formato físico são detalhados",
-    "description": "Foram anunciados o pacote Vintage Vice City, um mês de GTA+ para reservas digitais, pré-carregamento em 12 de novembro e caixas físicas contendo código para download.",
+    "summary": "A Rockstar detalhou os bônus, o pré-carregamento e o formato físico associados à pré-venda de GTA VI.",
+    "description": "No mesmo ciclo de divulgação comercial, a Rockstar detalhou os incentivos e a logística associados à pré-venda de GTA VI. Foram anunciados o pacote Vintage Vice City, um mês de GTA+ para determinadas reservas digitais, o início do pré-carregamento em 12 de novembro e a disponibilização de caixas físicas contendo código para download. Esses detalhes ajudam a entender como a companhia pretende distribuir o jogo e estimular compras antecipadas antes do lançamento. O evento é tratado separadamente dos preços porque adiciona informações sobre benefícios, entrega digital e formato físico, e não apenas sobre valor de venda.",
     "category": "Distribution",
     "subcategory": "Bônus e distribuição",
     "priority": "Relevant",
@@ -578,7 +610,8 @@
   {
     "slug": "gta-vi-preorders-open",
     "title": "Pré-vendas são oficialmente abertas",
-    "description": "O início efetivo das vendas foi registrado separadamente do anúncio de 18 de junho para permitir a análise de reações distintas do mercado.",
+    "summary": "Em 25 de junho de 2026, as pré-vendas de GTA VI foram oficialmente abertas.",
+    "description": "Em 25 de junho de 2026, as pré-vendas de GTA VI foram efetivamente abertas após uma semana de anúncios preparatórios. A partir desse momento, o interesse pelo jogo deixou de ser apenas intenção e passou a poder se converter em pedidos antecipados nas edições anunciadas pela Rockstar. O VI Impact registra a abertura como evento próprio porque ela representa uma mudança operacional concreta no ciclo comercial: consumidores puderam realizar a compra, enquanto o anúncio de 18 de junho apenas informava quando isso seria possível. Essa separação evita misturar dois catalisadores distintos.",
     "category": "PreOrder",
     "subcategory": "Abertura das pré-vendas",
     "priority": "Primary",
@@ -596,7 +629,8 @@
   {
     "slug": "gta-vi-console-market-impact-analysis",
     "title": "Analistas avaliam o efeito do GTA VI sobre o mercado de consoles",
-    "description": "A análise destacou que o lançamento deve impulsionar vendas de software do PlayStation 5, embora aconteça em uma fase avançada do ciclo do console.",
+    "summary": "Uma análise apontou que GTA VI deve impulsionar vendas de software do PlayStation 5 mesmo em uma fase avançada do ciclo do console.",
+    "description": "A análise destacou que o lançamento deve impulsionar vendas de software do PlayStation 5, embora aconteça em uma fase avançada do ciclo do console. A fonte de referência cadastrada é Reuters; como o registro não é oficial, o conteúdo deve ser interpretado como informação atribuída ou reportada, e não como confirmação da Rockstar Games.",
     "category": "MarketAnalysis",
     "subcategory": "Análise do mercado de consoles",
     "priority": "Contextual",
@@ -614,7 +648,8 @@
   {
     "slug": "gta-vi-extended-look-announced",
     "title": "Rockstar anuncia Grand Theft Auto VI: An Extended Look",
-    "description": "A Rockstar anunciou que a apresentação estrearia primeiro na Netflix em 27 de agosto de 2026, às 15h no horário do leste dos Estados Unidos, e seria publicada seis horas depois no canal oficial da Rockstar no YouTube e no site de GTA VI.",
+    "summary": "Em 6 de agosto de 2026, a Rockstar Games anunciou Grand Theft Auto VI: An Extended Look, uma nova apresentação oficial dedicada ao jogo.",
+    "description": "Em 6 de agosto de 2026, a Rockstar Games anunciou Grand Theft Auto VI: An Extended Look, uma nova apresentação oficial dedicada ao jogo. A exibição foi marcada para 27 de agosto, com estreia na Netflix às 15h ET e disponibilização posterior, às 21h ET, no canal oficial da Rockstar no YouTube e no site de GTA VI. O anúncio não revelou antecipadamente todo o conteúdo que seria mostrado, mas estabeleceu um novo marco de comunicação oficial a menos de três meses do lançamento previsto para 19 de novembro. Por ocorrer já durante a fase de pré-venda, a apresentação passou a ser um dos principais eventos de marketing do período final antes da estreia.",
     "category": "Announcement",
     "subcategory": "Anúncio de apresentação estendida",
     "priority": "Primary",
@@ -632,7 +667,8 @@
   {
     "slug": "gta-vi-gameplay-map-leak-august-2026",
     "title": "Novo vazamento atribuído a GTA VI mostra gameplay e partes do mapa",
-    "description": "Novos vídeos e imagens atribuídos a Grand Theft Auto VI começaram a circular online, mostrando Jason jogando basquete, dirigindo e se envolvendo em combate, além de imagens supostamente ligadas ao mapa de Leonida. A Rockstar Games não confirmou oficialmente a autenticidade do material; relatos de remoções por DMCA aumentaram sua credibilidade, embora haja indicação de que os vídeos possam ser de uma build antiga e não representem o estado final do jogo.",
+    "summary": "Em 18 de agosto de 2026, vídeos e imagens atribuídos a GTA VI começaram a circular mostrando gameplay e áreas de Leonida.",
+    "description": "Em 18 de agosto de 2026, vídeos e imagens atribuídos a GTA VI começaram a circular online mostrando sequências de gameplay, áreas de Leonida e interações que ainda não haviam sido apresentadas dessa forma em material oficial. Entre os trechos reportados estavam Jason jogando basquete, dirigindo e entrando em combate, além de imagens associadas ao mapa. A Rockstar Games não confirmou publicamente a autenticidade do conteúdo. Relatos de remoções por DMCA aumentaram a percepção de credibilidade do vazamento, mas isso não comprova que tudo exibido represente a versão final: o material pode vir de uma build de desenvolvimento mais antiga, com sistemas, interface e conteúdo sujeitos a mudanças.",
     "category": "Leak",
     "subcategory": "Vazamento de gameplay e mapa",
     "priority": "Relevant",
@@ -650,7 +686,8 @@
   {
     "slug": "gta-vi-third-gameplay-leak-august-2026",
     "title": "Terceiro vazamento mostra gameplay noturno, combate e cutscene com Cal",
-    "description": "Um terceiro vídeo atribuído a Grand Theft Auto VI começou a circular online, mostrando Jason dirigindo à noite, entrando em confronto com seguranças em uma refinaria da Allied Crystal em Ambrosia, desarmando um deles e tomando um taser. O material também exibe opções contextuais como clonar chave, quebrar janelas, render-se, pegar um chapéu e usar uma lanterna tática, além de terminar com uma cutscene entre Jason e Cal Hampton. A Rockstar Games não confirmou oficialmente a autenticidade do vídeo, e o material pode vir de uma build de desenvolvimento anterior à versão final.",
+    "summary": "Em 19 de agosto de 2026, outro vídeo atribuído a GTA VI mostrou uma sequência noturna com Jason em uma refinaria de Ambrosia.",
+    "description": "Em 19 de agosto de 2026, outro vídeo atribuído a GTA VI passou a circular mostrando uma sequência noturna com Jason em uma refinaria da Allied Crystal, em Ambrosia. O material exibia confronto com seguranças, a possibilidade de desarmar um deles e tomar um taser, além de ações contextuais como clonar uma chave, quebrar janelas, render-se, pegar um chapéu e usar uma lanterna tática. A gravação terminava com uma cutscene envolvendo Jason e Cal Hampton. A Rockstar não confirmou oficialmente a autenticidade do vídeo; mesmo que o material seja legítimo, ele aparenta pertencer a uma build de desenvolvimento e não deve ser tratado como demonstração garantida das mecânicas finais.",
     "category": "Leak",
     "subcategory": "Terceiro vazamento de gameplay",
     "priority": "Relevant",
@@ -668,7 +705,8 @@
   {
     "slug": "gta-vi-fourth-gameplay-leak-august-2026",
     "title": "Quarto vazamento revela roda de armas, provocações e itens de cura",
-    "description": "Um quarto vídeo atribuído a Grand Theft Auto VI passou a circular online, mostrando Jason roubando uma motocicleta policial e exibindo uma nova roda de armas com oito espaços, além de uma roda separada para itens. O vídeo também mostra combate com faca, interações de provocar ou cumprimentar NPCs, saque de corpos, restaurantes de fast-food marcados no mapa e itens de cura como Zombix Pills e EpiPen. A Rockstar Games não confirmou oficialmente a autenticidade do material, que pode pertencer a uma build de desenvolvimento anterior à versão final.",
+    "summary": "Também em 19 de agosto de 2026, um novo vídeo atribuído a GTA VI exibiu sistemas de combate, inventário e interação com NPCs.",
+    "description": "Também em 19 de agosto de 2026, um novo vídeo atribuído a GTA VI apresentou sistemas que ampliaram a discussão sobre combate, inventário e interação com NPCs. A gravação mostrava Jason roubando uma motocicleta policial, uma roda de armas com oito espaços e uma roda separada para itens, além de combate com faca, opções de provocar ou cumprimentar personagens, saque de corpos, restaurantes de fast-food marcados no mapa e itens de cura como Zombix Pills e EpiPen. A Rockstar Games não confirmou oficialmente o material. Como nos demais vazamentos, interfaces e mecânicas vistas em uma build de desenvolvimento podem ser alteradas ou removidas antes da versão final.",
     "category": "Leak",
     "subcategory": "Quarto vazamento de gameplay",
     "priority": "Relevant",
@@ -686,7 +724,8 @@
   {
     "slug": "gta-vi-plane-radio-gameplay-leak-august-2026",
     "title": "Novo vazamento mostra voo sobre Leonida e menu de rádio",
-    "description": "Um novo vídeo atribuído a Grand Theft Auto VI começou a circular online, mostrando Jason pilotando um biplano sobre Leonida em direção a Vice City, além de uma nova interface para seleção de rádios e uma opção de música sob demanda. O vídeo também termina com Jason disparando contra uma parede e formando a palavra “Leek”, reforçando a hipótese de que o responsável pelos vazamentos tenha acesso direto a uma build jogável. A Rockstar Games não confirmou oficialmente a autenticidade do material, e a gravação aparenta vir de uma build de desenvolvimento anterior à versão final.",
+    "summary": "Em 20 de agosto de 2026, outro vídeo atribuído a GTA VI mostrou Jason pilotando um biplano sobre Leonida em direção a Vice City.",
+    "description": "Em 20 de agosto de 2026, outro vídeo atribuído a GTA VI passou a circular mostrando Jason pilotando um biplano sobre Leonida em direção a Vice City. Além do voo, a gravação exibiu uma nova interface de seleção de estações de rádio e uma opção de música sob demanda, oferecendo indícios sobre como áudio e navegação poderiam funcionar nessa build. O vídeo também terminava com Jason disparando contra uma parede para formar a palavra “Leek”, detalhe interpretado como sinal de acesso direto do responsável a uma versão jogável. A Rockstar não confirmou a autenticidade e, mesmo se legítimo, o material pode refletir um estágio de desenvolvimento diferente do produto final.",
     "category": "Leak",
     "subcategory": "Vazamento de voo e interface de rádio",
     "priority": "Relevant",
@@ -704,7 +743,8 @@
   {
     "slug": "gta-vi-hypercar-gameplay-leak-august-2026",
     "title": "Novo vazamento mostra roubo de supercarro e direção em alta velocidade",
-    "description": "Um novo vídeo atribuído a Grand Theft Auto VI, divulgado como “Hypercar”, mostra Jason quebrando o vidro de um Truffade Thrax, retirando o motorista e dirigindo em alta velocidade durante a noite. O material apresenta uma sequência de roubo de veículo mais detalhada do que em GTA V. A Rockstar Games não confirmou oficialmente a autenticidade do vídeo, e a gravação pode vir de uma build de desenvolvimento anterior à versão final.",
+    "summary": "Em 21 de agosto de 2026, surgiu um novo vídeo atribuído a GTA VI e divulgado com o nome “Hypercar”.",
+    "description": "Em 21 de agosto de 2026, surgiu um novo vídeo atribuído a GTA VI e divulgado com o nome “Hypercar”. A gravação, com pouco mais de dois minutos, mostra Jason quebrando o vidro de um Truffade Thrax, retirando do veículo um motorista que oferece resistência e assumindo o controle do supercarro antes de dirigir em alta velocidade durante a noite. A sequência chamou atenção por apresentar um processo de roubo de veículo mais detalhado do que o padrão visto em GTA V. A Rockstar Games não confirmou oficialmente a autenticidade do vídeo, e a filmagem pode ter sido capturada em uma build de desenvolvimento anterior à configuração final de animações, física e interações.",
     "category": "Leak",
     "subcategory": "Vazamento Hypercar de gameplay",
     "priority": "Relevant",
@@ -722,7 +762,8 @@
   {
     "slug": "gta-vi-preload-begins",
     "title": "Início do pré-carregamento",
-    "description": "Início futuro confirmado do pré-carregamento de GTA VI.",
+    "summary": "O pré-carregamento de GTA VI está previsto para começar antes do lançamento oficial.",
+    "description": "Início futuro confirmado do pré-carregamento de GTA VI. O evento é tratado como oficial no catálogo do VI Impact. A fonte de referência cadastrada para este registro é Rockstar Games.",
     "category": "Distribution",
     "subcategory": "Pré-carregamento",
     "priority": "Relevant",
@@ -740,7 +781,8 @@
   {
     "slug": "gta-vi-download-code-boxes-available",
     "title": "Disponibilização das caixas com código de download",
-    "description": "Disponibilização futura confirmada das caixas físicas contendo código para download.",
+    "summary": "Caixas físicas contendo códigos para download de GTA VI estão previstas para serem disponibilizadas antes do lançamento.",
+    "description": "Disponibilização futura confirmada das caixas físicas contendo código para download. O evento é tratado como oficial no catálogo do VI Impact. A fonte de referência cadastrada para este registro é Rockstar Games.",
     "category": "Distribution",
     "subcategory": "Formato físico com código",
     "priority": "Relevant",
@@ -758,7 +800,8 @@
   {
     "slug": "gta-vi-worldwide-launch",
     "title": "Lançamento mundial do GTA VI",
-    "description": "O lançamento está confirmado para PlayStation 5 e Xbox Series X|S. Não há versão de PC oficialmente datada na timeline fornecida.",
+    "summary": "GTA VI tem lançamento confirmado para PlayStation 5 e Xbox Series X|S em 19 de novembro de 2026.",
+    "description": "O lançamento está confirmado para PlayStation 5 e Xbox Series X|S. Não há versão de PC oficialmente datada na timeline fornecida. O evento é tratado como oficial no catálogo do VI Impact. A fonte de referência cadastrada para este registro é Rockstar Games.",
     "category": "Launch",
     "subcategory": "Lançamento mundial",
     "priority": "Primary",

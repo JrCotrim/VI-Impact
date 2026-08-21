@@ -8,7 +8,6 @@ import {
 import './App.css'
 import { ChartPeriodSelector } from './components/ChartPeriodSelector'
 import { EventIcon } from './components/EventIcon'
-import { getGtaEventAnalysisDescription } from './utils/gtaEventAnalysisContent'
 import { getDashboardData } from './services/dashboardService'
 import {
   getGtaEventImpact,
@@ -1484,39 +1483,6 @@ function getInitialAnalysisEventId(): string | null {
   return new URL(
     window.location.href,
   ).searchParams.get('event')
-}
-
-function createEventPreview(
-  description: string,
-  maximumLength = 190,
-): string {
-  const normalizedDescription =
-    description.trim().replace(/\s+/g, ' ')
-
-  if (
-    normalizedDescription.length <=
-    maximumLength
-  ) {
-    return normalizedDescription
-  }
-
-  const truncatedDescription =
-    normalizedDescription.slice(
-      0,
-      maximumLength + 1,
-    )
-
-  const lastSpaceIndex =
-    truncatedDescription.lastIndexOf(' ')
-
-  return `${truncatedDescription
-    .slice(
-      0,
-      lastSpaceIndex > maximumLength * 0.65
-        ? lastSpaceIndex
-        : maximumLength,
-    )
-    .trimEnd()}…`
 }
 
 interface EventPreviewImpactSummary {
@@ -3572,9 +3538,7 @@ function App() {
                 </div>
 
                 <p className="event-analysis-description">
-                  {getGtaEventAnalysisDescription(
-                    analysisEvent,
-                  )}
+                  {analysisEvent.description}
                 </p>
 
                 {analysisEvent.sourceUrl.trim() ? (
@@ -4567,9 +4531,8 @@ function App() {
                             </p>
 
                             <p className="event-detail-description event-preview-description">
-                              {createEventPreview(
-                                gtaEvent.description,
-                              )}
+                              {gtaEvent.summary?.trim() ||
+                                gtaEvent.description}
                             </p>
 
                             {gtaEvent.isImpactAnalysisEligible ===

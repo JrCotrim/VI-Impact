@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using VIImpact.API.Contracts.GtaEvents;
@@ -60,13 +60,15 @@ public sealed class GtaEventsController : ControllerBase
 
         Guid eventId = Guid.NewGuid();
         string title = request.Title.Trim();
+        string description = request.Description.Trim();
 
         var gtaEvent = new GtaEvent
         {
             Id = eventId,
             Slug = CreateManualSlug(title, eventId),
             Title = title,
-            Description = request.Description.Trim(),
+            Summary = description,
+            Description = description,
             Category = GtaEventCategory.Announcement,
             Subcategory = "Manual entry",
             Priority = GtaEventPriority.Relevant,

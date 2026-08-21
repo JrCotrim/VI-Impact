@@ -89,6 +89,21 @@ public static class GtaEventSeeder
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        List<GtaEvent> eventsMissingSummary =
+            await dbContext.GtaEvents
+                .Where(gtaEvent => gtaEvent.Summary == string.Empty)
+                .ToListAsync(cancellationToken);
+
+        if (eventsMissingSummary.Count > 0)
+        {
+            foreach (GtaEvent gtaEvent in eventsMissingSummary)
+            {
+                gtaEvent.Summary = gtaEvent.Description;
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 
     private static async Task<IReadOnlyList<GtaEventSeedItem>>
@@ -142,6 +157,7 @@ public static class GtaEventSeeder
             .FirstOrDefault(seedItem =>
                 string.IsNullOrWhiteSpace(seedItem.Slug) ||
                 string.IsNullOrWhiteSpace(seedItem.Title) ||
+                string.IsNullOrWhiteSpace(seedItem.Summary) ||
                 string.IsNullOrWhiteSpace(seedItem.Description) ||
                 string.IsNullOrWhiteSpace(seedItem.Subcategory) ||
                 string.IsNullOrWhiteSpace(seedItem.SourceName));
@@ -150,7 +166,7 @@ public static class GtaEventSeeder
         {
             throw new InvalidOperationException(
                 "Every GTA VI seed event must have a slug, title, " +
-                "description, subcategory and source name.");
+                "summary, description, subcategory and source name.");
         }
     }
 
@@ -160,6 +176,7 @@ public static class GtaEventSeeder
     {
         gtaEvent.Slug = seedItem.Slug;
         gtaEvent.Title = seedItem.Title;
+        gtaEvent.Summary = seedItem.Summary;
         gtaEvent.Description = seedItem.Description;
         gtaEvent.Category = seedItem.Category;
         gtaEvent.Subcategory = seedItem.Subcategory;

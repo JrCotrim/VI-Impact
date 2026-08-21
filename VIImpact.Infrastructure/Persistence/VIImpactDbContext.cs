@@ -59,6 +59,10 @@ public sealed class VIImpactDbContext : DbContext
                 .HasMaxLength(240)
                 .IsRequired();
 
+            entity.Property(gtaEvent => gtaEvent.Summary)
+                .HasMaxLength(1_000)
+                .IsRequired();
+
             entity.Property(gtaEvent => gtaEvent.Description)
                 .HasMaxLength(2_000)
                 .IsRequired();

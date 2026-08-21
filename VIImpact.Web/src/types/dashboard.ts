@@ -10,6 +10,7 @@ export interface GtaEvent {
   id: string
   slug?: string
   title: string
+  summary?: string
   description: string
   category?: string | number
   subcategory?: string

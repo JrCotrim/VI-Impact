@@ -1,4 +1,4 @@
-﻿using VIImpact.Domain.Enums;
+using VIImpact.Domain.Enums;
 
 namespace VIImpact.API.Contracts.Dashboard;
 
@@ -12,6 +12,8 @@ public sealed class GtaEventMarkerResponse
     public string Slug { get; set; } = string.Empty;
 
     public string Title { get; set; } = string.Empty;
+
+    public string Summary { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;
 

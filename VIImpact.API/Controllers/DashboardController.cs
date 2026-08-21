@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using VIImpact.API.Contracts.Dashboard;
 using VIImpact.Application.Interfaces;
 using VIImpact.Domain.Entities;
@@ -88,6 +88,7 @@ public sealed class DashboardController : ControllerBase
                     Id = gtaEvent.Id,
                     Slug = gtaEvent.Slug,
                     Title = gtaEvent.Title,
+                    Summary = gtaEvent.Summary,
                     Description = gtaEvent.Description,
                     Category = gtaEvent.Category,
                     Subcategory = gtaEvent.Subcategory,
