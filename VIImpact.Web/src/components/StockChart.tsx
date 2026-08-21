@@ -84,6 +84,8 @@ interface EventMarker {
   labelSide: 'left' | 'right'
   horizontalOffset: number
   lane: number
+  iconY: number
+  compact: boolean
   isSelected: boolean
 }
 
@@ -119,11 +121,14 @@ interface ChartViewport {
   endIndex: number
 }
 
-const EVENT_MARKER_LANE_COUNT = 3
-const EVENT_MARKER_LANE_GAP = 34
-const EVENT_MARKER_RAIL_TOP = 24
-const EVENT_MARKER_MIN_HORIZONTAL_GAP = 40
-const EVENT_MARKER_CHART_TOP_MARGIN = 126
+const EVENT_MARKER_DESKTOP_LANE_COUNT = 4
+const EVENT_MARKER_MOBILE_LANE_COUNT = 5
+const EVENT_MARKER_DESKTOP_LANE_GAP = 32
+const EVENT_MARKER_MOBILE_LANE_GAP = 28
+const EVENT_MARKER_DESKTOP_RAIL_TOP = 22
+const EVENT_MARKER_MOBILE_RAIL_TOP = 18
+const EVENT_MARKER_DESKTOP_MIN_HORIZONTAL_GAP = 50
+const EVENT_MARKER_MOBILE_MIN_HORIZONTAL_GAP = 34
 
 interface ChartDragState {
   pointerId: number
@@ -788,7 +793,7 @@ function shortenDescription(
 function createRawChartData(
   values: StockTimeSeriesPoint[],
 ): ChartPoint[] {
-  return values
+  const points = values
     .map((value) => ({
       open: value.open,
       high: value.high,
@@ -811,11 +816,24 @@ function createRawChartData(
         Number.isFinite(point.low) &&
         Number.isFinite(point.close),
     )
-    .sort(
-      (firstPoint, secondPoint) =>
-        firstPoint.timestamp -
-        secondPoint.timestamp,
+
+  const pointsByTimestamp =
+    new Map<number, ChartPoint>()
+
+  for (const point of points) {
+    pointsByTimestamp.set(
+      point.timestamp,
+      point,
     )
+  }
+
+  return Array.from(
+    pointsByTimestamp.values(),
+  ).sort(
+    (firstPoint, secondPoint) =>
+      firstPoint.timestamp -
+      secondPoint.timestamp,
+  )
 }
 
 function getMedianTimestampInterval(
@@ -1067,11 +1085,51 @@ function createAxisTicks(
   )
 }
 
-function createPriceDomain(
+interface PriceAxisScale {
+  domain: [number, number]
+  ticks: number[]
+}
+
+function getNiceAxisStep(
+  rawStep: number,
+): number {
+  if (
+    !Number.isFinite(rawStep) ||
+    rawStep <= 0
+  ) {
+    return 1
+  }
+
+  const magnitude =
+    10 ** Math.floor(Math.log10(rawStep))
+  const normalizedStep = rawStep / magnitude
+  const candidates = [1, 1.25, 2, 2.5, 5, 10]
+  let closestCandidate = candidates[0]
+  let closestDistance = Number.POSITIVE_INFINITY
+
+  candidates.forEach((candidate) => {
+    const distance = Math.abs(
+      Math.log(normalizedStep / candidate),
+    )
+
+    if (distance < closestDistance) {
+      closestDistance = distance
+      closestCandidate = candidate
+    }
+  })
+
+  return closestCandidate * magnitude
+}
+
+function createPriceAxisScale(
   points: ChartPoint[],
-): [number, number] {
+  targetTickCount: number,
+): PriceAxisScale {
   if (points.length === 0) {
-    return [0, 1]
+    return {
+      domain: [0, 1],
+      ticks: [0, 1],
+    }
   }
 
   const prices = points.flatMap(
@@ -1085,17 +1143,67 @@ function createPriceDomain(
   )
   const minimumPrice = Math.min(...prices)
   const maximumPrice = Math.max(...prices)
-  const priceRange =
-    maximumPrice - minimumPrice
+  const priceRange = maximumPrice - minimumPrice
   const padding =
     priceRange > 0
-      ? priceRange * 0.1
-      : Math.max(minimumPrice * 0.02, 1)
+      ? Math.max(priceRange * 0.045, 0.35)
+      : Math.max(
+          Math.abs(minimumPrice) * 0.012,
+          0.5,
+        )
+  const paddedMinimum = minimumPrice - padding
+  const paddedMaximum = maximumPrice + padding
+  const requestedIntervals = Math.max(
+    targetTickCount - 1,
+    3,
+  )
+  let step = getNiceAxisStep(
+    (paddedMaximum - paddedMinimum) /
+      requestedIntervals,
+  )
 
-  return [
-    Math.max(0, minimumPrice - padding),
-    maximumPrice + padding,
-  ]
+  function createScaleForStep(
+    currentStep: number,
+  ): PriceAxisScale {
+    const domainMinimum = Math.max(
+      0,
+      Math.floor(paddedMinimum / currentStep) *
+        currentStep,
+    )
+    const domainMaximum = Math.max(
+      domainMinimum + currentStep,
+      Math.ceil(paddedMaximum / currentStep) *
+        currentStep,
+    )
+    const ticks: number[] = []
+
+    for (
+      let tick = domainMinimum;
+      tick <=
+        domainMaximum + currentStep * 0.001 &&
+      ticks.length < 10;
+      tick += currentStep
+    ) {
+      ticks.push(Number(tick.toFixed(8)))
+    }
+
+    return {
+      domain: [
+        Number(domainMinimum.toFixed(8)),
+        Number(domainMaximum.toFixed(8)),
+      ],
+      ticks,
+    }
+  }
+
+  let scale = createScaleForStep(step)
+
+  if (scale.ticks.length > 7) {
+    step = getNiceAxisStep(step * 1.55)
+    scale = createScaleForStep(step)
+  }
+
+  return scale
 }
 
 function findNearestPointIndex(
@@ -1292,6 +1400,19 @@ function createEventMarkers(
     endTimestamp - startTimestamp,
     1,
   )
+  const isNarrowChart = chartWidth < 700
+  const laneCount = isNarrowChart
+    ? EVENT_MARKER_MOBILE_LANE_COUNT
+    : EVENT_MARKER_DESKTOP_LANE_COUNT
+  const laneGap = isNarrowChart
+    ? EVENT_MARKER_MOBILE_LANE_GAP
+    : EVENT_MARKER_DESKTOP_LANE_GAP
+  const railTop = isNarrowChart
+    ? EVENT_MARKER_MOBILE_RAIL_TOP
+    : EVENT_MARKER_DESKTOP_RAIL_TOP
+  const minimumHorizontalGap = isNarrowChart
+    ? EVENT_MARKER_MOBILE_MIN_HORIZONTAL_GAP
+    : EVENT_MARKER_DESKTOP_MIN_HORIZONTAL_GAP
 
   groupsByDate.forEach((group) => {
     const selectedEvent = group.find(
@@ -1301,6 +1422,7 @@ function createEventMarkers(
     )
 
     let unselectedOffsetIndex = 0
+    const offsetGap = isNarrowChart ? 15 : 20
 
     group.forEach(
       (eligibleEvent, index) => {
@@ -1321,14 +1443,14 @@ function createEventMarkers(
                 : 1
 
             horizontalOffset =
-              direction * distance * 18
+              direction * distance * offsetGap
             unselectedOffsetIndex += 1
           }
         } else {
           horizontalOffset =
             (index -
               (group.length - 1) / 2) *
-            18
+            offsetGap
         }
 
         const chartPosition =
@@ -1353,6 +1475,8 @@ function createEventMarkers(
               : 'right',
           horizontalOffset,
           lane: 0,
+          iconY: railTop,
+          compact: false,
           isSelected,
         })
       },
@@ -1364,7 +1488,7 @@ function createEventMarkers(
     1,
   )
   const laneLastPositions = Array.from(
-    { length: EVENT_MARKER_LANE_COUNT },
+    { length: laneCount },
     () => Number.NEGATIVE_INFINITY,
   )
 
@@ -1388,7 +1512,7 @@ function createEventMarkers(
         laneLastPositions.findIndex(
           (lastPosition) =>
             xPosition - lastPosition >=
-            EVENT_MARKER_MIN_HORIZONTAL_GAP,
+            minimumHorizontalGap,
         )
 
       if (availableLane < 0) {
@@ -1399,6 +1523,10 @@ function createEventMarkers(
       }
 
       marker.lane = availableLane
+      marker.iconY =
+        railTop + availableLane * laneGap
+      marker.compact =
+        isNarrowChart || markers.length >= 12
       laneLastPositions[availableLane] =
         xPosition
     })
@@ -1987,13 +2115,15 @@ function EventMarkerShape({
 
   const iconX =
     cx + marker.horizontalOffset
-  const iconY =
-    EVENT_MARKER_RAIL_TOP +
-    marker.lane * EVENT_MARKER_LANE_GAP
+  const iconY = marker.iconY
 
   const iconRadius = marker.isSelected
-    ? 15
-    : 13
+    ? marker.compact
+      ? 13
+      : 15
+    : marker.compact
+      ? 11
+      : 13
   const hasEmphasis =
     marker.isSelected || isHovered
 
@@ -2204,6 +2334,8 @@ export function StockChart({
     useRef<HTMLElement | null>(null)
   const crosshairPriceValueRef =
     useRef<HTMLElement | null>(null)
+  const crosshairChangeValueRef =
+    useRef<HTMLElement | null>(null)
   const crosshairVolumeValueRef =
     useRef<HTMLElement | null>(null)
   const lastCrosshairTimestampRef =
@@ -2275,19 +2407,19 @@ export function StockChart({
     [chartData, normalizedViewport],
   )
   const widthPointBudget = Math.max(
-    160,
+    240,
     Math.min(
-      360,
-      Math.floor(chartSize.width / 3),
+      720,
+      Math.floor(chartSize.width / 1.65),
     ),
   )
   const maximumRenderedPointCount =
-    viewportPoints.length > 2500
-      ? Math.min(widthPointBudget, 160)
-      : viewportPoints.length > 1200
-        ? Math.min(widthPointBudget, 210)
-        : viewportPoints.length > 700
-          ? Math.min(widthPointBudget, 270)
+    viewportPoints.length > 4000
+      ? Math.min(widthPointBudget, 360)
+      : viewportPoints.length > 2500
+        ? Math.min(widthPointBudget, 440)
+        : viewportPoints.length > 1200
+          ? Math.min(widthPointBudget, 560)
           : widthPointBudget
   const renderPoints = useMemo(
     () =>
@@ -2548,14 +2680,14 @@ export function StockChart({
     [endTimestamp, startTimestamp],
   )
   const axisTickCount = Math.max(
-    3,
+    4,
     Math.min(
-      6,
+      7,
       Math.floor(
         Math.max(
-          chartSize.width - 110,
-          300,
-        ) / 125,
+          chartSize.width - 96,
+          360,
+        ) / 100,
       ),
     ),
   )
@@ -2574,9 +2706,28 @@ export function StockChart({
       viewportPoints,
     ],
   )
-  const priceDomain = useMemo(
-    () => createPriceDomain(viewportPoints),
-    [viewportPoints],
+  const priceAxisTickCount = Math.max(
+    5,
+    Math.min(
+      6,
+      Math.floor(
+        Math.max(
+          chartSize.height - 120,
+          240,
+        ) / 92,
+      ),
+    ),
+  )
+  const priceAxisScale = useMemo(
+    () =>
+      createPriceAxisScale(
+        viewportPoints,
+        priceAxisTickCount,
+      ),
+    [
+      priceAxisTickCount,
+      viewportPoints,
+    ],
   )
   const eventMarkers = useMemo(
     () =>
@@ -2599,7 +2750,14 @@ export function StockChart({
   )
   const chartTopMargin =
     eventMarkers.length > 0
-      ? EVENT_MARKER_CHART_TOP_MARGIN
+      ? Math.max(
+          112,
+          ...eventMarkers.map(
+            (marker) =>
+              marker.iconY +
+              (marker.compact ? 34 : 40),
+          ),
+        )
       : 30
   const selectedMarker = useMemo(
     () =>
@@ -2789,12 +2947,25 @@ export function StockChart({
 
       const priceChange =
         point.close - point.open
+      const priceChangePercent =
+        point.open !== 0
+          ? (priceChange / point.open) * 100
+          : 0
 
       if (crosshairPriceValueRef.current) {
         crosshairPriceValueRef.current.textContent =
           formatCurrency(point.close)
         crosshairPriceValueRef.current.className =
           priceChange >= 0
+            ? 'positive-value'
+            : 'negative-value'
+      }
+
+      if (crosshairChangeValueRef.current) {
+        crosshairChangeValueRef.current.textContent =
+          formatSignedPercent(priceChangePercent)
+        crosshairChangeValueRef.current.className =
+          priceChangePercent >= 0
             ? 'positive-value'
             : 'negative-value'
       }
@@ -3248,7 +3419,8 @@ export function StockChart({
 
           <YAxis
             dataKey="price"
-            domain={priceDomain}
+            domain={priceAxisScale.domain}
+            ticks={priceAxisScale.ticks}
             orientation="right"
             width={78}
             tickMargin={10}
@@ -3265,7 +3437,7 @@ export function StockChart({
           />
 
           <Line
-            type="linear"
+            type="monotoneX"
             dataKey="price"
             name={
               isComparisonMode
@@ -3273,19 +3445,24 @@ export function StockChart({
                 : 'Fechamento'
             }
             stroke="var(--accent-pink)"
-            strokeWidth={2.4}
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
             dot={false}
             activeDot={false}
+            connectNulls={false}
             isAnimationActive={false}
           />
 
           {isComparisonMode && (
             <Line
-              type="linear"
+              type="monotoneX"
               dataKey="benchmarkNormalized"
               name={benchmarkSymbol}
               stroke="var(--accent-blue)"
-              strokeWidth={2.1}
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
               strokeDasharray="7 4"
               dot={false}
               activeDot={false}
@@ -3431,6 +3608,11 @@ export function StockChart({
                 <span>Fechamento</span>
                 <strong
                   ref={crosshairPriceValueRef}
+                />
+
+                <span>Variação</span>
+                <strong
+                  ref={crosshairChangeValueRef}
                 />
 
                 <span>Volume</span>

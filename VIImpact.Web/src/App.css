@@ -13944,3 +13944,35 @@ a {
   .event-analysis-metric-sparkline.impact-negative {
   color: #e94167;
 }
+
+/* =========================================================
+   Chart refinement V1.15 — precise line rendering
+   ========================================================= */
+
+.trading-chart-container .recharts-line-curve {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  shape-rendering: geometricPrecision;
+}
+
+.trading-chart-container
+  .recharts-cartesian-axis-tick-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.trading-chart-container
+  .recharts-cartesian-grid-horizontal line,
+.trading-chart-container
+  .recharts-cartesian-grid-vertical line {
+  shape-rendering: crispEdges;
+}
+
+.stock-point-tooltip-compact strong {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 700px) {
+  .trading-chart-container .recharts-line-curve {
+    stroke-width: 2px;
+  }
+}
