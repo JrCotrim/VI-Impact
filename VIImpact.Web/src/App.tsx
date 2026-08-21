@@ -2046,12 +2046,46 @@ function App() {
     !dashboard
   ) {
     return (
-      <main className="status-screen">
-        <div className="status-card">
-          <span className="status-pulse" />
-          <p>
-            Carregando dados do VI Impact...
+      <main
+        className="loading-splash"
+        role="status"
+        aria-live="polite"
+        aria-label="Carregando dados do VI Impact"
+      >
+        <div
+          className="loading-splash-frame"
+          aria-hidden="true"
+        />
+
+        <div className="loading-splash-content">
+          <img
+            className="loading-splash-logo"
+            src="/vi-impact-logo.png"
+            alt="VI Impact"
+          />
+
+          <div className="loading-splash-heading">
+            <span className="loading-splash-kicker">
+              Take-Two × GTA VI
+            </span>
+
+            <strong>Market Impact Dashboard</strong>
+          </div>
+
+          <div
+            className="loading-splash-progress"
+            aria-hidden="true"
+          >
+            <span />
+          </div>
+
+          <p className="loading-splash-message">
+            Carregando dados do mercado
           </p>
+
+          <span className="loading-splash-meta">
+            TTWO · NASDAQ · VI IMPACT
+          </span>
         </div>
       </main>
     )

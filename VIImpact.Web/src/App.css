@@ -10605,3 +10605,276 @@ a {
     letter-spacing: 0.085em;
   }
 }
+
+/* =========================================================
+   Initial loading splash — VI Impact identity
+   ========================================================= */
+
+.loading-splash {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  display: grid;
+  min-width: 320px;
+  min-height: 100dvh;
+  overflow: hidden;
+  place-items: center;
+  padding: clamp(20px, 3vw, 42px);
+  color: #ffffff;
+  background: #080611;
+  isolation: isolate;
+}
+
+.loading-splash::before,
+.loading-splash::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+}
+
+.loading-splash::before {
+  z-index: -2;
+  background:
+    url('/vice-city-banner-night.png')
+      center 48% / cover no-repeat;
+  opacity: 0.48;
+  filter: saturate(0.82) contrast(1.08);
+  transform: scale(1.035);
+  animation:
+    loading-splash-background 8s ease-in-out
+      infinite alternate;
+}
+
+.loading-splash::after {
+  z-index: -1;
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(157, 78, 221, 0.16),
+      transparent 27%
+    ),
+    radial-gradient(
+      circle at 50% 78%,
+      rgba(255, 42, 133, 0.14),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(5, 4, 13, 0.66) 0%,
+      rgba(8, 5, 18, 0.78) 48%,
+      rgba(11, 5, 19, 0.94) 100%
+    );
+}
+
+.loading-splash-frame {
+  position: absolute;
+  inset: clamp(16px, 2.4vw, 32px);
+  border: 1px solid rgba(237, 213, 255, 0.58);
+  border-radius: clamp(16px, 1.5vw, 24px);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 63, 164, 0.12),
+    0 0 34px rgba(121, 71, 181, 0.08);
+  pointer-events: none;
+}
+
+.loading-splash-content {
+  display: flex;
+  width: min(520px, calc(100vw - 72px));
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  animation: loading-splash-enter 440ms ease-out both;
+}
+
+.loading-splash-logo {
+  display: block;
+  width: clamp(150px, 16vw, 220px);
+  height: auto;
+  max-height: 150px;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  filter:
+    drop-shadow(0 0 18px rgba(255, 61, 163, 0.28))
+    drop-shadow(0 8px 26px rgba(0, 0, 0, 0.34));
+  animation:
+    loading-splash-logo-breathe 2.8s ease-in-out
+      infinite;
+}
+
+.loading-splash-heading {
+  display: grid;
+  gap: 5px;
+  margin-top: 14px;
+}
+
+.loading-splash-kicker {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(0.66rem, 1.05vw, 0.78rem);
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.29em;
+}
+
+.loading-splash-heading strong {
+  color: #ffffff;
+  font-size: clamp(1.02rem, 1.7vw, 1.36rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.075em;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.48);
+}
+
+.loading-splash-progress {
+  position: relative;
+  width: min(350px, 78vw);
+  height: 4px;
+  margin-top: 30px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.13);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.34),
+    0 0 22px rgba(255, 43, 145, 0.08);
+}
+
+.loading-splash-progress span {
+  position: absolute;
+  inset: 0 auto 0 -38%;
+  width: 38%;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(157, 78, 221, 0),
+      #9d4edd 24%,
+      #ff2a85 68%,
+      #00f2fe 100%
+    );
+  box-shadow:
+    0 0 12px rgba(255, 42, 133, 0.56),
+    0 0 20px rgba(0, 242, 254, 0.16);
+  animation:
+    loading-splash-progress 1.35s
+      cubic-bezier(0.45, 0, 0.55, 1)
+      infinite;
+}
+
+.loading-splash-message {
+  margin: 14px 0 0;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: clamp(0.64rem, 1vw, 0.75rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.loading-splash-meta {
+  margin-top: 10px;
+  color: rgba(199, 190, 219, 0.48);
+  font-size: 0.56rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.19em;
+}
+
+@keyframes loading-splash-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes loading-splash-background {
+  from {
+    transform: scale(1.035) translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: scale(1.055) translate3d(0, -0.5%, 0);
+  }
+}
+
+@keyframes loading-splash-logo-breathe {
+  0%,
+  100% {
+    opacity: 0.94;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes loading-splash-progress {
+  from {
+    left: -38%;
+  }
+
+  to {
+    left: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .loading-splash {
+    padding: 22px;
+  }
+
+  .loading-splash-frame {
+    inset: 12px;
+    border-radius: 16px;
+  }
+
+  .loading-splash-content {
+    width: min(100%, 360px);
+  }
+
+  .loading-splash-logo {
+    width: clamp(138px, 44vw, 180px);
+  }
+
+  .loading-splash-heading {
+    margin-top: 10px;
+  }
+
+  .loading-splash-kicker {
+    letter-spacing: 0.2em;
+  }
+
+  .loading-splash-heading strong {
+    font-size: clamp(0.9rem, 4.5vw, 1.08rem);
+    letter-spacing: 0.055em;
+  }
+
+  .loading-splash-progress {
+    width: min(280px, 78vw);
+    margin-top: 24px;
+  }
+
+  .loading-splash-message {
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-splash::before,
+  .loading-splash-logo,
+  .loading-splash-content {
+    animation: none;
+  }
+
+  .loading-splash-progress span {
+    left: 0;
+    width: 42%;
+    animation-duration: 2.4s;
+  }
+}
+
