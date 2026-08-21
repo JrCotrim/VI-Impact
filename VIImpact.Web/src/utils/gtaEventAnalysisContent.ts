@@ -20,6 +20,8 @@ const eventAnalysisDescriptions: Record<string, string> = {
     'Também em 19 de agosto de 2026, um novo vídeo atribuído a GTA VI mostrou uma roda de armas com oito espaços, uma roda separada para itens, combate com faca, provocações e cumprimentos a NPCs, saque de corpos e itens de cura. A Rockstar Games não confirmou oficialmente o material, que pode pertencer a uma build anterior à versão final.',
   'gta-vi-plane-radio-gameplay-leak-august-2026':
     'Em 20 de agosto de 2026, um vídeo atribuído a GTA VI passou a circular mostrando Jason pilotando um biplano sobre Leonida em direção a Vice City. A gravação também apresentou uma nova interface de seleção de rádios e uma opção de música sob demanda. A Rockstar não confirmou oficialmente a autenticidade, e os indícios visuais sugerem que o material pode vir de uma build de desenvolvimento.',
+  'gta-vi-hypercar-gameplay-leak-august-2026':
+    'Em 21 de agosto de 2026, após cerca de um dia sem novas publicações, surgiu um novo vídeo atribuído a GTA VI e divulgado como “Hypercar”. A gravação, com pouco mais de dois minutos, mostra Jason quebrando o vidro de um Truffade Thrax, retirando um motorista que resiste e assumindo o controle do veículo antes de dirigir em alta velocidade durante a noite. A Rockstar Games não confirmou oficialmente a autenticidade do material, que pode representar uma build de desenvolvimento anterior ao estado final do jogo.',
 }
 
 export function getGtaEventAnalysisDescription(
