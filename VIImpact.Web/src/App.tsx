@@ -1,11 +1,12 @@
 import {
+  lazy,
+  Suspense,
   useEffect,
   useRef,
   useState,
 } from 'react'
 import './App.css'
 import { ChartPeriodSelector } from './components/ChartPeriodSelector'
-import { StockChart } from './components/StockChart'
 import { EventIcon } from './components/EventIcon'
 import { getGtaEventAnalysisDescription } from './utils/gtaEventAnalysisContent'
 import { getDashboardData } from './services/dashboardService'
@@ -39,6 +40,16 @@ import type {
   StockTimeSeriesPeriod,
 } from './types/dashboard'
 
+const StockChart = lazy(async () => {
+  const stockChartModule = await import(
+    './components/StockChart'
+  )
+
+  return {
+    default: stockChartModule.StockChart,
+  }
+})
+
 type Theme = 'day' | 'night'
 type ImpactRankingPeriod =
   | '1D'
@@ -70,6 +81,14 @@ type InterfaceIconName =
 interface InterfaceIconProps {
   name: InterfaceIconName
   className?: string
+}
+
+function StockChartLoadingFallback() {
+  return (
+    <div className="chart-state-message">
+      Carregando gráfico...
+    </div>
+  )
 }
 
 /**
@@ -3366,17 +3385,23 @@ function App() {
                       className="chart-error-notice"
                     />
                   ) : timeSeries ? (
-                    <StockChart
-                      values={timeSeries.values}
-                      events={[analysisEvent]}
-                      selectedEventId={
-                        analysisEvent.id
+                    <Suspense
+                      fallback={
+                        <StockChartLoadingFallback />
                       }
-                      eventImpactSummaries={
-                        chartEventImpactSummaries
-                      }
-                      onEventSelect={() => undefined}
-                    />
+                    >
+                      <StockChart
+                        values={timeSeries.values}
+                        events={[analysisEvent]}
+                        selectedEventId={
+                          analysisEvent.id
+                        }
+                        eventImpactSummaries={
+                          chartEventImpactSummaries
+                        }
+                        onEventSelect={() => undefined}
+                      />
+                    </Suspense>
                   ) : (
                     <div className="chart-state-message">
                       Nenhum histórico disponível para esta janela.
@@ -4259,23 +4284,29 @@ function App() {
                 )}
 
               {timeSeries && (
-                <StockChart
-                  values={
-                    timeSeries.values
+                <Suspense
+                  fallback={
+                    <StockChartLoadingFallback />
                   }
-                  events={
-                    occurredEvents
-                  }
-                  selectedEventId={
-                    selectedEventId
-                  }
-                  eventImpactSummaries={
-                    chartEventImpactSummaries
-                  }
-                  onEventSelect={
-                    handleChartEventSelect
-                  }
-                />
+                >
+                  <StockChart
+                    values={
+                      timeSeries.values
+                    }
+                    events={
+                      occurredEvents
+                    }
+                    selectedEventId={
+                      selectedEventId
+                    }
+                    eventImpactSummaries={
+                      chartEventImpactSummaries
+                    }
+                    onEventSelect={
+                      handleChartEventSelect
+                    }
+                  />
+                </Suspense>
               )}
 
             </div>
