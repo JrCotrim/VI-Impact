@@ -14436,3 +14436,166 @@ a {
     font-size: 0.66rem;
   }
 }
+
+/* =========================================================
+   Event analysis V1.28 — clearer 1 / 5 / 30-session micro charts
+   ========================================================= */
+
+/* The mini charts now distinguish the pre-event trajectory from the
+   post-event window. The horizontal guide represents the close immediately
+   before the event, so the visual direction matches the return shown on the
+   card instead of acting as a decorative baseline. */
+.event-analysis-metric-sparkline {
+  height: 54px;
+  color: #8f9ab2;
+}
+
+.event-analysis-metric-sparkline-area {
+  fill: currentColor;
+  opacity: 0.1;
+}
+
+.event-analysis-metric-sparkline-baseline {
+  stroke: #a4aec2;
+  stroke-width: 0.9;
+  stroke-dasharray: 3 3;
+  opacity: 0.26;
+  vector-effect: non-scaling-stroke;
+}
+
+.event-analysis-metric-sparkline-event {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 2.5 2.5;
+  opacity: 0.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.event-analysis-metric-sparkline-pre,
+.event-analysis-metric-sparkline-post {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.event-analysis-metric-sparkline-pre {
+  stroke: #7f8ba2;
+  stroke-width: 1.45;
+  opacity: 0.7;
+}
+
+.event-analysis-metric-sparkline-post {
+  stroke: currentColor;
+  stroke-width: 2.15;
+}
+
+.event-analysis-metric-sparkline-point {
+  fill: var(--panel-background, #081327);
+  stroke: currentColor;
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+
+.event-analysis-metric-sparkline-end-halo {
+  fill: currentColor;
+  opacity: 0.16;
+}
+
+.event-analysis-metric-sparkline-end {
+  fill: currentColor;
+  stroke: var(--panel-background, #081327);
+  stroke-width: 1.15;
+  vector-effect: non-scaling-stroke;
+}
+
+.event-analysis-metric-sparkline.pending {
+  color: #93a0b7;
+}
+
+.event-analysis-metric-sparkline.pending
+  .event-analysis-metric-sparkline-area {
+  opacity: 0.045;
+}
+
+.event-analysis-metric-sparkline.pending
+  .event-analysis-metric-sparkline-post {
+  stroke-dasharray: 3 2;
+  opacity: 0.82;
+}
+
+.event-analysis-metric-sparkline.pending
+  .event-analysis-metric-sparkline-end-halo {
+  opacity: 0.08;
+}
+
+:root:not([data-theme='night'])
+  .event-analysis-metric-sparkline-pre {
+  stroke: #8793a7;
+}
+
+:root:not([data-theme='night'])
+  .event-analysis-metric-sparkline-baseline {
+  stroke: #64748b;
+  opacity: 0.24;
+}
+
+@media (max-width: 700px) {
+  .event-analysis-metric-sparkline {
+    height: 50px;
+  }
+}
+
+/* Keep the neutral pre-event trace neutral even when older impact-color
+   selectors target every polyline inside the sparkline. */
+.event-analysis-metric-sparkline
+  .event-analysis-metric-sparkline-pre {
+  stroke: #7f8ba2;
+  stroke-width: 1.45;
+  opacity: 0.7;
+}
+
+.event-analysis-metric-sparkline
+  .event-analysis-metric-sparkline-post {
+  stroke: currentColor;
+  stroke-width: 2.15;
+}
+
+.event-analysis-metric-sparkline.impact-positive
+  .event-analysis-metric-sparkline-pre,
+.event-analysis-metric-sparkline.impact-negative
+  .event-analysis-metric-sparkline-pre {
+  stroke: #7f8ba2;
+}
+
+:root:not([data-theme='night'])
+  .event-analysis-metric-sparkline
+  .event-analysis-metric-sparkline-pre {
+  stroke: #8793a7;
+}
+
+/* =========================================================
+   Event analysis V1.29 — semantic value colors in light theme
+   ========================================================= */
+
+/* The generic light-theme metric text rule has more specificity than the
+   impact-positive / impact-negative variants declared earlier. Reassert the
+   semantic colors after the light-theme overrides so gains and losses remain
+   visually encoded in both themes. */
+:root:not([data-theme='night'])
+  .event-analysis-metric-copy
+  strong.impact-positive,
+:root:not([data-theme='night'])
+  .event-analysis-metric-copy
+  small.impact-positive {
+  color: var(--positive);
+}
+
+:root:not([data-theme='night'])
+  .event-analysis-metric-copy
+  strong.impact-negative,
+:root:not([data-theme='night'])
+  .event-analysis-metric-copy
+  small.impact-negative {
+  color: var(--negative);
+}

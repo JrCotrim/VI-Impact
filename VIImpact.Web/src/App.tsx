@@ -1116,10 +1116,14 @@ function createSparklinePoints(
 }
 
 interface AnalysisMetricSparklineData {
-  points: string
+  preEventPoints: string
+  postEventPoints: string
   areaPoints: string
+  baselineY: number
   eventX: number
   eventY: number
+  endX: number
+  endY: number
 }
 
 function createAnalysisMetricSparklineData(
@@ -1222,24 +1226,48 @@ function createAnalysisMetricSparklineData(
   )
 
   const eventPoint = coordinates[eventIndex]
+  const baselinePoint =
+    coordinates[Math.max(0, eventIndex - 1)]
+  const endPoint = coordinates.at(-1) ?? eventPoint
 
-  return {
-    points: coordinates
+  const preEventCoordinates = coordinates.slice(
+    0,
+    eventIndex + 1,
+  )
+  const postEventCoordinates = coordinates.slice(
+    eventIndex,
+  )
+
+  const formatCoordinates = (
+    chartCoordinates: Array<{ x: number; y: number }>,
+  ) =>
+    chartCoordinates
       .map(
         ({ x, y }) =>
           `${x.toFixed(2)},${y.toFixed(2)}`,
       )
-      .join(' '),
+      .join(' ')
+
+  return {
+    preEventPoints: formatCoordinates(
+      preEventCoordinates,
+    ),
+    postEventPoints: formatCoordinates(
+      postEventCoordinates,
+    ),
     areaPoints: [
-      `0,${chartBottom}`,
-      ...coordinates.map(
+      `${eventPoint.x.toFixed(2)},${chartBottom}`,
+      ...postEventCoordinates.map(
         ({ x, y }) =>
           `${x.toFixed(2)},${y.toFixed(2)}`,
       ),
-      `${chartWidth},${chartBottom}`,
+      `${endPoint.x.toFixed(2)},${chartBottom}`,
     ].join(' '),
+    baselineY: baselinePoint.y,
     eventX: eventPoint.x,
     eventY: eventPoint.y,
+    endX: endPoint.x,
+    endY: endPoint.y,
   }
 }
 
@@ -3499,7 +3527,12 @@ function App() {
                                 getImpactValueClassName(
                                   metric.value,
                                 ),
-                              ].join(' ')}
+                                metric.value === null
+                                  ? 'pending'
+                                  : '',
+                              ]
+                                .filter(Boolean)
+                                .join(' ')}
                               viewBox="0 0 128 44"
                               preserveAspectRatio="none"
                               aria-hidden="true"
@@ -3511,9 +3544,9 @@ function App() {
                               <line
                                 className="event-analysis-metric-sparkline-baseline"
                                 x1="0"
-                                y1="38"
+                                y1={sparkline.baselineY}
                                 x2="128"
-                                y2="38"
+                                y2={sparkline.baselineY}
                               />
                               <line
                                 className="event-analysis-metric-sparkline-event"
@@ -3523,7 +3556,14 @@ function App() {
                                 y2="40"
                               />
                               <polyline
-                                points={sparkline.points}
+                                className="event-analysis-metric-sparkline-pre"
+                                points={sparkline.preEventPoints}
+                                fill="none"
+                                vectorEffect="non-scaling-stroke"
+                              />
+                              <polyline
+                                className="event-analysis-metric-sparkline-post"
+                                points={sparkline.postEventPoints}
                                 fill="none"
                                 vectorEffect="non-scaling-stroke"
                               />
@@ -3532,6 +3572,18 @@ function App() {
                                 cx={sparkline.eventX}
                                 cy={sparkline.eventY}
                                 r="2.4"
+                              />
+                              <circle
+                                className="event-analysis-metric-sparkline-end-halo"
+                                cx={sparkline.endX}
+                                cy={sparkline.endY}
+                                r="4.2"
+                              />
+                              <circle
+                                className="event-analysis-metric-sparkline-end"
+                                cx={sparkline.endX}
+                                cy={sparkline.endY}
+                                r="2"
                               />
                             </svg>
                           )}
