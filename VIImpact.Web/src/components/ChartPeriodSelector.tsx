@@ -138,6 +138,47 @@ function getPerformanceClassName(
   return 'chart-period-performance neutral'
 }
 
+function PeriodLoadingSpinner() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      style={{
+        display: 'block',
+        flex: '0 0 12px',
+      }}
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="8"
+        stroke="currentColor"
+        strokeWidth="3"
+        opacity="0.24"
+      />
+      <path
+        d="M12 4a8 8 0 0 1 8 8"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      >
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          from="0 12 12"
+          to="360 12 12"
+          dur="0.72s"
+          repeatCount="indefinite"
+        />
+      </path>
+    </svg>
+  )
+}
+
 export function ChartPeriodSelector({
   selectedPeriod,
   customStartDate,
@@ -223,10 +264,14 @@ export function ChartPeriodSelector({
         <div
           className="chart-period-options"
           aria-label="Período do gráfico"
+          aria-busy={isLoading}
         >
           {periodOptions.map((option) => {
             const isActive =
               selectedPeriod === option.value
+
+            const isUpdating =
+              isLoading && isActive
 
             const changePercent =
               performancesByPeriod.get(
@@ -236,14 +281,17 @@ export function ChartPeriodSelector({
             return (
               <button
                 key={option.value}
-                className={
-                  isActive
-                    ? 'chart-period-button active'
-                    : 'chart-period-button'
-                }
+                className={[
+                  'chart-period-button',
+                  isActive ? 'active' : '',
+                  isUpdating ? 'updating' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 type="button"
                 title={option.description}
                 aria-pressed={isActive}
+                aria-busy={isUpdating}
                 disabled={isLoading}
                 onClick={() =>
                   handlePeriodChange(
@@ -251,8 +299,19 @@ export function ChartPeriodSelector({
                   )
                 }
               >
-                <span className="chart-period-label">
+                <span
+                  className="chart-period-label"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                  }}
+                >
                   {option.label}
+                  {isUpdating && (
+                    <PeriodLoadingSpinner />
+                  )}
                 </span>
 
                 <span
@@ -271,15 +330,26 @@ export function ChartPeriodSelector({
           })}
 
           <button
-            className={
+            className={[
+              'calendar-period-button',
               selectedPeriod === 'CUSTOM'
-                ? 'calendar-period-button active'
-                : 'calendar-period-button'
-            }
+                ? 'active'
+                : '',
+              selectedPeriod === 'CUSTOM' &&
+              isLoading
+                ? 'updating'
+                : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
             type="button"
             title="Selecionar período personalizado"
             aria-label="Selecionar período personalizado"
             aria-expanded={isCalendarOpen}
+            aria-busy={
+              selectedPeriod === 'CUSTOM' &&
+              isLoading
+            }
             disabled={isLoading}
             onClick={handleCalendarToggle}
           >
@@ -290,17 +360,24 @@ export function ChartPeriodSelector({
               <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm12 9H5v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8ZM6 6a1 1 0 0 0-1 1v2h14V7a1 1 0 0 0-1-1H6Z" />
             </svg>
 
-            <span className="calendar-period-text">
+            <span
+              className="calendar-period-text"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '5px',
+              }}
+            >
               Datas
+              {selectedPeriod === 'CUSTOM' &&
+                isLoading && (
+                  <PeriodLoadingSpinner />
+                )}
             </span>
           </button>
         </div>
 
-        {isLoading && (
-          <span className="chart-period-loading">
-            Atualizando gráfico...
-          </span>
-        )}
       </div>
 
       {isCalendarOpen && (

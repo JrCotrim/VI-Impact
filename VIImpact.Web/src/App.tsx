@@ -601,6 +601,60 @@ function getUtcDateKey(
     .slice(0, 10)
 }
 
+
+interface TimelineEventGroup {
+  dateKey: string
+  label: string
+  events: GtaEvent[]
+}
+
+function formatTimelineGroupDate(
+  dateText: string,
+): string {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+    .format(parseUtcDate(dateText))
+    .toLocaleUpperCase('pt-BR')
+}
+
+function groupTimelineEvents(
+  events: GtaEvent[],
+): TimelineEventGroup[] {
+  return events.reduce<TimelineEventGroup[]>(
+    (groups, gtaEvent) => {
+      const dateKey = getUtcDateKey(
+        gtaEvent.occurredAtUtc,
+      )
+
+      const currentGroup =
+        groups[groups.length - 1]
+
+      if (
+        !currentGroup ||
+        currentGroup.dateKey !== dateKey
+      ) {
+        groups.push({
+          dateKey,
+          label: formatTimelineGroupDate(
+            gtaEvent.occurredAtUtc,
+          ),
+          events: [gtaEvent],
+        })
+
+        return groups
+      }
+
+      currentGroup.events.push(gtaEvent)
+      return groups
+    },
+    [],
+  )
+}
+
 function getTradingDateExplanation(
   gtaEvent: GtaEvent,
   impact: GtaEventImpact,
@@ -2089,15 +2143,27 @@ function App() {
       .filter((gtaEvent) =>
         isOccurredGtaEvent(gtaEvent),
       )
-      .sort(
-        (firstEvent, secondEvent) =>
+      .sort((firstEvent, secondEvent) => {
+        const timestampDifference =
           parseUtcDate(
             secondEvent.occurredAtUtc,
           ).getTime() -
           parseUtcDate(
             firstEvent.occurredAtUtc,
-          ).getTime(),
-      )
+          ).getTime()
+
+        if (timestampDifference !== 0) {
+          return timestampDifference
+        }
+
+        return firstEvent.title.localeCompare(
+          secondEvent.title,
+          'pt-BR',
+          {
+            sensitivity: 'base',
+          },
+        )
+      })
 
   const chartDateKeys =
     timeSeries?.values.map((value) =>
@@ -2144,6 +2210,9 @@ function App() {
             )
           },
         )
+
+  const timelineEventGroups =
+    groupTimelineEvents(timelineEvents)
 
   const rankingEntries = impactRanking
     .flatMap((impact) => {
@@ -2793,16 +2862,6 @@ function App() {
                 />
               )}
 
-              {timeSeries &&
-                isChartLoading && (
-                  <div
-                    className="data-refresh-indicator"
-                    role="status"
-                  >
-                    <span className="status-pulse" />
-                    Atualizando período...
-                  </div>
-                )}
             </div>
 
             {timeSeries && chartError && (
@@ -2899,8 +2958,25 @@ function App() {
               onWheel={cancelTimelineReturn}
             >
               {timelineEvents.length > 0 ? (
-                timelineEvents.map(
-                  (gtaEvent) => {
+                timelineEventGroups.map(
+                  (timelineGroup) => (
+                    <section
+                      className="event-date-group"
+                      key={timelineGroup.dateKey}
+                      aria-labelledby={`event-date-${timelineGroup.dateKey}`}
+                    >
+                      <div className="event-date-heading">
+                        <time
+                          id={`event-date-${timelineGroup.dateKey}`}
+                          dateTime={timelineGroup.dateKey}
+                        >
+                          {timelineGroup.label}
+                        </time>
+                      </div>
+
+                      <div className="event-date-items">
+                        {timelineGroup.events.map(
+                          (gtaEvent) => {
                     const eventStyle =
                       getGtaEventPresentation(
                         gtaEvent,
@@ -3000,12 +3076,6 @@ function App() {
                             <h3>
                               {gtaEvent.title}
                             </h3>
-
-                            <p className="event-metadata">
-                              {formatGtaEventDate(
-                                gtaEvent.occurredAtUtc,
-                              )}
-                            </p>
 
                             <span
                               className={`event-badge ${eventStyle.className}`}
@@ -3295,6 +3365,10 @@ function App() {
                       </article>
                     )
                   },
+                )}
+                      </div>
+                    </section>
+                  ),
                 )
               ) : (
                 <article className="empty-event-card">

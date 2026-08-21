@@ -10140,6 +10140,12 @@ a {
     font-size: 0.58rem;
   }
 
+  .update-card .market-closed-value {
+    font-size: clamp(1rem, 4.4vw, 1.12rem);
+    line-height: 1.12;
+    white-space: normal;
+  }
+
   .chart-panel,
   .events-panel,
   .impact-ranking-panel {
@@ -10502,4 +10508,100 @@ a {
   .chart-panel
   .custom-period-panel input[type='date'] {
   color-scheme: dark;
+}
+
+/* =========================================================
+   Timeline polish — chronological date groups
+   ========================================================= */
+
+.events-list {
+  gap: 12px;
+}
+
+.event-date-group {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+}
+
+.event-date-group + .event-date-group {
+  margin-top: 5px;
+}
+
+.event-date-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px;
+}
+
+.event-date-heading::after {
+  height: 1px;
+  min-width: 24px;
+  flex: 1 1 auto;
+  content: '';
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 79, 167, 0.3),
+      rgba(135, 157, 205, 0.08) 62%,
+      transparent
+    );
+}
+
+.event-date-heading time {
+  flex: 0 0 auto;
+  color: #ff79bc;
+  font-size: 0.62rem;
+  font-weight: 850;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.event-date-items {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+:root:not([data-theme='night'])
+  .event-date-heading time {
+  color: #d70072;
+}
+
+:root:not([data-theme='night'])
+  .event-date-heading::after {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(230, 0, 122, 0.24),
+      rgba(49, 81, 111, 0.08) 62%,
+      transparent
+    );
+}
+
+@media (max-width: 700px) {
+  .events-list {
+    gap: 14px;
+  }
+
+  .event-date-group {
+    gap: 6px;
+  }
+
+  .event-date-group + .event-date-group {
+    margin-top: 2px;
+  }
+
+  .event-date-heading {
+    gap: 8px;
+    padding: 0 1px;
+  }
+
+  .event-date-heading time {
+    font-size: 0.58rem;
+    letter-spacing: 0.085em;
+  }
 }
