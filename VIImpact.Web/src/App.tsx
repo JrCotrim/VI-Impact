@@ -1475,14 +1475,75 @@ function ApiErrorNotice({
   )
 }
 
-function getInitialAnalysisEventId(): string | null {
+const EVENT_ANALYSIS_ROUTE_PREFIX = '/events/'
+
+function getInitialAnalysisEventKey(): string | null {
   if (typeof window === 'undefined') {
     return null
   }
 
-  return new URL(
+  const currentUrl = new URL(
     window.location.href,
-  ).searchParams.get('event')
+  )
+  const normalizedPathname =
+    currentUrl.pathname.replace(/\/+$/, '') || '/'
+
+  if (
+    normalizedPathname.startsWith(
+      EVENT_ANALYSIS_ROUTE_PREFIX,
+    )
+  ) {
+    const encodedEventKey =
+      normalizedPathname.slice(
+        EVENT_ANALYSIS_ROUTE_PREFIX.length,
+      )
+
+    if (encodedEventKey) {
+      try {
+        return decodeURIComponent(
+          encodedEventKey,
+        )
+      } catch {
+        return encodedEventKey
+      }
+    }
+  }
+
+  const legacyEventKey =
+    currentUrl.searchParams.get('event')
+
+  return legacyEventKey?.trim() || null
+}
+
+function createEventAnalysisPath(
+  eventKey: string,
+): string {
+  return `${EVENT_ANALYSIS_ROUTE_PREFIX}${encodeURIComponent(eventKey)}`
+}
+
+function getEventAnalysisRouteKey(
+  gtaEvent: GtaEvent,
+): string {
+  const slug = gtaEvent.slug?.trim()
+
+  return slug || gtaEvent.id
+}
+
+function findAnalysisEvent(
+  events: GtaEvent[],
+  eventKey: string | null,
+): GtaEvent | null {
+  if (!eventKey) {
+    return null
+  }
+
+  return (
+    events.find(
+      (gtaEvent) =>
+        gtaEvent.slug === eventKey ||
+        gtaEvent.id === eventKey,
+    ) ?? null
+  )
 }
 
 interface EventPreviewImpactSummary {
@@ -1751,16 +1812,16 @@ function App() {
   ] = useState(0)
 
   const [
-    analysisEventId,
-    setAnalysisEventId,
+    analysisEventKey,
+    setAnalysisEventKey,
   ] = useState<string | null>(
-    getInitialAnalysisEventId,
+    getInitialAnalysisEventKey,
   )
 
   useEffect(() => {
     function syncAnalysisRoute() {
-      setAnalysisEventId(
-        getInitialAnalysisEventId(),
+      setAnalysisEventKey(
+        getInitialAnalysisEventKey(),
       )
     }
 
@@ -1776,6 +1837,58 @@ function App() {
       )
     }
   }, [])
+
+  useEffect(() => {
+    if (!dashboard || !analysisEventKey) {
+      return
+    }
+
+    const analysisEvent = findAnalysisEvent(
+      dashboard.gtaEvents,
+      analysisEventKey,
+    )
+
+    if (!analysisEvent) {
+      return
+    }
+
+    const currentUrl = new URL(
+      window.location.href,
+    )
+    const canonicalEventKey =
+      getEventAnalysisRouteKey(analysisEvent)
+    const canonicalPath =
+      createEventAnalysisPath(
+        canonicalEventKey,
+      )
+    const normalizedCurrentPath =
+      currentUrl.pathname.replace(/\/+$/, '') || '/'
+
+    if (
+      normalizedCurrentPath === canonicalPath &&
+      !currentUrl.searchParams.has('event') &&
+      analysisEventKey === canonicalEventKey
+    ) {
+      return
+    }
+
+    currentUrl.pathname = canonicalPath
+    currentUrl.searchParams.delete('event')
+
+    window.history.replaceState(
+      {
+        eventSlug: canonicalEventKey,
+      },
+      '',
+      `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`,
+    )
+
+    if (analysisEventKey !== canonicalEventKey) {
+      setAnalysisEventKey(
+        canonicalEventKey,
+      )
+    }
+  }, [analysisEventKey, dashboard])
 
   useEffect(() => {
     document.documentElement.dataset.theme =
@@ -1837,15 +1950,14 @@ function App() {
   }, [dashboard, timeSeries])
 
   useEffect(() => {
-    if (!dashboard || !analysisEventId) {
+    if (!dashboard || !analysisEventKey) {
       return
     }
 
-    const analysisEvent =
-      dashboard.gtaEvents.find(
-        (gtaEvent) =>
-          gtaEvent.id === analysisEventId,
-      )
+    const analysisEvent = findAnalysisEvent(
+      dashboard.gtaEvents,
+      analysisEventKey,
+    )
 
     if (!analysisEvent) {
       return
@@ -1884,7 +1996,7 @@ function App() {
       setSelectedPeriod('CUSTOM')
     }
   }, [
-    analysisEventId,
+    analysisEventKey,
     appliedCustomEndDate,
     appliedCustomStartDate,
     dashboard,
@@ -1892,15 +2004,14 @@ function App() {
   ])
 
   useEffect(() => {
-    if (!dashboard || !analysisEventId) {
+    if (!dashboard || !analysisEventKey) {
       return
     }
 
-    const analysisEvent =
-      dashboard.gtaEvents.find(
-        (gtaEvent) =>
-          gtaEvent.id === analysisEventId,
-      )
+    const analysisEvent = findAnalysisEvent(
+      dashboard.gtaEvents,
+      analysisEventKey,
+    )
 
     if (
       !analysisEvent ||
@@ -2004,7 +2115,7 @@ function App() {
       isActive = false
     }
   }, [
-    analysisEventId,
+    analysisEventKey,
     dashboard,
     eventImpacts,
   ])
@@ -2572,21 +2683,23 @@ function App() {
     const nextUrl = new URL(
       window.location.href,
     )
+    const eventRouteKey =
+      getEventAnalysisRouteKey(gtaEvent)
 
-    nextUrl.searchParams.set(
-      'event',
-      gtaEvent.id,
+    nextUrl.pathname = createEventAnalysisPath(
+      eventRouteKey,
     )
+    nextUrl.searchParams.delete('event')
 
     window.history.pushState(
       {
-        eventId: gtaEvent.id,
+        eventSlug: eventRouteKey,
       },
       '',
       `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
     )
 
-    setAnalysisEventId(gtaEvent.id)
+    setAnalysisEventKey(eventRouteKey)
     setExpandedEventId(null)
     setSelectedEventId(gtaEvent.id)
 
@@ -2597,10 +2710,18 @@ function App() {
   }
 
   function closeEventAnalysis() {
+    const returningEvent =
+      dashboard
+        ? findAnalysisEvent(
+            dashboard.gtaEvents,
+            analysisEventKey,
+          )
+        : null
     const nextUrl = new URL(
       window.location.href,
     )
 
+    nextUrl.pathname = '/'
     nextUrl.searchParams.delete('event')
 
     window.history.pushState(
@@ -2610,15 +2731,9 @@ function App() {
     )
 
     const returningEventId =
-      analysisEventId &&
-      dashboard?.gtaEvents.some(
-        (gtaEvent) =>
-          gtaEvent.id === analysisEventId,
-      )
-        ? analysisEventId
-        : null
+      returningEvent?.id ?? null
 
-    setAnalysisEventId(null)
+    setAnalysisEventKey(null)
     setSelectedEventId(returningEventId)
     setExpandedEventId(returningEventId)
 
@@ -2901,15 +3016,12 @@ function App() {
         return summaries
       }, {})
 
-  const analysisEvent =
-    analysisEventId
-      ? dashboard.gtaEvents.find(
-          (gtaEvent) =>
-            gtaEvent.id === analysisEventId,
-        ) ?? null
-      : null
+  const analysisEvent = findAnalysisEvent(
+    dashboard.gtaEvents,
+    analysisEventKey,
+  )
 
-  if (analysisEventId && !analysisEvent) {
+  if (analysisEventKey && !analysisEvent) {
     return (
       <div className="app-shell event-analysis-shell">
         {renderTopbar(closeEventAnalysis)}
