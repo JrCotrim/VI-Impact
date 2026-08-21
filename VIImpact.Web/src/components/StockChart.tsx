@@ -34,6 +34,11 @@ import {
   type RichGtaEvent,
 } from '../utils/gtaEventPresentation'
 
+interface StockChartEventImpactSummary {
+  value: number
+  label: string
+}
+
 interface StockChartProps {
   values: StockTimeSeriesPoint[]
   benchmarkValues?: StockTimeSeriesPoint[]
@@ -41,6 +46,10 @@ interface StockChartProps {
   benchmarkSymbol?: string
   events: GtaEvent[]
   selectedEventId: string | null
+  eventImpactSummaries?: Record<
+    string,
+    StockChartEventImpactSummary
+  >
   onEventSelect: (gtaEvent: GtaEvent) => void
 }
 
@@ -734,6 +743,26 @@ function formatCurrency(value: number): string {
       maximumFractionDigits: 2,
     },
   )}`
+}
+
+function formatSignedPercent(
+  value: number,
+): string {
+  const formattedValue = Math.abs(value)
+    .toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+
+  if (value > 0) {
+    return `+${formattedValue}%`
+  }
+
+  if (value < 0) {
+    return `-${formattedValue}%`
+  }
+
+  return `${formattedValue}%`
 }
 
 function shortenDescription(
@@ -1781,8 +1810,10 @@ function EventIconGlyph({
 
 function EventTooltipCard({
   tooltip,
+  impactSummary,
 }: {
   tooltip: EventTooltipState
+  impactSummary?: StockChartEventImpactSummary
 }) {
   const { marker } = tooltip
   const priorityLabel =
@@ -1791,7 +1822,9 @@ function EventTooltipCard({
     getGtaEventSourceLabel(marker.event)
 
   const popupWidth = 318
-  const popupHeight = 236
+  const popupHeight = impactSummary
+    ? 282
+    : 236
   const popupGap = 18
   const viewportPadding = 12
   const viewportWidth =
@@ -1893,6 +1926,33 @@ function EventTooltipCard({
           )}
         </strong>
       </div>
+
+      {impactSummary && (
+        <div
+          className={[
+            'event-marker-tooltip-impact',
+            impactSummary.value > 0
+              ? 'positive'
+              : impactSummary.value < 0
+                ? 'negative'
+                : 'neutral',
+          ].join(' ')}
+        >
+          <span>
+            Reação observada · {impactSummary.label}
+          </span>
+          <strong>
+            {impactSummary.value > 0
+              ? 'Positiva '
+              : impactSummary.value < 0
+                ? 'Negativa '
+                : 'Neutra '}
+            {formatSignedPercent(
+              impactSummary.value,
+            )}
+          </strong>
+        </div>
+      )}
 
       <p className="event-marker-tooltip-description">
         {shortenDescription(
@@ -2106,6 +2166,7 @@ export function StockChart({
   benchmarkSymbol = 'QQQ',
   events,
   selectedEventId,
+  eventImpactSummaries = {},
   onEventSelect,
 }: StockChartProps) {
   const chartContainerRef =
@@ -3385,6 +3446,11 @@ export function StockChart({
       {activeEventTooltip && (
         <EventTooltipCard
           tooltip={activeEventTooltip}
+          impactSummary={
+            eventImpactSummaries[
+              activeEventTooltip.marker.event.id
+            ]
+          }
         />
       )}
     </div>

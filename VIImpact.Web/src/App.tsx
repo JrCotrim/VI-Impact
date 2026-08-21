@@ -7,6 +7,7 @@ import './App.css'
 import { ChartPeriodSelector } from './components/ChartPeriodSelector'
 import { StockChart } from './components/StockChart'
 import { EventIcon } from './components/EventIcon'
+import { getGtaEventAnalysisDescription } from './utils/gtaEventAnalysisContent'
 import { getDashboardData } from './services/dashboardService'
 import {
   getGtaEventImpact,
@@ -703,6 +704,95 @@ function getTradingDateExplanation(
   )
 }
 
+function getAnalysisMarketHighlights(
+  impact: GtaEventImpact | undefined,
+  isLoading: boolean,
+  hasError: boolean,
+): string[] {
+  if (hasError) {
+    return [
+      'A leitura quantitativa está temporariamente indisponível. Os indicadores podem ser recarregados sem perder o contexto do evento.',
+    ]
+  }
+
+  if (isLoading && !impact) {
+    return [
+      'Os indicadores de mercado deste evento ainda estão sendo calculados.',
+    ]
+  }
+
+  if (!impact) {
+    return [
+      'Ainda não há uma leitura de mercado disponível para este evento.',
+    ]
+  }
+
+  if (!impact.isAvailable) {
+    return [
+      impact.unavailableReason ??
+        'Ainda não existem dados históricos suficientes para construir uma leitura de mercado confiável para este evento.',
+    ]
+  }
+
+  const highlights: string[] = []
+
+  if (impact.day1ReturnPercent !== null) {
+    highlights.push(
+      `Após 1 pregão, a TTWO registrou ${formatSignedPercent(
+        impact.day1ReturnPercent,
+      )}.`,
+    )
+  }
+
+  if (impact.day5ReturnPercent !== null) {
+    highlights.push(
+      `Em 5 pregões, o movimento acumulado chegou a ${formatSignedPercent(
+        impact.day5ReturnPercent,
+      )}.`,
+    )
+  } else if (impact.sameDayReturnPercent !== null) {
+    highlights.push(
+      `No mesmo pregão, a variação observada foi ${formatSignedPercent(
+        impact.sameDayReturnPercent,
+      )}.`,
+    )
+  }
+
+  if (impact.day30ReturnPercent !== null) {
+    highlights.push(
+      `Em 30 pregões, a variação observada foi ${formatSignedPercent(
+        impact.day30ReturnPercent,
+      )}.`,
+    )
+  }
+
+  if (impact.volumeChangePercent !== null) {
+    const direction =
+      impact.volumeChangePercent >= 0
+        ? 'acima'
+        : 'abaixo'
+
+    const absoluteVolumeChange =
+      Math.abs(impact.volumeChangePercent)
+        .toLocaleString('pt-BR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+
+    highlights.push(
+      `O volume negociado ficou ${absoluteVolumeChange}% ${direction} da média usada na análise.`,
+    )
+  }
+
+  if (highlights.length === 0) {
+    return [
+      'Os dados do pregão já foram identificados, mas os percentuais de reação ainda não estão disponíveis.',
+    ]
+  }
+
+  return highlights.slice(0, 4)
+}
+
 function toDateInputValue(
   date: Date,
 ): string {
@@ -859,6 +949,134 @@ function createSparklinePoints(
       return `${x.toFixed(2)},${y.toFixed(2)}`
     })
     .join(' ')
+}
+
+interface AnalysisMetricSparklineData {
+  points: string
+  areaPoints: string
+  eventX: number
+  eventY: number
+}
+
+function createAnalysisMetricSparklineData(
+  timeSeries: StockTimeSeries | null,
+  analysisDateText: string,
+  horizon: number,
+): AnalysisMetricSparklineData | null {
+  if (!timeSeries || timeSeries.values.length < 2) {
+    return null
+  }
+
+  const values = [...timeSeries.values].sort(
+    (firstValue, secondValue) =>
+      parseUtcDate(
+        firstValue.dateTimeUtc,
+      ).getTime() -
+      parseUtcDate(
+        secondValue.dateTimeUtc,
+      ).getTime(),
+  )
+
+  const analysisTimestamp = parseUtcDate(
+    analysisDateText,
+  ).getTime()
+
+  const firstAnalysisIndex = values.findIndex(
+    (value) =>
+      parseUtcDate(
+        value.dateTimeUtc,
+      ).getTime() >= analysisTimestamp,
+  )
+
+  if (firstAnalysisIndex < 0) {
+    return null
+  }
+
+  // Keep a few sessions before the event in every miniature chart.
+  // The card still reports its own 1/5/30-session return, while the
+  // sparkline gives enough pre-event context to show the trajectory.
+  const sessionsBeforeEvent = 6
+  const startIndex = Math.max(
+    0,
+    firstAnalysisIndex - sessionsBeforeEvent,
+  )
+
+  const endIndex = Math.min(
+    values.length,
+    firstAnalysisIndex + horizon + 1,
+  )
+
+  const chartValues = values
+    .slice(startIndex, endIndex)
+    .filter((value) =>
+      Number.isFinite(value.close),
+    )
+
+  if (chartValues.length < 2) {
+    return null
+  }
+
+  const prices = chartValues.map(
+    (value) => value.close,
+  )
+
+  const minimumPrice = Math.min(...prices)
+  const maximumPrice = Math.max(...prices)
+  const priceRange =
+    maximumPrice - minimumPrice || 1
+
+  const chartWidth = 128
+  const chartTop = 4
+  const chartBottom = 38
+  const chartHeight = chartBottom - chartTop
+
+  const coordinates = prices.map(
+    (price, index) => {
+      const x =
+        (index / (prices.length - 1)) *
+        chartWidth
+
+      const y =
+        chartBottom -
+        ((price - minimumPrice) /
+          priceRange) *
+          chartHeight
+
+      return {
+        x,
+        y,
+      }
+    },
+  )
+
+  const eventIndex = Math.max(
+    0,
+    Math.min(
+      coordinates.length - 1,
+      firstAnalysisIndex - startIndex,
+    ),
+  )
+
+  const eventPoint = coordinates[eventIndex]
+
+  return {
+    points: coordinates
+      .map(
+        ({ x, y }) =>
+          `${x.toFixed(2)},${y.toFixed(2)}`,
+      )
+      .join(' '),
+    areaPoints: [
+      `0,${chartBottom}`,
+      ...coordinates.map(
+        ({ x, y }) =>
+          `${x.toFixed(2)},${y.toFixed(2)}`,
+      ),
+      `${chartWidth},${chartBottom}`,
+    ].join(' '),
+    eventX: eventPoint.x,
+    eventY: eventPoint.y,
+  }
 }
 
 interface VolumeVisualization {
@@ -1239,6 +1457,127 @@ function ApiErrorNotice({
   )
 }
 
+function getInitialAnalysisEventId(): string | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  return new URL(
+    window.location.href,
+  ).searchParams.get('event')
+}
+
+function createEventPreview(
+  description: string,
+  maximumLength = 190,
+): string {
+  const normalizedDescription =
+    description.trim().replace(/\s+/g, ' ')
+
+  if (
+    normalizedDescription.length <=
+    maximumLength
+  ) {
+    return normalizedDescription
+  }
+
+  const truncatedDescription =
+    normalizedDescription.slice(
+      0,
+      maximumLength + 1,
+    )
+
+  const lastSpaceIndex =
+    truncatedDescription.lastIndexOf(' ')
+
+  return `${truncatedDescription
+    .slice(
+      0,
+      lastSpaceIndex > maximumLength * 0.65
+        ? lastSpaceIndex
+        : maximumLength,
+    )
+    .trimEnd()}…`
+}
+
+interface EventPreviewImpactSummary {
+  label: string
+  value: number
+}
+
+function getEventPreviewImpactSummary(
+  impact: GtaEventImpact | undefined,
+): EventPreviewImpactSummary | null {
+  if (!impact?.isAvailable) {
+    return null
+  }
+
+  const candidates = [
+    {
+      label: 'Após 1 pregão',
+      value: impact.day1ReturnPercent,
+    },
+    {
+      label: 'No mesmo pregão',
+      value: impact.sameDayReturnPercent,
+    },
+    {
+      label: 'Após 5 pregões',
+      value: impact.day5ReturnPercent,
+    },
+    {
+      label: 'Após 30 pregões',
+      value: impact.day30ReturnPercent,
+    },
+  ]
+
+  const availableCandidate =
+    candidates.find(
+      (candidate) =>
+        typeof candidate.value === 'number',
+    )
+
+  if (
+    !availableCandidate ||
+    typeof availableCandidate.value !== 'number'
+  ) {
+    return null
+  }
+
+  return {
+    label: availableCandidate.label,
+    value: availableCandidate.value,
+  }
+}
+
+function getEventPreviewImpactTone(
+  value: number,
+): 'positive' | 'negative' | 'neutral' {
+  if (value > 0) {
+    return 'positive'
+  }
+
+  if (value < 0) {
+    return 'negative'
+  }
+
+  return 'neutral'
+}
+
+function getEventPreviewImpactLabel(
+  value: number,
+): string {
+  if (value > 0) {
+    return 'Reação positiva'
+  }
+
+  if (value < 0) {
+    return 'Reação negativa'
+  }
+
+  return 'Reação neutra'
+}
+
 function App() {
   const [dashboard, setDashboard] =
     useState<DashboardData | null>(null)
@@ -1426,6 +1765,33 @@ function App() {
     setTimelineScrollRequest,
   ] = useState(0)
 
+  const [
+    analysisEventId,
+    setAnalysisEventId,
+  ] = useState<string | null>(
+    getInitialAnalysisEventId,
+  )
+
+  useEffect(() => {
+    function syncAnalysisRoute() {
+      setAnalysisEventId(
+        getInitialAnalysisEventId(),
+      )
+    }
+
+    window.addEventListener(
+      'popstate',
+      syncAnalysisRoute,
+    )
+
+    return () => {
+      window.removeEventListener(
+        'popstate',
+        syncAnalysisRoute,
+      )
+    }
+  }, [])
+
   useEffect(() => {
     document.documentElement.dataset.theme =
       theme
@@ -1484,6 +1850,179 @@ function App() {
       )
     }
   }, [dashboard, timeSeries])
+
+  useEffect(() => {
+    if (!dashboard || !analysisEventId) {
+      return
+    }
+
+    const analysisEvent =
+      dashboard.gtaEvents.find(
+        (gtaEvent) =>
+          gtaEvent.id === analysisEventId,
+      )
+
+    if (!analysisEvent) {
+      return
+    }
+
+    const focusRange =
+      createEventFocusRange(
+        analysisEvent.occurredAtUtc,
+      )
+
+    const requiresReload =
+      selectedPeriod !== 'CUSTOM' ||
+      focusRange.startDate !==
+        appliedCustomStartDate ||
+      focusRange.endDate !==
+        appliedCustomEndDate
+
+    setSelectedEventId(analysisEvent.id)
+    setExpandedEventId(null)
+    setCustomStartDate(
+      focusRange.startDate,
+    )
+    setCustomEndDate(
+      focusRange.endDate,
+    )
+
+    if (requiresReload) {
+      setIsChartLoading(true)
+      setChartError(null)
+      setAppliedCustomStartDate(
+        focusRange.startDate,
+      )
+      setAppliedCustomEndDate(
+        focusRange.endDate,
+      )
+      setSelectedPeriod('CUSTOM')
+    }
+  }, [
+    analysisEventId,
+    appliedCustomEndDate,
+    appliedCustomStartDate,
+    dashboard,
+    selectedPeriod,
+  ])
+
+  useEffect(() => {
+    if (!dashboard || !analysisEventId) {
+      return
+    }
+
+    const analysisEvent =
+      dashboard.gtaEvents.find(
+        (gtaEvent) =>
+          gtaEvent.id === analysisEventId,
+      )
+
+    if (
+      !analysisEvent ||
+      analysisEvent.isImpactAnalysisEligible ===
+        false ||
+      eventImpacts[analysisEvent.id] ||
+      eventImpactRequestsRef.current.has(
+        analysisEvent.id,
+      )
+    ) {
+      return
+    }
+
+    const analysisEventIdForRequest =
+      analysisEvent.id
+
+    const analysisSymbol =
+      dashboard.symbol ?? 'TTWO'
+
+    let isActive = true
+
+    eventImpactRequestsRef.current.add(
+      analysisEventIdForRequest,
+    )
+
+    setLoadingEventImpactIds(
+      (currentIds) => {
+        const nextIds = new Set(currentIds)
+        nextIds.add(analysisEventIdForRequest)
+        return nextIds
+      },
+    )
+
+    setEventImpactErrors(
+      (currentErrors) => {
+        const nextErrors = {
+          ...currentErrors,
+        }
+
+        delete nextErrors[analysisEventIdForRequest]
+        return nextErrors
+      },
+    )
+
+    async function loadAnalysisImpact() {
+      try {
+        const impact =
+          await getGtaEventImpact(
+            analysisEventIdForRequest,
+            analysisSymbol,
+          )
+
+        if (!isActive) {
+          return
+        }
+
+        setEventImpacts(
+          (currentImpacts) => ({
+            ...currentImpacts,
+            [analysisEventIdForRequest]: impact,
+          }),
+        )
+      } catch (error) {
+        if (!isActive) {
+          return
+        }
+
+        setEventImpactErrors(
+          (currentErrors) => ({
+            ...currentErrors,
+            [analysisEventIdForRequest]:
+              toApiRequestError(
+                error,
+                'Não foi possível calcular o movimento observado.',
+              ),
+          }),
+        )
+      } finally {
+        eventImpactRequestsRef.current.delete(
+          analysisEventIdForRequest,
+        )
+
+        if (isActive) {
+          setLoadingEventImpactIds(
+            (currentIds) => {
+              const nextIds =
+                new Set(currentIds)
+              nextIds.delete(
+                analysisEventIdForRequest,
+              )
+              return nextIds
+            },
+          )
+        }
+      }
+    }
+
+    void loadAnalysisImpact()
+
+    return () => {
+      isActive = false
+    }
+  }, [
+    analysisEventId,
+    dashboard,
+    eventImpacts,
+  ])
 
   useEffect(() => {
     if (!expandedEventId) {
@@ -2015,7 +2554,6 @@ function App() {
       (currentRequest) =>
         currentRequest + 1,
     )
-    void loadEventImpact(gtaEvent)
     focusEventOnChart(gtaEvent)
     scheduleTimelineReturnToLatest()
   }
@@ -2039,6 +2577,167 @@ function App() {
     }
 
     focusEventOnChart(gtaEvent)
+  }
+
+  function openEventAnalysis(
+    gtaEvent: GtaEvent,
+  ) {
+    cancelTimelineReturn()
+
+    const nextUrl = new URL(
+      window.location.href,
+    )
+
+    nextUrl.searchParams.set(
+      'event',
+      gtaEvent.id,
+    )
+
+    window.history.pushState(
+      {
+        eventId: gtaEvent.id,
+      },
+      '',
+      `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+    )
+
+    setAnalysisEventId(gtaEvent.id)
+    setExpandedEventId(null)
+    setSelectedEventId(gtaEvent.id)
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
+  }
+
+  function closeEventAnalysis() {
+    const nextUrl = new URL(
+      window.location.href,
+    )
+
+    nextUrl.searchParams.delete('event')
+
+    window.history.pushState(
+      {},
+      '',
+      `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+    )
+
+    const returningEventId =
+      analysisEventId &&
+      dashboard?.gtaEvents.some(
+        (gtaEvent) =>
+          gtaEvent.id === analysisEventId,
+      )
+        ? analysisEventId
+        : null
+
+    setAnalysisEventId(null)
+    setSelectedEventId(returningEventId)
+    setExpandedEventId(returningEventId)
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
+  }
+
+  function renderThemeToggle(
+    actionsClassName?: string,
+  ) {
+    return (
+      <div
+        className={[
+          'topbar-actions',
+          actionsClassName ?? '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        <button
+          className={`theme-toggle ${theme}`}
+          type="button"
+          onClick={toggleTheme}
+          aria-label={
+            theme === 'night'
+              ? 'Ativar tema Dia'
+              : 'Ativar tema Noite'
+          }
+          aria-pressed={
+            theme === 'night'
+          }
+        >
+          <span
+            className="theme-toggle-status-icon"
+            aria-hidden="true"
+          >
+            {theme === 'night' ? (
+              <svg viewBox="0 0 24 24">
+                <path d="M20.4 15.5A8.4 8.4 0 0 1 8.5 3.6a8.5 8.5 0 1 0 11.9 11.9Z" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
+              </svg>
+            )}
+          </span>
+
+          <span className="theme-toggle-copy">
+            <span className="theme-toggle-title">
+              {theme === 'night'
+                ? 'Noite'
+                : 'Dia'}
+            </span>
+            <span className="theme-toggle-subtitle">
+              Tema
+            </span>
+          </span>
+
+          <span
+            className="theme-toggle-track"
+            aria-hidden="true"
+          >
+            <span className="theme-toggle-thumb" />
+          </span>
+        </button>
+      </div>
+    )
+  }
+
+  function renderTopbar(
+    onBrandActivate?: () => void,
+  ) {
+    return (
+      <header className="topbar">
+        <a
+          className="brand-link"
+          href="#dashboard"
+          aria-label={
+            onBrandActivate
+              ? 'Voltar ao dashboard'
+              : 'Ir para o dashboard'
+          }
+          onClick={
+            onBrandActivate
+              ? (event) => {
+                  event.preventDefault()
+                  onBrandActivate()
+                }
+              : undefined
+          }
+        >
+          <img
+            className="brand-logo"
+            src="/vi-impact-logo.png"
+            alt="VI Impact"
+          />
+        </a>
+
+        {renderThemeToggle()}
+      </header>
+    )
   }
 
   if (
@@ -2198,6 +2897,748 @@ function App() {
           },
         )
       })
+
+  const chartEventImpactSummaries =
+    [...impactRanking, ...Object.values(eventImpacts)]
+      .reduce<
+        Record<
+          string,
+          EventPreviewImpactSummary
+        >
+      >((summaries, impact) => {
+        const summary =
+          getEventPreviewImpactSummary(impact)
+
+        if (summary) {
+          summaries[impact.eventId] = summary
+        }
+
+        return summaries
+      }, {})
+
+  const analysisEvent =
+    analysisEventId
+      ? dashboard.gtaEvents.find(
+          (gtaEvent) =>
+            gtaEvent.id === analysisEventId,
+        ) ?? null
+      : null
+
+  if (analysisEventId && !analysisEvent) {
+    return (
+      <div className="app-shell event-analysis-shell">
+        {renderTopbar(closeEventAnalysis)}
+
+        <main className="event-analysis-page">
+          <section className="event-analysis-not-found">
+            <span>Evento não encontrado</span>
+            <h1>
+              Esta análise não está disponível.
+            </h1>
+            <p>
+              O link pode estar desatualizado ou o evento pode ter sido removido do catálogo.
+            </p>
+            <button
+              type="button"
+              onClick={closeEventAnalysis}
+            >
+              Voltar ao dashboard
+            </button>
+          </section>
+        </main>
+      </div>
+    )
+  }
+
+  if (analysisEvent) {
+    const eventStyle =
+      getGtaEventPresentation(
+        analysisEvent,
+      )
+
+    const categoryLabel =
+      getGtaEventCategoryLabel(
+        analysisEvent,
+      ) ?? 'Não classificada'
+
+    const priorityLabel =
+      getGtaEventPriorityLabel(
+        analysisEvent,
+      ) ?? 'Não classificada'
+
+    const confirmationLabel =
+      getGtaEventConfirmationLabel(
+        analysisEvent,
+      )
+
+    const sourceLabel =
+      getGtaEventSourceLabel(
+        analysisEvent,
+      )
+
+    const analysisImpact =
+      eventImpacts[analysisEvent.id]
+
+    const isAnalysisImpactLoading =
+      loadingEventImpactIds.has(
+        analysisEvent.id,
+      )
+
+    const analysisImpactError =
+      eventImpactErrors[analysisEvent.id]
+
+    const tradingDateExplanation =
+      analysisImpact
+        ? getTradingDateExplanation(
+            analysisEvent,
+            analysisImpact,
+          )
+        : null
+
+    const analysisExchange =
+      analysisImpact?.exchange ??
+      timeSeries?.exchange ??
+      'NASDAQ'
+
+    const analysisMarketHighlights =
+      getAnalysisMarketHighlights(
+        analysisImpact,
+        isAnalysisImpactLoading,
+        Boolean(analysisImpactError),
+      )
+
+    const analysisMetricCards = [
+      {
+        label: '1 pregão',
+        horizon: 1,
+        value:
+          analysisImpact?.day1ReturnPercent ??
+          null,
+        detail:
+          analysisImpact?.sameDayReturnPercent !== null &&
+          analysisImpact?.sameDayReturnPercent !== undefined
+            ? `No mesmo pregão ${formatSignedPercent(
+                analysisImpact.sameDayReturnPercent,
+              )}`
+            : 'movimento observado após o evento',
+        detailValue:
+          analysisImpact?.sameDayReturnPercent ??
+          null,
+      },
+      {
+        label: '5 pregões',
+        horizon: 5,
+        value:
+          analysisImpact?.day5ReturnPercent ??
+          null,
+        detail:
+          analysisImpact?.day1ReturnPercent !== null &&
+          analysisImpact?.day1ReturnPercent !== undefined
+            ? `1 pregão ${formatSignedPercent(
+                analysisImpact.day1ReturnPercent,
+              )}`
+            : 'movimento observado após o evento',
+        detailValue:
+          analysisImpact?.day1ReturnPercent ??
+          null,
+      },
+      {
+        label: '30 pregões',
+        horizon: 30,
+        value:
+          analysisImpact?.day30ReturnPercent ??
+          null,
+        detail:
+          analysisImpact?.day5ReturnPercent !== null &&
+          analysisImpact?.day5ReturnPercent !== undefined
+            ? `5 pregões ${formatSignedPercent(
+                analysisImpact.day5ReturnPercent,
+              )}`
+            : 'movimento observado após o evento',
+        detailValue:
+          analysisImpact?.day5ReturnPercent ??
+          null,
+      },
+    ]
+
+    const priorityVisualLevel =
+      priorityLabel
+        .toLocaleLowerCase('pt-BR')
+        .includes('alta')
+        ? 3
+        : priorityLabel
+              .toLocaleLowerCase('pt-BR')
+              .includes('média')
+          ? 2
+          : 1
+
+    const analysisSparklineDate =
+      analysisImpact?.effectiveTradingDate ??
+      analysisEvent.occurredAtUtc
+
+    const priorityNeedleEnd =
+      priorityVisualLevel === 3
+        ? { x: 79, y: 35 }
+        : priorityVisualLevel === 2
+          ? { x: 50, y: 18 }
+          : { x: 21, y: 35 }
+
+    return (
+      <div className="app-shell event-analysis-shell">
+        <main className="event-analysis-page">
+          <section className="event-analysis-hero">
+            <div className="event-analysis-hero-overlay" />
+
+            <div className="event-analysis-hero-chrome">
+              <button
+                className="event-analysis-brand-button"
+                type="button"
+                onClick={closeEventAnalysis}
+                aria-label="Voltar ao dashboard"
+              >
+                <img
+                  src="/vi-impact-logo.png"
+                  alt="VI Impact"
+                />
+              </button>
+
+              {renderThemeToggle(
+                'event-analysis-theme-actions',
+              )}
+            </div>
+
+            <div className="event-analysis-hero-content">
+              <button
+                className="event-analysis-back"
+                type="button"
+                onClick={closeEventAnalysis}
+              >
+                <span
+                  className="event-analysis-back-icon"
+                  aria-hidden="true"
+                >
+                  ←
+                </span>
+                <span>Voltar ao dashboard</span>
+              </button>
+
+              <h1>{analysisEvent.title}</h1>
+
+              <div className="event-analysis-meta">
+                <time
+                  dateTime={
+                    analysisEvent.occurredAtUtc
+                  }
+                >
+                  {formatGtaEventDate(
+                    analysisEvent.occurredAtUtc,
+                  )}
+                </time>
+                <span aria-hidden="true">•</span>
+                <span>{sourceLabel}</span>
+              </div>
+            </div>
+          </section>
+
+          <section
+            className="event-analysis-impact-overview"
+            aria-labelledby="event-analysis-impact-heading"
+          >
+            <h2
+              id="event-analysis-impact-heading"
+              className="event-analysis-visually-hidden"
+            >
+              Impacto observado no preço da TTWO
+            </h2>
+
+            {analysisEvent.isImpactAnalysisEligible ===
+            false ? (
+              <div className="event-analysis-state-card">
+                Este evento não está elegível para análise de impacto.
+              </div>
+            ) : analysisImpactError ? (
+              <ApiErrorNotice
+                error={analysisImpactError}
+                onRetry={() =>
+                  void loadEventImpact(
+                    analysisEvent,
+                  )
+                }
+                className="event-analysis-error"
+              />
+            ) : analysisImpact &&
+              !analysisImpact.isAvailable ? (
+              <div className="event-analysis-state-card">
+                {analysisImpact.unavailableReason ??
+                  'Não existem dados históricos suficientes para este evento.'}
+              </div>
+            ) : (
+              <div className="event-analysis-metric-grid">
+                {analysisMetricCards.map(
+                  (metric) => {
+                    const sparkline =
+                      createAnalysisMetricSparklineData(
+                        timeSeries,
+                        analysisSparklineDate,
+                        metric.horizon,
+                      )
+
+                    return (
+                      <article
+                        className="event-analysis-metric-card"
+                        key={metric.label}
+                      >
+                        <div className="event-analysis-metric-card-header">
+                          <span>{metric.label}</span>
+                          <span
+                            className="event-analysis-metric-icon"
+                            aria-hidden="true"
+                          >
+                            <svg viewBox="0 0 24 24">
+                              <rect
+                                x="4"
+                                y="5.5"
+                                width="16"
+                                height="14"
+                                rx="3"
+                              />
+                              <path d="M8 3.5v4M16 3.5v4M4 9.5h16" />
+                            </svg>
+                          </span>
+                        </div>
+
+                        <div className="event-analysis-metric-card-body">
+                          <div className="event-analysis-metric-copy">
+                            <strong
+                              className={getImpactValueClassName(
+                                metric.value,
+                              )}
+                            >
+                              {isAnalysisImpactLoading &&
+                              !analysisImpact
+                                ? 'Calculando…'
+                                : formatImpactPercent(
+                                    metric.value,
+                                  )}
+                            </strong>
+                            <small
+                              className={
+                                metric.detailValue === null
+                                  ? undefined
+                                  : getImpactValueClassName(
+                                      metric.detailValue,
+                                    )
+                              }
+                            >
+                              {metric.detail}
+                            </small>
+                          </div>
+
+                          {sparkline && (
+                            <svg
+                              className={[
+                                'event-analysis-metric-sparkline',
+                                getImpactValueClassName(
+                                  metric.value,
+                                ),
+                              ].join(' ')}
+                              viewBox="0 0 128 44"
+                              preserveAspectRatio="none"
+                              aria-hidden="true"
+                            >
+                              <polygon
+                                className="event-analysis-metric-sparkline-area"
+                                points={sparkline.areaPoints}
+                              />
+                              <line
+                                className="event-analysis-metric-sparkline-baseline"
+                                x1="0"
+                                y1="38"
+                                x2="128"
+                                y2="38"
+                              />
+                              <line
+                                className="event-analysis-metric-sparkline-event"
+                                x1={sparkline.eventX}
+                                y1="3"
+                                x2={sparkline.eventX}
+                                y2="40"
+                              />
+                              <polyline
+                                points={sparkline.points}
+                                fill="none"
+                                vectorEffect="non-scaling-stroke"
+                              />
+                              <circle
+                                className="event-analysis-metric-sparkline-point"
+                                cx={sparkline.eventX}
+                                cy={sparkline.eventY}
+                                r="2.4"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      </article>
+                    )
+                  },
+                )}
+
+                <article className="event-analysis-metric-card editorial">
+                  <div className="event-analysis-editorial-copy">
+                    <span>Prioridade editorial</span>
+                    <strong>{priorityLabel}</strong>
+                    <small>
+                      {analysisExchange} · {dashboard.symbol}
+                    </small>
+                  </div>
+
+                  <div
+                    className="event-analysis-priority-gauge"
+                    aria-label={`Nível editorial ${priorityLabel}`}
+                  >
+                    <svg viewBox="0 0 100 62" aria-hidden="true">
+                      <defs>
+                        <linearGradient
+                          id="event-analysis-priority-gradient"
+                          x1="0"
+                          y1="0"
+                          x2="1"
+                          y2="0"
+                        >
+                          <stop offset="0%" stopColor="#7844d7" />
+                          <stop offset="55%" stopColor="#b94de9" />
+                          <stop offset="100%" stopColor="#ff4aa6" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        className="event-analysis-priority-gauge-track"
+                        d="M10 52 A40 40 0 0 1 90 52"
+                      />
+                      <path
+                        className="event-analysis-priority-gauge-value"
+                        d="M10 52 A40 40 0 0 1 90 52"
+                      />
+                      <line
+                        className="event-analysis-priority-gauge-needle"
+                        x1="50"
+                        y1="52"
+                        x2={priorityNeedleEnd.x}
+                        y2={priorityNeedleEnd.y}
+                      />
+                      <circle
+                        className="event-analysis-priority-gauge-hub"
+                        cx="50"
+                        cy="52"
+                        r="4"
+                      />
+                    </svg>
+                    <span className="event-analysis-priority-gauge-low">P3</span>
+                    <span className="event-analysis-priority-gauge-high">P1</span>
+                  </div>
+                </article>
+              </div>
+            )}
+          </section>
+
+          <section className="event-analysis-layout">
+            <div className="event-analysis-main-column">
+              <article
+                className="event-analysis-chart-panel"
+                id="event-analysis-chart"
+              >
+                <div className="event-analysis-card-heading">
+                  <h2>Preço ao redor do evento</h2>
+
+                  <span className="event-analysis-period-chip">
+                    −14 a +14 dias
+                  </span>
+                </div>
+
+                <div className="event-analysis-chart-content">
+                  {isChartLoading ? (
+                    <div className="chart-state-message">
+                      Preparando janela do evento...
+                    </div>
+                  ) : !timeSeries && chartError ? (
+                    <ApiErrorNotice
+                      error={chartError}
+                      onRetry={retryChartLoad}
+                      className="chart-error-notice"
+                    />
+                  ) : timeSeries ? (
+                    <StockChart
+                      values={timeSeries.values}
+                      events={[analysisEvent]}
+                      selectedEventId={
+                        analysisEvent.id
+                      }
+                      eventImpactSummaries={
+                        chartEventImpactSummaries
+                      }
+                      onEventSelect={() => undefined}
+                    />
+                  ) : (
+                    <div className="chart-state-message">
+                      Nenhum histórico disponível para esta janela.
+                    </div>
+                  )}
+                </div>
+
+                {timeSeries && chartError && (
+                  <ApiErrorNotice
+                    error={chartError}
+                    onRetry={retryChartLoad}
+                    compact
+                    staleMessage="O gráfico continua exibindo os últimos dados carregados com sucesso."
+                    className="chart-stale-notice"
+                  />
+                )}
+
+                <p className="event-analysis-chart-note">
+                  A janela é centralizada no evento e limitada à data atual quando necessário. O movimento observado não comprova causalidade.
+                </p>
+              </article>
+
+              {analysisImpact?.isAvailable && (
+                <article className="event-analysis-market-panel">
+                  <div className="event-analysis-card-heading">
+                    <h2>Métricas do evento</h2>
+                  </div>
+
+                  <div className="event-analysis-market-grid">
+                    <div className="event-analysis-market-card price-reference">
+                      <div className="event-analysis-market-card-heading">
+                        <span
+                          className="event-analysis-market-icon"
+                          aria-hidden="true"
+                        >
+                          <svg viewBox="0 0 24 24">
+                            <path d="M4 17.5 9 12l3 3 7-8" />
+                            <path d="M15 7h4v4" />
+                          </svg>
+                        </span>
+                        <span>Fechamento anterior</span>
+                      </div>
+                      <strong>
+                        {formatImpactCurrency(
+                          analysisImpact.previousClose,
+                        )}
+                      </strong>
+                      <small>Referência antes do evento</small>
+                    </div>
+
+                    <div className="event-analysis-market-card opening-price">
+                      <div className="event-analysis-market-card-heading">
+                        <span
+                          className="event-analysis-market-icon"
+                          aria-hidden="true"
+                        >
+                          <svg viewBox="0 0 24 24">
+                            <path d="M5 18V9" />
+                            <path d="M12 18V5" />
+                            <path d="M19 18v-6" />
+                          </svg>
+                        </span>
+                        <span>Abertura no pregão</span>
+                      </div>
+                      <strong>
+                        {formatImpactCurrency(
+                          analysisImpact.eventDayOpen,
+                        )}
+                      </strong>
+                      <small>Preço de abertura</small>
+                    </div>
+
+                    <div className="event-analysis-market-card closing-price">
+                      <div className="event-analysis-market-card-heading">
+                        <span
+                          className="event-analysis-market-icon"
+                          aria-hidden="true"
+                        >
+                          <svg viewBox="0 0 24 24">
+                            <path d="M4 14.5 9 10l4 3 7-7" />
+                            <path d="M16 6h4v4" />
+                          </svg>
+                        </span>
+                        <span>Fechamento no pregão</span>
+                      </div>
+                      <strong>
+                        {formatImpactCurrency(
+                          analysisImpact.eventDayClose,
+                        )}
+                      </strong>
+                      <small>Preço de fechamento</small>
+                    </div>
+
+                    <div className="event-analysis-market-card same-day">
+                      <div className="event-analysis-market-card-heading">
+                        <span
+                          className="event-analysis-market-icon"
+                          aria-hidden="true"
+                        >
+                          <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14" />
+                            <path d="m15 8 4 4-4 4" />
+                          </svg>
+                        </span>
+                        <span>No mesmo pregão</span>
+                      </div>
+                      <strong
+                        className={getImpactValueClassName(
+                          analysisImpact.sameDayReturnPercent,
+                        )}
+                      >
+                        {formatImpactPercent(
+                          analysisImpact.sameDayReturnPercent,
+                        )}
+                      </strong>
+                      <small>Variação intradiária observada</small>
+                    </div>
+
+                    <div className="event-analysis-market-card volume">
+                      <div className="event-analysis-market-card-heading">
+                        <span
+                          className="event-analysis-market-icon"
+                          aria-hidden="true"
+                        >
+                          <svg viewBox="0 0 24 24">
+                            <path d="M5 19v-5" />
+                            <path d="M10 19V8" />
+                            <path d="M15 19v-8" />
+                            <path d="M20 19V5" />
+                          </svg>
+                        </span>
+                        <span>Volume contra média</span>
+                      </div>
+                      <strong
+                        className={getImpactValueClassName(
+                          analysisImpact.volumeChangePercent,
+                        )}
+                      >
+                        {formatImpactPercent(
+                          analysisImpact.volumeChangePercent,
+                        )}
+                      </strong>
+                      <small>Comparação com a média usada</small>
+                    </div>
+                  </div>
+                </article>
+              )}
+            </div>
+
+            <aside className="event-analysis-sidebar">
+              <article className="event-analysis-context-card">
+                <div className="event-analysis-card-heading compact">
+                  <h2>O que aconteceu</h2>
+                </div>
+
+                <div
+                  className="event-analysis-context-tags"
+                  aria-label="Classificação do evento"
+                >
+                  <span
+                    className={`event-analysis-context-tag ${eventStyle.className}`}
+                  >
+                    {categoryLabel}
+                  </span>
+                  <span className="event-analysis-context-tag priority">
+                    {priorityLabel}
+                  </span>
+                </div>
+
+                <p className="event-analysis-description">
+                  {getGtaEventAnalysisDescription(
+                    analysisEvent,
+                  )}
+                </p>
+
+                {analysisEvent.sourceUrl.trim() ? (
+                  <a
+                    className="event-analysis-source-link"
+                    href={analysisEvent.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Fonte original
+                    <InterfaceIcon
+                      name="external-link"
+                      className="inline-action-icon"
+                    />
+                  </a>
+                ) : (
+                  <span className="event-detail-source-missing">
+                    Fonte original pendente
+                  </span>
+                )}
+
+                <section className="event-analysis-reading">
+                  <h3 className="event-analysis-reading-title">
+                    Leitura de mercado
+                  </h3>
+
+                  <ul className="event-analysis-highlight-list">
+                    {analysisMarketHighlights.map(
+                      (highlight) => (
+                        <li key={highlight}>
+                          <span
+                            className="event-analysis-highlight-check"
+                            aria-hidden="true"
+                          >
+                            ✓
+                          </span>
+                          <span>{highlight}</span>
+                        </li>
+                      ),
+                    )}
+                  </ul>
+
+                  {tradingDateExplanation && (
+                    <p className="event-analysis-explanation">
+                      {tradingDateExplanation}
+                    </p>
+                  )}
+                </section>
+
+                <div className="event-analysis-facts-list compact">
+                  <div>
+                    <span>Categoria</span>
+                    <strong>{categoryLabel}</strong>
+                  </div>
+                  <div>
+                    <span>Confirmação</span>
+                    <strong>{confirmationLabel}</strong>
+                  </div>
+                  <div>
+                    <span>Mercado</span>
+                    <strong>
+                      {analysisExchange} ({dashboard.symbol})
+                    </strong>
+                  </div>
+                  <div>
+                    <span>Pregão analisado</span>
+                    <strong>
+                      {analysisEvent.isImpactAnalysisEligible ===
+                      false
+                        ? 'Não aplicável'
+                        : analysisImpact
+                          ? formatTradingDate(
+                              analysisImpact.effectiveTradingDate,
+                            )
+                          : 'Calculando...'}
+                    </strong>
+                  </div>
+                </div>
+
+                <p className="event-analysis-disclaimer">
+                  Os percentuais descrevem movimentos observados nas ações da Take-Two ao redor do evento e não comprovam que ele foi a única causa das variações.
+                </p>
+              </article>
+            </aside>
+          </section>
+        </main>
+      </div>
+    )
+  }
 
   const chartDateKeys =
     timeSeries?.values.map((value) =>
@@ -2428,69 +3869,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <a
-          className="brand-link"
-          href="#dashboard"
-          aria-label="Ir para o dashboard"
-        >
-          <img
-            className="brand-logo"
-            src="/vi-impact-logo.png"
-            alt="VI Impact"
-          />
-        </a>
-
-        <div className="topbar-actions">
-          <button
-            className={`theme-toggle ${theme}`}
-            type="button"
-            onClick={toggleTheme}
-            aria-label={
-              theme === 'night'
-                ? 'Ativar tema Dia'
-                : 'Ativar tema Noite'
-            }
-            aria-pressed={
-              theme === 'night'
-            }
-          >
-            <span
-              className="theme-toggle-status-icon"
-              aria-hidden="true"
-            >
-              {theme === 'night' ? (
-                <svg viewBox="0 0 24 24">
-                  <path d="M20.4 15.5A8.4 8.4 0 0 1 8.5 3.6a8.5 8.5 0 1 0 11.9 11.9Z" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
-                </svg>
-              )}
-            </span>
-
-            <span className="theme-toggle-copy">
-              <span className="theme-toggle-title">
-                {theme === 'night'
-                  ? 'Noite'
-                  : 'Dia'}
-              </span>
-              <span className="theme-toggle-subtitle">
-                Tema
-              </span>
-            </span>
-
-            <span
-              className="theme-toggle-track"
-              aria-hidden="true"
-            >
-              <span className="theme-toggle-thumb" />
-            </span>
-          </button>
-        </div>
-      </header>
+      {renderTopbar()}
 
       <main
         className="dashboard"
@@ -2890,6 +4269,9 @@ function App() {
                   selectedEventId={
                     selectedEventId
                   }
+                  eventImpactSummaries={
+                    chartEventImpactSummaries
+                  }
                   onEventSelect={
                     handleChartEventSelect
                   }
@@ -3029,39 +4411,35 @@ function App() {
                         gtaEvent,
                       ) ?? 'Não classificada'
 
-                    const priorityLabel =
-                      getGtaEventPriorityLabel(
-                        gtaEvent,
-                      ) ?? 'Não classificada'
-
-                    const confirmationLabel =
-                      getGtaEventConfirmationLabel(
-                        gtaEvent,
-                      )
-
                     const sourceLabel =
                       getGtaEventSourceLabel(
                         gtaEvent,
                       )
 
-                    const eventImpact =
-                      eventImpacts[gtaEvent.id]
-
-                    const isImpactLoading =
-                      loadingEventImpactIds.has(
-                        gtaEvent.id,
+                    const previewImpact =
+                      eventImpacts[gtaEvent.id] ??
+                      impactRanking.find(
+                        (impact) =>
+                          impact.eventId ===
+                          gtaEvent.id,
                       )
 
-                    const eventImpactError =
-                      eventImpactErrors[gtaEvent.id]
+                    const previewImpactSummary =
+                      getEventPreviewImpactSummary(
+                        previewImpact,
+                      )
 
-                    const tradingDateExplanation =
-                      eventImpact
-                        ? getTradingDateExplanation(
-                            gtaEvent,
-                            eventImpact,
+                    const previewImpactTone =
+                      previewImpactSummary
+                        ? getEventPreviewImpactTone(
+                            previewImpactSummary.value,
                           )
                         : null
+
+                    const isPreviewImpactLoading =
+                      loadingEventImpactIds.has(
+                        gtaEvent.id,
+                      ) && !previewImpactSummary
 
                     const cardClassName = [
                       'event-card',
@@ -3111,11 +4489,30 @@ function App() {
                               {gtaEvent.title}
                             </h3>
 
-                            <span
-                              className={`event-badge ${eventStyle.className}`}
-                            >
-                              {eventStyle.label}
-                            </span>
+                            <div className="event-card-signals">
+                              <span
+                                className={`event-badge ${eventStyle.className}`}
+                              >
+                                {eventStyle.label}
+                              </span>
+
+                              {previewImpactSummary &&
+                                previewImpactTone && (
+                                  <span
+                                    className={`event-impact-direction ${previewImpactTone}`}
+                                    title={previewImpactSummary.label}
+                                  >
+                                    {getEventPreviewImpactLabel(
+                                      previewImpactSummary.value,
+                                    )}
+                                    <strong>
+                                      {formatImpactPercent(
+                                        previewImpactSummary.value,
+                                      )}
+                                    </strong>
+                                  </span>
+                                )}
+                            </div>
                           </div>
 
                           <span
@@ -3131,267 +4528,116 @@ function App() {
 
                         {isExpanded && (
                           <div
-                            className="event-card-details"
+                            className="event-card-details event-card-preview"
                             id={detailsId}
                           >
                             <p className="event-detail-section-label">
-                              Descrição
+                              Resumo
                             </p>
 
-                            <p className="event-detail-description">
-                              {gtaEvent.description}
+                            <p className="event-detail-description event-preview-description">
+                              {createEventPreview(
+                                gtaEvent.description,
+                              )}
                             </p>
 
-                            <p className="event-detail-section-label event-detail-section-label-spaced">
-                              Detalhes do evento
-                            </p>
+                            {gtaEvent.isImpactAnalysisEligible ===
+                            false ? (
+                              <div className="event-preview-impact unavailable">
+                                <span>Reação observada</span>
+                                <strong>
+                                  Sem análise de mercado
+                                </strong>
+                              </div>
+                            ) : previewImpactSummary &&
+                              previewImpactTone ? (
+                              <div
+                                className={`event-preview-impact ${previewImpactTone}`}
+                              >
+                                <span>Reação observada</span>
+                                <strong>
+                                  {getEventPreviewImpactLabel(
+                                    previewImpactSummary.value,
+                                  )}{' '}
+                                  {formatImpactPercent(
+                                    previewImpactSummary.value,
+                                  )}
+                                </strong>
+                                <small>
+                                  {previewImpactSummary.label}
+                                </small>
+                              </div>
+                            ) : isPreviewImpactLoading ? (
+                              <div className="event-preview-impact loading">
+                                <span>Reação observada</span>
+                                <strong>
+                                  Calculando reação da TTWO…
+                                </strong>
+                              </div>
+                            ) : (
+                              <div className="event-preview-impact unavailable">
+                                <span>Reação observada</span>
+                                <strong>
+                                  Ainda não disponível
+                                </strong>
+                              </div>
+                            )}
 
-                            <div className="event-detail-grid">
-                              <div>
-                                <span>Categoria</span>
+                            <div className="event-preview-metadata">
+                              <span>
+                                <small>Categoria</small>
                                 <strong>
                                   {categoryLabel}
                                 </strong>
-                              </div>
+                              </span>
 
-                              <div>
-                                <span>Prioridade</span>
-                                <strong>
-                                  {priorityLabel}
-                                </strong>
-                              </div>
-
-                              <div>
-                                <span>Confirmação</span>
-                                <strong>
-                                  {confirmationLabel}
-                                </strong>
-                              </div>
-
-                              <div>
-                                <span>Fonte</span>
+                              <span>
+                                <small>Fonte</small>
                                 <strong>
                                   {sourceLabel}
                                 </strong>
-                              </div>
+                              </span>
 
-                              <div>
-                                <span>Data do evento</span>
+                              <span>
+                                <small>Data</small>
                                 <strong>
                                   {formatTradingDate(
                                     gtaEvent.occurredAtUtc,
                                   )}
                                 </strong>
-                              </div>
-
-                              <div>
-                                <span>Pregão analisado</span>
-                                <strong>
-                                  {gtaEvent.isImpactAnalysisEligible === false
-                                    ? 'Não aplicável'
-                                    : eventImpact
-                                      ? formatTradingDate(
-                                          eventImpact.effectiveTradingDate,
-                                        )
-                                      : isImpactLoading
-                                        ? 'Calculando...'
-                                        : 'Aguardando análise'}
-                                </strong>
-                              </div>
+                              </span>
                             </div>
 
-                            <section className="event-impact-section">
-                              <div className="event-impact-heading">
-                                <p className="event-detail-section-label">
-                                  Movimento observado
-                                </p>
+                            <div className="event-preview-actions">
+                              <button
+                                className="event-analysis-cta"
+                                type="button"
+                                onClick={() =>
+                                  openEventAnalysis(
+                                    gtaEvent,
+                                  )
+                                }
+                              >
+                                Ver análise completa
+                                <InterfaceIcon
+                                  name="expand"
+                                  className="inline-action-icon"
+                                />
+                              </button>
 
-                                {eventImpact?.exchange && (
-                                  <span>
-                                    {eventImpact.symbol} ·{' '}
-                                    {eventImpact.exchange}
-                                  </span>
-                                )}
-                              </div>
-
-                              {gtaEvent.isImpactAnalysisEligible === false ? (
-                                <p className="event-impact-status">
-                                  Este evento não está elegível para análise de impacto.
-                                </p>
-                              ) : isImpactLoading ? (
-                                <div className="event-impact-loading">
-                                  <span className="event-impact-spinner" />
-                                  <p>
-                                    Calculando reação do mercado...
-                                  </p>
-                                </div>
-                              ) : eventImpactError ? (
-                                <div className="event-impact-error">
-                                  <div>
-                                    <strong>
-                                      {eventImpactError.title}
-                                    </strong>
-
-                                    <p>
-                                      {eventImpactError.message}
-                                    </p>
-                                  </div>
-
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      void loadEventImpact(
-                                        gtaEvent,
-                                      )
-                                    }
-                                  >
-                                    Tentar novamente
-                                  </button>
-                                </div>
-                              ) : eventImpact && !eventImpact.isAvailable ? (
-                                <p className="event-impact-status">
-                                  {eventImpact.unavailableReason ??
-                                    'Não existem dados históricos suficientes para este evento.'}
-                                </p>
-                              ) : eventImpact ? (
-                                <>
-                                  <div className="event-impact-price-grid">
-                                    <div>
-                                      <span>Fechamento anterior</span>
-                                      <strong>
-                                        {formatImpactCurrency(
-                                          eventImpact.previousClose,
-                                        )}
-                                      </strong>
-                                    </div>
-
-                                    <div>
-                                      <span>Abertura no pregão</span>
-                                      <strong>
-                                        {formatImpactCurrency(
-                                          eventImpact.eventDayOpen,
-                                        )}
-                                      </strong>
-                                    </div>
-
-                                    <div>
-                                      <span>Fechamento no pregão</span>
-                                      <strong>
-                                        {formatImpactCurrency(
-                                          eventImpact.eventDayClose,
-                                        )}
-                                      </strong>
-                                    </div>
-                                  </div>
-
-                                  <div className="event-impact-metrics">
-                                    <div>
-                                      <span>No mesmo pregão</span>
-                                      <strong
-                                        className={getImpactValueClassName(
-                                          eventImpact.sameDayReturnPercent,
-                                        )}
-                                      >
-                                        {formatImpactPercent(
-                                          eventImpact.sameDayReturnPercent,
-                                        )}
-                                      </strong>
-                                    </div>
-
-                                    <div>
-                                      <span>Após 1 pregão</span>
-                                      <strong
-                                        className={getImpactValueClassName(
-                                          eventImpact.day1ReturnPercent,
-                                        )}
-                                      >
-                                        {formatImpactPercent(
-                                          eventImpact.day1ReturnPercent,
-                                        )}
-                                      </strong>
-                                    </div>
-
-                                    <div>
-                                      <span>Após 5 pregões</span>
-                                      <strong
-                                        className={getImpactValueClassName(
-                                          eventImpact.day5ReturnPercent,
-                                        )}
-                                      >
-                                        {formatImpactPercent(
-                                          eventImpact.day5ReturnPercent,
-                                        )}
-                                      </strong>
-                                    </div>
-
-                                    <div>
-                                      <span>Após 30 pregões</span>
-                                      <strong
-                                        className={getImpactValueClassName(
-                                          eventImpact.day30ReturnPercent,
-                                        )}
-                                      >
-                                        {formatImpactPercent(
-                                          eventImpact.day30ReturnPercent,
-                                        )}
-                                      </strong>
-                                    </div>
-
-                                    <div>
-                                      <span>Volume contra média</span>
-                                      <strong
-                                        className={getImpactValueClassName(
-                                          eventImpact.volumeChangePercent,
-                                        )}
-                                      >
-                                        {formatImpactPercent(
-                                          eventImpact.volumeChangePercent,
-                                        )}
-                                      </strong>
-                                    </div>
-                                  </div>
-
-                                  {tradingDateExplanation && (
-                                    <p className="event-impact-explanation">
-                                      {tradingDateExplanation}
-                                    </p>
-                                  )}
-
-                                  <p className="event-impact-disclaimer">
-                                    Os valores representam movimentos observados nas ações da Take-Two após o evento. Eles não comprovam que o evento foi a única causa das variações.
-                                  </p>
-                                </>
-                              ) : (
-                                <p className="event-impact-status">
-                                  Abra novamente o evento para carregar a análise.
-                                </p>
-                              )}
-                            </section>
-
-                            <div className="event-detail-footer">
-                              {gtaEvent.sourceUrl.trim() ? (
+                              {gtaEvent.sourceUrl.trim() && (
                                 <a
-                                  className="event-detail-source-link"
+                                  className="event-preview-source-link"
                                   href={gtaEvent.sourceUrl}
                                   target="_blank"
                                   rel="noreferrer"
                                 >
-                                  Ver fonte original
+                                  Fonte
                                   <InterfaceIcon
                                     name="external-link"
                                     className="inline-action-icon"
                                   />
                                 </a>
-                              ) : (
-                                <span className="event-detail-source-missing">
-                                  Cadastro pendente
-                                </span>
-                              )}
-
-                              {gtaEvent.subcategory?.trim() && (
-                                <span className="event-detail-subcategory">
-                                  {gtaEvent.subcategory}
-                                </span>
                               )}
                             </div>
                           </div>
@@ -3778,12 +5024,12 @@ function App() {
                             type="button"
                             key={gtaEvent.id}
                             onClick={() =>
-                              handleChartEventSelect(
+                              openEventAnalysis(
                                 gtaEvent,
                               )
                             }
                             aria-label={
-                              `Abrir ${gtaEvent.title} no gráfico. ${gtaEvent.description}`
+                              `Ver análise completa de ${gtaEvent.title}. ${gtaEvent.description}`
                             }
                             aria-describedby={
                               `ranking-description-${gtaEvent.id}`
