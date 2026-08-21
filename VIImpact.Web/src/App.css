@@ -14599,3 +14599,362 @@ a {
   small.impact-negative {
   color: var(--negative);
 }
+
+/* =========================================================
+   Site-wide V1.31 — responsive audit and overflow guardrails
+   ========================================================= */
+
+/* Keep stacked/tablet layouts shrinkable. A few dense dashboard and event
+   analysis children use grid/flex content with intrinsic widths; explicitly
+   allowing those tracks to shrink prevents one long label from creating a
+   horizontal page scrollbar. */
+@media (max-width: 1180px) {
+  .dashboard,
+  .dashboard-content,
+  .summary-grid,
+  .chart-panel,
+  .events-panel,
+  .impact-ranking-panel,
+  .panel-header,
+  .panel-header > div,
+  .impact-ranking-header,
+  .impact-ranking-header > div,
+  .event-analysis-impact-overview,
+  .event-analysis-layout,
+  .event-analysis-main-column,
+  .event-analysis-sidebar,
+  .event-analysis-context-card,
+  .event-analysis-card-heading,
+  .event-analysis-card-heading > div {
+    min-width: 0;
+  }
+
+  .panel-header h2,
+  .impact-ranking-header h2,
+  .event-analysis-card-heading h2,
+  .event-analysis-hero h1,
+  .event-card h3,
+  .impact-ranking-copy strong {
+    overflow-wrap: anywhere;
+  }
+
+  .api-error-copy,
+  .api-error-copy p,
+  .api-error-copy small {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* The period strip fits comfortably on desktop, but around tablet widths the
+   combined 1D…MAX + calendar controls become tighter than the chart panel.
+   Make that strip horizontally scrollable before it starts compressing. */
+@media (max-width: 900px) {
+  .chart-panel .chart-period-toolbar {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .chart-panel .chart-period-options {
+    display: flex;
+    width: 100%;
+    padding-bottom: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .chart-panel .chart-period-options::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chart-panel .chart-period-button,
+  .chart-panel .calendar-period-button {
+    min-width: 62px;
+    flex: 0 0 62px;
+    scroll-snap-align: start;
+  }
+
+  .chart-panel .calendar-period-button {
+    min-width: 68px;
+    flex-basis: 68px;
+  }
+
+  .event-analysis-benchmark-table-wrap {
+    max-width: 100%;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 700px) {
+  /* Main dashboard */
+  .dashboard,
+  .dashboard-content,
+  .chart-panel,
+  .events-panel,
+  .impact-ranking-panel {
+    max-width: 100%;
+  }
+
+  .panel-header {
+    flex-wrap: wrap;
+  }
+
+  .panel-header > div {
+    max-width: 100%;
+  }
+
+  .event-card-content,
+  .impact-ranking-copy,
+  .impact-ranking-metadata {
+    min-width: 0;
+  }
+
+  .impact-ranking-category {
+    max-width: min(124px, 100%);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .event-detail-grid strong,
+  .event-preview-metadata strong,
+  .event-analysis-facts-list strong {
+    overflow-wrap: anywhere;
+  }
+
+  /* Event analysis uses the document/page scroll on narrow viewports. Never
+     inherit the desktop card scroller when the columns are stacked. */
+  .event-analysis-context-card {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    scrollbar-gutter: auto;
+  }
+
+  .event-analysis-hero h1 {
+    text-wrap: pretty;
+  }
+
+  .event-analysis-meta {
+    row-gap: 6px;
+  }
+
+  .event-analysis-benchmark-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .event-analysis-benchmark-chip {
+    margin-left: auto;
+  }
+
+  .event-analysis-benchmark-table-wrap {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Narrow phones need a little more breathing room than the regular two-card
+   mobile summary grid provides. This breakpoint covers common 360–430 px
+   devices without changing the compact 2×2 composition on larger phones. */
+@media (max-width: 430px) {
+  .summary-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .summary-card,
+  :root[data-theme='night'] .summary-card,
+  :root:not([data-theme='night']) .summary-card {
+    min-height: 126px;
+  }
+
+  .hero-copy {
+    max-width: 86%;
+  }
+
+  .event-focus-button {
+    grid-template-columns: 58px minmax(0, 1fr) 22px;
+    gap: 8px;
+  }
+
+  .event-thumbnail,
+  .event-focus-button .event-thumbnail {
+    width: 58px;
+    height: 56px;
+  }
+
+  .impact-ranking-item,
+  .impact-ranking-panel.date-ordered .impact-ranking-item {
+    grid-template-columns: 32px 36px minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  .impact-ranking-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .event-analysis-hero-chrome {
+    padding: 7px 9px 0;
+  }
+
+  .event-analysis-brand-button {
+    width: 74px;
+    height: 62px;
+  }
+
+  .event-analysis-brand-button img {
+    width: 72px;
+    height: 60px;
+  }
+
+  .event-analysis-theme-actions .theme-toggle {
+    min-width: 46px;
+    height: 42px;
+    padding: 0 6px;
+  }
+
+  .event-analysis-hero-content {
+    width: calc(100% - 22px);
+    padding-top: 72px;
+  }
+
+  .event-analysis-hero h1 {
+    font-size: clamp(1.65rem, 9vw, 2.1rem);
+  }
+
+  .event-analysis-impact-overview,
+  .event-analysis-layout {
+    width: calc(100% - 20px);
+  }
+
+  .event-analysis-chart-panel,
+  .event-analysis-market-panel,
+  .event-analysis-context-card,
+  .event-analysis-story-card,
+  .event-analysis-facts-card {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .event-analysis-metric-card-body {
+    grid-template-columns: minmax(0, 1fr) 84px;
+    gap: 8px;
+  }
+
+  .event-analysis-metric-card.editorial {
+    grid-template-columns: minmax(0, 1fr) 84px;
+  }
+
+  .event-analysis-priority-gauge {
+    width: 84px;
+  }
+
+  .event-analysis-benchmark-table {
+    min-width: 280px;
+  }
+
+  .event-analysis-benchmark-table th,
+  .event-analysis-benchmark-table td {
+    padding-right: 5px;
+    padding-left: 5px;
+  }
+
+  .event-analysis-not-found {
+    margin: 48px auto;
+    padding: 24px 18px;
+  }
+
+  .event-chart-popup.event-chart-popup-portal {
+    width: calc(100vw - 12px);
+  }
+}
+
+/* Phones in landscape have little vertical room. The page already scrolls;
+   trim only the decorative vertical footprint so the first useful content is
+   reached sooner without changing desktop/tablet compositions. */
+@media (max-width: 900px) and (max-height: 560px) {
+  .hero-banner,
+  :root:not([data-theme='night']) .hero-banner,
+  :root[data-theme='night'] .hero-banner {
+    min-height: 136px;
+    padding-top: 70px;
+    padding-bottom: 16px;
+  }
+
+  .chart-content {
+    height: 360px;
+    min-height: 360px;
+  }
+
+  .event-analysis-hero {
+    min-height: 230px;
+  }
+
+  .event-analysis-hero-content {
+    min-height: 230px;
+    padding-bottom: 22px;
+  }
+}
+
+@media (max-width: 360px) {
+  .loading-splash {
+    min-width: 0;
+  }
+
+  .event-analysis-benchmark-table {
+    min-width: 268px;
+  }
+}
+
+/* =========================================================
+   Responsive audit V1.32 — analysis theme toggle icon
+   ========================================================= */
+
+@media (max-width: 820px) {
+  .event-analysis-theme-actions .theme-toggle {
+    display: grid;
+    width: 50px;
+    min-width: 50px;
+    height: 44px;
+    padding: 0;
+    grid-template-columns: 1fr;
+    place-items: center;
+  }
+
+  .event-analysis-theme-actions
+    .theme-toggle
+    > .theme-toggle-status-icon {
+    display: grid !important;
+    visibility: visible;
+    width: 30px;
+    height: 30px;
+    opacity: 1;
+    place-items: center;
+  }
+
+  .event-analysis-theme-actions
+    .theme-toggle
+    > .theme-toggle-status-icon
+    svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    opacity: 1;
+  }
+
+  .event-analysis-theme-actions
+    .theme-toggle
+    > .theme-toggle-copy,
+  .event-analysis-theme-actions
+    .theme-toggle
+    > .theme-toggle-track {
+    display: none !important;
+  }
+}
