@@ -75,6 +75,8 @@ type InterfaceIconName =
   | 'expand'
   | 'collapse'
   | 'search'
+  | 'share'
+  | 'copy'
   | 'chevron-right'
 
 interface InterfaceIconProps {
@@ -157,6 +159,58 @@ function InterfaceIcon({
             d="m15 15 4 4"
             stroke="currentColor"
             strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </>
+      )}
+
+      {name === 'share' && (
+        <>
+          <circle
+            cx="18"
+            cy="5"
+            r="2.25"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          />
+          <circle
+            cx="6"
+            cy="12"
+            r="2.25"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          />
+          <circle
+            cx="18"
+            cy="19"
+            r="2.25"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          />
+          <path
+            d="m8 11 7.8-4.6M8 13l7.8 4.6"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </>
+      )}
+
+      {name === 'copy' && (
+        <>
+          <rect
+            x="8"
+            y="8"
+            width="10"
+            height="10"
+            rx="2"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          />
+          <path
+            d="M15 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"
+            stroke="currentColor"
+            strokeWidth="1.8"
             strokeLinecap="round"
           />
         </>
@@ -1703,6 +1757,43 @@ function getEventAnalysisRouteKey(
   return slug || gtaEvent.id
 }
 
+function getEventAnalysisShareUrl(
+  gtaEvent: GtaEvent,
+): string {
+  return new URL(
+    createEventAnalysisPath(
+      getEventAnalysisRouteKey(gtaEvent),
+    ),
+    window.location.origin,
+  ).toString()
+}
+
+async function copyTextToClipboard(
+  value: string,
+): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value)
+    return
+  }
+
+  const textArea = document.createElement(
+    'textarea',
+  )
+  textArea.value = value
+  textArea.setAttribute('readonly', '')
+  textArea.style.position = 'fixed'
+  textArea.style.opacity = '0'
+  document.body.appendChild(textArea)
+  textArea.select()
+
+  const didCopy = document.execCommand('copy')
+  document.body.removeChild(textArea)
+
+  if (!didCopy) {
+    throw new Error('Clipboard copy failed.')
+  }
+}
+
 function findAnalysisEvent(
   events: GtaEvent[],
   eventKey: string | null,
@@ -1992,6 +2083,14 @@ function App() {
     getInitialAnalysisEventKey,
   )
 
+  const [
+    shareFeedback,
+    setShareFeedback,
+  ] = useState<string | null>(null)
+
+  const shareFeedbackTimeoutRef =
+    useRef<number | null>(null)
+
   useEffect(() => {
     function syncAnalysisRoute() {
       setAnalysisEventKey(
@@ -2009,6 +2108,16 @@ function App() {
         'popstate',
         syncAnalysisRoute,
       )
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (shareFeedbackTimeoutRef.current !== null) {
+        window.clearTimeout(
+          shareFeedbackTimeoutRef.current,
+        )
+      }
     }
   }, [])
 
@@ -2874,6 +2983,7 @@ function App() {
     )
 
     setAnalysisEventKey(eventRouteKey)
+    setShareFeedback(null)
     setExpandedEventId(null)
     setSelectedEventId(gtaEvent.id)
 
@@ -2881,6 +2991,67 @@ function App() {
       top: 0,
       behavior: 'smooth',
     })
+  }
+
+  function showShareFeedback(
+    message: string,
+  ) {
+    setShareFeedback(message)
+
+    if (shareFeedbackTimeoutRef.current !== null) {
+      window.clearTimeout(
+        shareFeedbackTimeoutRef.current,
+      )
+    }
+
+    shareFeedbackTimeoutRef.current =
+      window.setTimeout(() => {
+        setShareFeedback(null)
+        shareFeedbackTimeoutRef.current = null
+      }, 2400)
+  }
+
+  async function copyEventAnalysisLink(
+    gtaEvent: GtaEvent,
+  ) {
+    try {
+      await copyTextToClipboard(
+        getEventAnalysisShareUrl(gtaEvent),
+      )
+      showShareFeedback('Link copiado')
+    } catch {
+      showShareFeedback(
+        'Não foi possível copiar o link',
+      )
+    }
+  }
+
+  async function shareEventAnalysis(
+    gtaEvent: GtaEvent,
+  ) {
+    const shareUrl =
+      getEventAnalysisShareUrl(gtaEvent)
+
+    const shareText = `${gtaEvent.title} — VI Impact\nVeja a análise do evento e a reação da TTWO:\n${shareUrl}`
+
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          text: shareText,
+        })
+        showShareFeedback('Compartilhado')
+        return
+      } catch (error) {
+        if (
+          error instanceof DOMException &&
+          error.name === 'AbortError'
+        ) {
+          return
+        }
+      }
+    }
+
+    await copyEventAnalysisLink(gtaEvent)
   }
 
   function closeEventAnalysis() {
@@ -2908,6 +3079,7 @@ function App() {
       returningEvent?.id ?? null
 
     setAnalysisEventKey(null)
+    setShareFeedback(null)
     setSelectedEventId(returningEventId)
     setExpandedEventId(returningEventId)
 
@@ -3394,19 +3566,64 @@ function App() {
             </div>
 
             <div className="event-analysis-hero-content">
-              <button
-                className="event-analysis-back"
-                type="button"
-                onClick={closeEventAnalysis}
-              >
-                <span
-                  className="event-analysis-back-icon"
-                  aria-hidden="true"
+              <div className="event-analysis-hero-actions">
+                <button
+                  className="event-analysis-back"
+                  type="button"
+                  onClick={closeEventAnalysis}
                 >
-                  ←
-                </span>
-                <span>Voltar ao dashboard</span>
-              </button>
+                  <span
+                    className="event-analysis-back-icon"
+                    aria-hidden="true"
+                  >
+                    ←
+                  </span>
+                  <span>Voltar ao dashboard</span>
+                </button>
+
+                <div className="event-analysis-share-area">
+                  <div className="event-analysis-share-actions">
+                    <button
+                      className="event-analysis-share-button"
+                      type="button"
+                      onClick={() =>
+                        void shareEventAnalysis(
+                          analysisEvent,
+                        )
+                      }
+                      aria-label={`Compartilhar análise: ${analysisEvent.title}`}
+                    >
+                      <InterfaceIcon name="share" />
+                      <span aria-live="polite">
+                        {shareFeedback === 'Compartilhado'
+                          ? 'Compartilhado'
+                          : 'Compartilhar'}
+                      </span>
+                    </button>
+
+                    <button
+                      className="event-analysis-share-button secondary"
+                      type="button"
+                      onClick={() =>
+                        void copyEventAnalysisLink(
+                          analysisEvent,
+                        )
+                      }
+                      aria-label="Copiar link da análise"
+                    >
+                      <InterfaceIcon name="copy" />
+                      <span aria-live="polite">
+                        {shareFeedback === 'Link copiado'
+                          ? 'Link copiado'
+                          : shareFeedback ===
+                              'Não foi possível copiar o link'
+                            ? 'Falha ao copiar'
+                            : 'Copiar link'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               <h1>{analysisEvent.title}</h1>
 

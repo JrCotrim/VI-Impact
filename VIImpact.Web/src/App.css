@@ -14958,3 +14958,148 @@ a {
     display: none !important;
   }
 }
+
+/* =========================================================
+   Event analysis — sharing controls
+   ========================================================= */
+
+.event-analysis-hero-actions {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.event-analysis-hero-actions .event-analysis-back {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+}
+
+.event-analysis-share-area {
+  min-width: 0;
+}
+
+.event-analysis-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+/* All hero actions share one visual language in both themes.
+   The hero itself stays dark, so light-theme overrides would reduce consistency. */
+.event-analysis-hero-actions .event-analysis-back,
+.event-analysis-share-button {
+  min-height: 36px;
+  border: 1px solid rgba(255, 111, 187, 0.28);
+  border-radius: 999px;
+  color: #ffe0ef;
+  background: rgba(8, 13, 30, 0.56);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(12px);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    color 170ms ease,
+    border-color 170ms ease,
+    background 170ms ease,
+    transform 170ms ease;
+}
+
+.event-analysis-hero-actions .event-analysis-back {
+  gap: 7px;
+  padding: 0 12px;
+}
+
+.event-analysis-back-icon {
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  place-items: center;
+  border-radius: 0;
+  color: currentColor;
+  background: transparent;
+  font-size: 0.94rem;
+  line-height: 1;
+}
+
+.event-analysis-share-button {
+  display: inline-flex;
+  min-width: 112px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+}
+
+.event-analysis-share-button.secondary {
+  color: #ffe0ef;
+  border-color: rgba(255, 111, 187, 0.28);
+  background: rgba(8, 13, 30, 0.56);
+}
+
+.event-analysis-share-button svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
+.event-analysis-hero-actions .event-analysis-back:hover,
+.event-analysis-share-button:hover,
+.event-analysis-share-button.secondary:hover {
+  color: #ffffff;
+  border-color: rgba(255, 111, 187, 0.56);
+  background: rgba(25, 19, 47, 0.76);
+}
+
+.event-analysis-hero-actions .event-analysis-back:hover {
+  transform: translateX(-1px);
+}
+
+.event-analysis-share-button:hover {
+  transform: translateY(-1px);
+}
+
+.event-analysis-hero-actions .event-analysis-back:focus-visible,
+.event-analysis-share-button:focus-visible {
+  outline: 2px solid rgba(255, 132, 197, 0.86);
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .event-analysis-hero-actions {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .event-analysis-share-actions {
+    justify-content: flex-start;
+  }
+
+  .event-analysis-share-button {
+    min-height: 34px;
+    min-width: 108px;
+    padding: 0 10px;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .event-analysis-share-area,
+  .event-analysis-share-actions {
+    width: 100%;
+  }
+
+  .event-analysis-share-button {
+    min-width: 0;
+    flex: 1 1 0;
+    padding-right: 9px;
+    padding-left: 9px;
+  }
+}

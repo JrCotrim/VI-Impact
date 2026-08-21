@@ -213,4 +213,64 @@ describe('App regression flows', () => {
       )
     })
   })
+
+  it('copies the canonical event analysis URL', async () => {
+    const user = userEvent.setup()
+    const writeText = vi.fn().mockResolvedValue(undefined)
+
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    })
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: undefined,
+    })
+
+    render(<App />)
+
+    await waitForDashboard()
+    await openFullEventAnalysis(user)
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Copiar link da análise',
+      }),
+    )
+
+    expect(writeText).toHaveBeenCalledWith(
+      `${window.location.origin}/events/${occurredEvent.slug}`,
+    )
+    expect(
+      await screen.findByText('Link copiado'),
+    ).toBeInTheDocument()
+  })
+
+  it('uses the native share sheet when it is available', async () => {
+    const user = userEvent.setup()
+    const share = vi.fn().mockResolvedValue(undefined)
+
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: share,
+    })
+
+    render(<App />)
+
+    await waitForDashboard()
+    await openFullEventAnalysis(user)
+
+    await user.click(
+      screen.getByRole('button', {
+        name: `Compartilhar análise: ${occurredEvent.title}`,
+      }),
+    )
+
+    expect(share).toHaveBeenCalledWith({
+      text: `${occurredEvent.title} — VI Impact\nVeja a análise do evento e a reação da TTWO:\n${window.location.origin}/events/${occurredEvent.slug}`,
+    })
+    expect(
+      await screen.findByText('Compartilhado'),
+    ).toBeInTheDocument()
+  })
 })
