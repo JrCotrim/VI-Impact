@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
@@ -176,6 +176,135 @@ describe('App regression flows', () => {
         name: 'QQQ',
       }),
     ).toBeInTheDocument()
+  })
+
+  it('labels recent-event horizons as pending until enough trading sessions exist', async () => {
+    const user = userEvent.setup()
+
+    getGtaEventImpactMock.mockResolvedValue({
+      ...createEventImpact(),
+      day1TradingDate: null,
+      day1Close: null,
+      day1ReturnPercent: null,
+      day5TradingDate: null,
+      day5Close: null,
+      day5ReturnPercent: null,
+      day30TradingDate: null,
+      day30Close: null,
+      day30ReturnPercent: null,
+      benchmarkDay1Close: null,
+      benchmarkDay1ReturnPercent: null,
+      benchmarkDay5Close: null,
+      benchmarkDay5ReturnPercent: null,
+      benchmarkDay30Close: null,
+      benchmarkDay30ReturnPercent: null,
+      day1ExcessReturnPercent: null,
+      day5ExcessReturnPercent: null,
+      day30ExcessReturnPercent: null,
+    })
+
+    render(<App />)
+
+    await waitForDashboard()
+    await openFullEventAnalysis(user)
+
+    expect(
+      await screen.findByText(
+        'Aguardando 1 pregão completo',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Aguardando 5 pregões completos',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Aguardando 30 pregões completos',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        /“Pendente” indica horizonte ainda em formação/,
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('treats a recent event awaiting its first trading session as pending', async () => {
+    const user = userEvent.setup()
+
+    getGtaEventImpactMock.mockResolvedValue({
+      ...createEventImpact(),
+      analysisTimestampUtc: '2026-08-22T00:00:00Z',
+      isAvailable: false,
+      unavailableReason:
+        'Não foi possível localizar um pregão anterior e um pregão efetivo completos.',
+      effectiveTradingDate: null,
+      previousTradingDate: null,
+      previousClose: null,
+      eventDayOpen: null,
+      eventDayClose: null,
+      eventDayVolume: null,
+      sameDayReturnPercent: null,
+    })
+
+    render(<App />)
+
+    await waitForDashboard()
+    await openFullEventAnalysis(user)
+
+    expect(
+      await screen.findByText('Métricas em formação'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Aguardando o primeiro pregão completo após o evento.',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText('Dados de mercado indisponíveis'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'A leitura de mercado começará após o primeiro pregão completo posterior ao evento.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('distinguishes unavailable market data from pending horizons', async () => {
+    const user = userEvent.setup()
+    const unavailableReason =
+      'Não foi possível localizar um pregão efetivo completo.'
+
+    getGtaEventImpactMock.mockResolvedValue({
+      ...createEventImpact(),
+      isAvailable: false,
+      unavailableReason,
+    })
+
+    render(<App />)
+
+    await waitForDashboard()
+    await openFullEventAnalysis(user)
+
+    const unavailableStateTitle =
+      await screen.findByText(
+        'Dados de mercado indisponíveis',
+      )
+    const unavailableStateCard =
+      unavailableStateTitle.parentElement
+
+    expect(unavailableStateCard).not.toBeNull()
+    expect(
+      within(unavailableStateCard!).getByText(
+        unavailableReason,
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(
+        'Aguardando 5 pregões completos',
+      ),
+    ).not.toBeInTheDocument()
   })
 
   it('allows retrying a recoverable dashboard error and renders the dashboard after success', async () => {

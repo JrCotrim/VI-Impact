@@ -477,6 +477,40 @@ function formatImpactPercent(
   return formatSignedPercent(value)
 }
 
+function getPendingImpactMetricLabel(
+  horizon: 1 | 5 | 30,
+): string {
+  return horizon === 1
+    ? 'Aguardando 1 pregão completo'
+    : `Aguardando ${horizon} pregões completos`
+}
+
+function isImpactAwaitingFirstTradingSession(
+  impact: GtaEventImpact | undefined,
+  timeSeries: StockTimeSeries | null,
+): boolean {
+  if (
+    !impact ||
+    impact.isAvailable ||
+    impact.effectiveTradingDate !== null ||
+    !timeSeries ||
+    timeSeries.values.length === 0
+  ) {
+    return false
+  }
+
+  const latestTradingSessionTimestamp = Math.max(
+    ...timeSeries.values.map((value) =>
+      parseUtcDate(value.dateTimeUtc).getTime(),
+    ),
+  )
+
+  return (
+    parseUtcDate(impact.analysisTimestampUtc).getTime() >
+    latestTradingSessionTimestamp
+  )
+}
+
 function getRankingImpactValue(
   impact: GtaEventImpact,
   period: ImpactRankingPeriod,
@@ -916,6 +950,7 @@ function getAnalysisMarketHighlights(
   impact: GtaEventImpact | undefined,
   isLoading: boolean,
   hasError: boolean,
+  isAwaitingFirstTradingSession: boolean,
 ): string[] {
   if (hasError) {
     return [
@@ -932,6 +967,12 @@ function getAnalysisMarketHighlights(
   if (!impact) {
     return [
       'Ainda não há uma leitura de mercado disponível para este evento.',
+    ]
+  }
+
+  if (isAwaitingFirstTradingSession) {
+    return [
+      'A leitura de mercado começará após o primeiro pregão completo posterior ao evento.',
     ]
   }
 
@@ -3443,11 +3484,18 @@ function App() {
       timeSeries?.exchange ??
       'NASDAQ'
 
+    const isAnalysisImpactAwaitingFirstTradingSession =
+      isImpactAwaitingFirstTradingSession(
+        analysisImpact,
+        timeSeries,
+      )
+
     const analysisMarketHighlights =
       getAnalysisMarketHighlights(
         analysisImpact,
         isAnalysisImpactLoading,
         Boolean(analysisImpactError),
+        isAnalysisImpactAwaitingFirstTradingSession,
       )
 
     const benchmarkComparisonRows =
@@ -3468,7 +3516,7 @@ function App() {
     const analysisMetricCards = [
       {
         label: '1 pregão',
-        horizon: 1,
+        horizon: 1 as const,
         value:
           analysisImpact?.day1ReturnPercent ??
           null,
@@ -3485,7 +3533,7 @@ function App() {
       },
       {
         label: '5 pregões',
-        horizon: 5,
+        horizon: 5 as const,
         value:
           analysisImpact?.day5ReturnPercent ??
           null,
@@ -3502,7 +3550,7 @@ function App() {
       },
       {
         label: '30 pregões',
-        horizon: 30,
+        horizon: 30 as const,
         value:
           analysisImpact?.day30ReturnPercent ??
           null,
@@ -3671,24 +3719,47 @@ function App() {
               />
             ) : analysisImpact &&
               !analysisImpact.isAvailable ? (
-              <div className="event-analysis-state-card">
-                {analysisImpact.unavailableReason ??
-                  'Não existem dados históricos suficientes para este evento.'}
-              </div>
+              isAnalysisImpactAwaitingFirstTradingSession ? (
+                <div className="event-analysis-state-card pending">
+                  <strong>Métricas em formação</strong>
+                  <span>
+                    Aguardando o primeiro pregão completo após o evento.
+                  </span>
+                </div>
+              ) : (
+                <div className="event-analysis-state-card unavailable">
+                  <strong>Dados de mercado indisponíveis</strong>
+                  <span>
+                    {analysisImpact.unavailableReason ??
+                      'Não existem dados históricos suficientes para este evento.'}
+                  </span>
+                </div>
+              )
             ) : (
               <div className="event-analysis-metric-grid">
                 {analysisMetricCards.map(
                   (metric) => {
+                    const isMetricPending =
+                      analysisImpact?.isAvailable === true &&
+                      metric.value === null
+
                     const sparkline =
-                      createAnalysisMetricSparklineData(
-                        timeSeries,
-                        analysisSparklineDate,
-                        metric.horizon,
-                      )
+                      isMetricPending
+                        ? null
+                        : createAnalysisMetricSparklineData(
+                            timeSeries,
+                            analysisSparklineDate,
+                            metric.horizon,
+                          )
 
                     return (
                       <article
-                        className="event-analysis-metric-card"
+                        className={[
+                          'event-analysis-metric-card',
+                          isMetricPending ? 'pending' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
                         key={metric.label}
                       >
                         <div className="event-analysis-metric-card-header">
@@ -3713,27 +3784,39 @@ function App() {
                         <div className="event-analysis-metric-card-body">
                           <div className="event-analysis-metric-copy">
                             <strong
-                              className={getImpactValueClassName(
-                                metric.value,
-                              )}
+                              className={
+                                isMetricPending
+                                  ? 'impact-pending'
+                                  : getImpactValueClassName(
+                                      metric.value,
+                                    )
+                              }
                             >
                               {isAnalysisImpactLoading &&
                               !analysisImpact
                                 ? 'Calculando…'
-                                : formatImpactPercent(
-                                    metric.value,
-                                  )}
+                                : isMetricPending
+                                  ? 'Pendente'
+                                  : formatImpactPercent(
+                                      metric.value,
+                                    )}
                             </strong>
                             <small
                               className={
-                                metric.detailValue === null
-                                  ? undefined
-                                  : getImpactValueClassName(
-                                      metric.detailValue,
-                                    )
+                                isMetricPending
+                                  ? 'impact-pending'
+                                  : metric.detailValue === null
+                                    ? undefined
+                                    : getImpactValueClassName(
+                                        metric.detailValue,
+                                      )
                               }
                             >
-                              {metric.detail}
+                              {isMetricPending
+                                ? getPendingImpactMetricLabel(
+                                    metric.horizon,
+                                  )
+                                : metric.detail}
                             </small>
                           </div>
 
@@ -4141,34 +4224,46 @@ function App() {
                                         {row.label}
                                       </th>
                                       <td
-                                        className={getImpactValueClassName(
-                                          row.ttwoReturnPercent,
-                                        )}
+                                        className={
+                                          row.ttwoReturnPercent === null
+                                            ? 'impact-pending'
+                                            : getImpactValueClassName(
+                                                row.ttwoReturnPercent,
+                                              )
+                                        }
                                       >
                                         {row.ttwoReturnPercent === null
-                                          ? '—'
+                                          ? 'Pendente'
                                           : formatSignedPercent(
                                               row.ttwoReturnPercent,
                                             )}
                                       </td>
                                       <td
-                                        className={getImpactValueClassName(
-                                          row.benchmarkReturnPercent,
-                                        )}
+                                        className={
+                                          row.benchmarkReturnPercent === null
+                                            ? 'impact-pending'
+                                            : getImpactValueClassName(
+                                                row.benchmarkReturnPercent,
+                                              )
+                                        }
                                       >
                                         {row.benchmarkReturnPercent === null
-                                          ? '—'
+                                          ? 'Pendente'
                                           : formatSignedPercent(
                                               row.benchmarkReturnPercent,
                                             )}
                                       </td>
                                       <td
-                                        className={getImpactValueClassName(
-                                          row.excessReturnPercent,
-                                        )}
+                                        className={
+                                          row.excessReturnPercent === null
+                                            ? 'impact-pending'
+                                            : getImpactValueClassName(
+                                                row.excessReturnPercent,
+                                              )
+                                        }
                                       >
                                         {row.excessReturnPercent === null
-                                          ? 'Ainda não disponível'
+                                          ? 'Pendente'
                                           : formatSignedPercentagePoints(
                                               row.excessReturnPercent,
                                             )}
@@ -4181,7 +4276,7 @@ function App() {
                           </div>
 
                           <p className="event-analysis-benchmark-note">
-                            Excesso = retorno da TTWO − retorno do {analysisBenchmarkSymbol}. “—” indica horizonte ainda sem dados.
+                            Excesso = retorno da TTWO − retorno do {analysisBenchmarkSymbol}. “Pendente” indica horizonte ainda em formação.
                           </p>
 
                           {benchmarkRelativeReading && (
@@ -5063,6 +5158,12 @@ function App() {
                         previewImpact,
                       )
 
+                    const isPreviewImpactAwaitingFirstTradingSession =
+                      isImpactAwaitingFirstTradingSession(
+                        previewImpact,
+                        timeSeries,
+                      )
+
                     const previewImpactTone =
                       previewImpactSummary
                         ? getEventPreviewImpactTone(
@@ -5206,6 +5307,30 @@ function App() {
                                 <strong>
                                   Calculando reação da TTWO…
                                 </strong>
+                              </div>
+                            ) : previewImpact?.isAvailable ||
+                              isPreviewImpactAwaitingFirstTradingSession ? (
+                              <div className="event-preview-impact pending">
+                                <span>Reação observada</span>
+                                <strong>
+                                  Métricas em formação
+                                </strong>
+                                <small>
+                                  {isPreviewImpactAwaitingFirstTradingSession
+                                    ? 'Aguardando o primeiro pregão completo após o evento'
+                                    : 'Aguardando pregões completos após o evento'}
+                                </small>
+                              </div>
+                            ) : previewImpact ? (
+                              <div className="event-preview-impact unavailable">
+                                <span>Reação observada</span>
+                                <strong>
+                                  Dados indisponíveis
+                                </strong>
+                                <small>
+                                  {previewImpact.unavailableReason ??
+                                    'Não há cotações suficientes para esta análise.'}
+                                </small>
                               </div>
                             ) : (
                               <div className="event-preview-impact unavailable">

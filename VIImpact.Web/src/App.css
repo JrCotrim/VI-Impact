@@ -15103,3 +15103,148 @@ a {
     padding-left: 9px;
   }
 }
+
+.event-analysis-metric-card.pending {
+  border-color: rgba(240, 190, 92, 0.24);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(25, 27, 39, 0.98),
+      rgba(17, 21, 35, 0.98)
+    );
+}
+
+.event-analysis-metric-card.pending::after {
+  background:
+    radial-gradient(
+      circle,
+      rgba(240, 190, 92, 0.12),
+      transparent 68%
+    );
+}
+
+.event-analysis-metric-copy strong.impact-pending {
+  color: #f0c46d;
+  font-size: clamp(1.05rem, 1.35vw, 1.35rem);
+  letter-spacing: -0.02em;
+}
+
+.event-analysis-metric-copy small.impact-pending {
+  color: #cbb98f;
+}
+
+.event-analysis-benchmark-table .impact-pending {
+  color: #d8b66f;
+  font-weight: 750;
+}
+
+.event-analysis-state-card.pending {
+  display: grid;
+  gap: 6px;
+  border-color: rgba(240, 190, 92, 0.24);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(114, 82, 24, 0.12),
+      var(--card-background)
+    );
+}
+
+.event-analysis-state-card.pending strong,
+.event-analysis-state-card.pending span {
+  display: block;
+}
+
+.event-analysis-state-card.pending strong {
+  color: #f0c46d;
+  font-size: 0.82rem;
+}
+
+.event-analysis-state-card.pending span {
+  color: var(--secondary-text);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.event-analysis-state-card.unavailable {
+  display: grid;
+  gap: 6px;
+  border-color: rgba(240, 190, 92, 0.22);
+}
+
+.event-analysis-state-card.unavailable strong,
+.event-analysis-state-card.unavailable span {
+  display: block;
+}
+
+.event-analysis-state-card.unavailable strong {
+  color: var(--primary-text);
+  font-size: 0.82rem;
+}
+
+.event-analysis-state-card.unavailable span {
+  color: var(--secondary-text);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.event-preview-impact.pending {
+  border-color: rgba(240, 190, 92, 0.22);
+  background: rgba(114, 82, 24, 0.12);
+}
+
+.event-preview-impact.pending > strong {
+  color: #f0c46d;
+}
+
+.event-preview-impact.pending > small {
+  color: #cbb98f;
+  white-space: normal;
+  text-align: right;
+}
+
+:root:not([data-theme='night'])
+  .event-preview-impact.pending {
+  border-color: rgba(181, 126, 24, 0.2);
+  background: rgba(255, 246, 222, 0.78);
+}
+
+:root:not([data-theme='night'])
+  .event-preview-impact.pending > strong {
+  color: #8a651d;
+}
+
+:root:not([data-theme='night'])
+  .event-preview-impact.pending > small {
+  color: #76633f;
+}
+
+/* Keep pending metric states semantically amber in the light theme.
+   The general light-theme metric text rules are more specific than the
+   base pending selectors, so these scoped overrides preserve the status
+   color without affecting calculated positive/negative values. */
+:root:not([data-theme='night'])
+  .event-analysis-metric-card.pending {
+  border-color: rgba(181, 126, 24, 0.28);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 250, 237, 0.98),
+      rgba(255, 255, 255, 0.94)
+    );
+}
+
+:root:not([data-theme='night'])
+  .event-analysis-metric-copy
+  strong.impact-pending,
+:root:not([data-theme='night'])
+  .event-analysis-benchmark-table
+  .impact-pending {
+  color: #b77912;
+}
+
+:root:not([data-theme='night'])
+  .event-analysis-metric-copy
+  small.impact-pending {
+  color: #8a6b2e;
+}
