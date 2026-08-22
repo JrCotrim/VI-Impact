@@ -1,0 +1,162 @@
+/*
+ * VI Impact design tokens
+ *
+ * Stable visual vocabulary extracted from the currently approved interface.
+ * Component-specific rules remain in App.css while the legacy stylesheet is
+ * consolidated incrementally. Introducing this file must not redesign the UI.
+ */
+
+:root {
+  /* Typography */
+  --vi-font-body:
+    'ArtDecoMedium',
+    'Trebuchet MS',
+    'Segoe UI',
+    sans-serif;
+  --vi-font-display:
+    'ArtDecoCondensedBold',
+    'Arial Narrow',
+    'Franklin Gothic Condensed',
+    sans-serif;
+
+  /* Type scale — compact, but no longer dependent on ad-hoc micro sizes. */
+  --vi-font-size-micro: 0.7rem;
+  --vi-font-size-caption: 0.72rem;
+  --vi-font-size-caption-readable: 0.75rem;
+  --vi-font-size-label: 0.78rem;
+  --vi-font-size-body-sm: 0.78rem;
+  --vi-font-size-body: 0.82rem;
+  --vi-font-size-section-title: 1.08rem;
+  --vi-font-size-data-sm: 0.92rem;
+  --vi-font-weight-label: 800;
+  --vi-font-weight-heading: 850;
+  --vi-letter-spacing-eyebrow: 0.12em;
+  --vi-letter-spacing-label: 0.06em;
+  --vi-letter-spacing-data: -0.03em;
+  --vi-line-height-tight: 1.12;
+  --vi-line-height-compact: 1.35;
+  --vi-line-height-readable: 1.5;
+
+  /* Existing recurring rhythm values */
+  --vi-space-2: 8px;
+  --vi-radius-control: 9px;
+  --vi-radius-control-sm: 7px;
+  --vi-radius-chip: 7px;
+  --vi-radius-pill: 999px;
+
+  /* Shared control sizing and interaction language */
+  --vi-control-height-compact: 30px;
+  --vi-control-height-default: 36px;
+  --vi-control-disabled-opacity: 0.48;
+
+  /* Motion already used by interactive controls */
+  --vi-motion-fast: 170ms;
+  --vi-motion-control: 150ms;
+  --vi-ease-standard: ease;
+  --vi-ease-control: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Day theme — semantic foundation */
+  --vi-color-page: #f8f9fa;
+  --vi-color-surface: #ffffff;
+  --vi-color-card: #ffffff;
+  --vi-color-border: rgba(11, 19, 43, 0.14);
+  --vi-color-text-primary: #0b132b;
+  --vi-color-text-secondary: #48516b;
+  --vi-color-text-muted: #687187;
+
+  --vi-color-brand-pink: #e6007a;
+  --vi-color-brand-purple: #9d4edd;
+  --vi-color-brand-cyan: #00b4d8;
+  --vi-color-brand-navy: #0b132b;
+
+  --vi-color-positive: #079669;
+  --vi-color-negative: #dc2626;
+  --vi-color-pending: #956a19;
+  --vi-color-pending-table: #956a19;
+  --vi-color-pending-muted: #786039;
+  --vi-color-pending-border: rgba(181, 126, 24, 0.28);
+  --vi-color-pending-surface-start: rgba(255, 250, 237, 0.98);
+  --vi-color-pending-surface-end: rgba(255, 255, 255, 0.94);
+
+  --vi-date-text: #526078;
+
+  /* Shared controls — neutral by default, branded when selected */
+  --vi-control-text: #48516b;
+  --vi-control-text-strong: #11182b;
+  --vi-control-border: rgba(63, 72, 101, 0.18);
+  --vi-control-border-hover: rgba(230, 0, 122, 0.34);
+  --vi-control-background: rgba(255, 255, 255, 0.82);
+  --vi-control-background-hover: #ffffff;
+  --vi-control-active-text: #b30d65;
+  --vi-control-active-border: rgba(230, 0, 122, 0.38);
+  --vi-control-active-background: rgba(230, 0, 122, 0.075);
+  --vi-control-focus-ring: rgba(230, 0, 122, 0.56);
+  --vi-control-accent-text: #b30d65;
+  --vi-control-accent-border: rgba(230, 0, 122, 0.28);
+  --vi-control-accent-background: rgba(230, 0, 122, 0.065);
+  --vi-control-accent-background-hover: rgba(230, 0, 122, 0.11);
+
+  /* Hero controls — hero stays dark in both themes */
+  --vi-hero-control-text: #ffe0ef;
+  --vi-hero-control-text-hover: #ffffff;
+  --vi-hero-control-border: rgba(255, 111, 187, 0.28);
+  --vi-hero-control-border-hover: rgba(255, 111, 187, 0.56);
+  --vi-hero-control-background: rgba(8, 13, 30, 0.56);
+  --vi-hero-control-background-hover: rgba(25, 19, 47, 0.76);
+  --vi-hero-control-focus: rgba(255, 132, 197, 0.86);
+  --vi-hero-control-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme='night'] {
+  --vi-color-page: #0a0915;
+  --vi-color-surface: #15132b;
+  --vi-color-card: #15132b;
+  --vi-color-border: rgba(157, 78, 221, 0.28);
+  --vi-color-text-primary: #f8f7ff;
+  --vi-color-text-secondary: #c8c4dc;
+  --vi-color-text-muted: #918ca8;
+
+  --vi-color-brand-pink: #ff2a85;
+  --vi-color-brand-purple: #9d4edd;
+  --vi-color-brand-cyan: #00f2fe;
+  --vi-color-brand-navy: #0a0915;
+
+  --vi-color-positive: #38df9d;
+  --vi-color-negative: #ff4d6d;
+  --vi-color-pending: #f0c46d;
+  --vi-color-pending-table: #d8b66f;
+  --vi-color-pending-muted: #cbb98f;
+  --vi-color-pending-border: rgba(240, 190, 92, 0.24);
+  --vi-color-pending-surface-start: rgba(25, 27, 39, 0.98);
+  --vi-color-pending-surface-end: rgba(17, 21, 35, 0.98);
+
+  --vi-date-text: #b4bfd3;
+
+  --vi-control-text: #b8bfd2;
+  --vi-control-text-strong: #ffffff;
+  --vi-control-border: rgba(132, 153, 199, 0.22);
+  --vi-control-border-hover: rgba(255, 82, 170, 0.42);
+  --vi-control-background: rgba(7, 16, 34, 0.5);
+  --vi-control-background-hover: rgba(255, 255, 255, 0.055);
+  --vi-control-active-text: #ff82c2;
+  --vi-control-active-border: rgba(255, 73, 166, 0.44);
+  --vi-control-active-background: rgba(242, 49, 147, 0.13);
+  --vi-control-focus-ring: rgba(255, 105, 184, 0.72);
+  --vi-control-accent-text: #ff83c2;
+  --vi-control-accent-border: rgba(255, 74, 166, 0.34);
+  --vi-control-accent-background: rgba(255, 54, 154, 0.09);
+  --vi-control-accent-background-hover: rgba(255, 54, 154, 0.16);
+}
+
+/* Editorial surfaces — use hierarchy and dividers before adding another card. */
+:root {
+  --vi-editorial-divider: rgba(11, 19, 43, 0.14);
+  --vi-editorial-divider-strong: rgba(11, 19, 43, 0.22);
+  --vi-editorial-insight-accent: #009ec1;
+}
+
+:root[data-theme='night'] {
+  --vi-editorial-divider: rgba(157, 78, 221, 0.22);
+  --vi-editorial-divider-strong: rgba(157, 78, 221, 0.34);
+  --vi-editorial-insight-accent: #31d7ee;
+}

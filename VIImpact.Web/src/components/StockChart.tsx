@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { EventIcon } from './EventIcon'
+import { createPinchViewport } from './stockChartPinch'
 import {
   CartesianGrid,
   Line,
@@ -133,6 +134,18 @@ const EVENT_MARKER_MOBILE_MIN_HORIZONTAL_GAP = 34
 interface ChartDragState {
   pointerId: number
   startClientX: number
+  viewport: ChartViewport
+}
+
+interface TouchPointerPosition {
+  clientX: number
+  clientY: number
+}
+
+interface ChartPinchState {
+  pointerIds: [number, number]
+  initialDistance: number
+  initialAnchorRatio: number
   viewport: ChartViewport
 }
 
@@ -2168,6 +2181,12 @@ function EventMarkerShape({
 
   return (
     <g
+      className={[
+        'event-chart-marker',
+        marker.isSelected ? 'is-selected' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       data-event-marker="true"
       role="button"
       aria-label={markerLabel}
@@ -2190,6 +2209,7 @@ function EventMarkerShape({
       }}
     >
       <line
+        className="event-chart-marker-rail"
         x1={iconX}
         y1={iconY + iconRadius + 4}
         x2={iconX}
@@ -2220,6 +2240,7 @@ function EventMarkerShape({
       )}
 
       <circle
+        className="event-chart-marker-point"
         cx={cx}
         cy={cy}
         r={marker.isSelected ? 4.5 : 3}
@@ -2231,6 +2252,7 @@ function EventMarkerShape({
 
       {hasEmphasis && (
         <circle
+          className="event-chart-marker-halo"
           cx={iconX}
           cy={iconY}
           r={iconRadius + 7}
@@ -2243,6 +2265,7 @@ function EventMarkerShape({
       )}
 
       <circle
+        className="event-chart-marker-ring"
         cx={iconX}
         cy={iconY}
         r={iconRadius + 1.5}
@@ -2303,6 +2326,12 @@ export function StockChart({
     useRef<HTMLDivElement | null>(null)
   const dragStateRef =
     useRef<ChartDragState | null>(null)
+  const touchPointersRef =
+    useRef<Map<number, TouchPointerPosition>>(
+      new Map(),
+    )
+  const pinchStateRef =
+    useRef<ChartPinchState | null>(null)
   const viewportRef =
     useRef<ChartViewport>({
       startIndex: 0,
@@ -2579,6 +2608,8 @@ export function StockChart({
         setActiveEventTooltip(null)
         setIsDragging(false)
         dragStateRef.current = null
+        pinchStateRef.current = null
+        touchPointersRef.current.clear()
       })
 
     return () => {
@@ -3077,10 +3108,121 @@ export function StockChart({
     }
   }
 
+  function getTouchPair() {
+    const entries = Array.from(
+      touchPointersRef.current.entries(),
+    )
+
+    if (entries.length < 2) {
+      return null
+    }
+
+    const [
+      [firstPointerId, firstPointer],
+      [secondPointerId, secondPointer],
+    ] = entries
+
+    return {
+      pointerIds: [
+        firstPointerId,
+        secondPointerId,
+      ] as [number, number],
+      firstPointer,
+      secondPointer,
+    }
+  }
+
+  function getPinchDistance(
+    firstPointer: TouchPointerPosition,
+    secondPointer: TouchPointerPosition,
+  ) {
+    return Math.hypot(
+      secondPointer.clientX -
+        firstPointer.clientX,
+      secondPointer.clientY -
+        firstPointer.clientY,
+    )
+  }
+
+  function getPinchAnchorRatio(
+    firstPointer: TouchPointerPosition,
+    secondPointer: TouchPointerPosition,
+  ) {
+    const chartContainer =
+      chartContainerRef.current
+
+    if (!chartContainer) {
+      return 0.5
+    }
+
+    const bounds =
+      chartContainer.getBoundingClientRect()
+    const midpointX =
+      (firstPointer.clientX +
+        secondPointer.clientX) /
+      2
+
+    return clamp(
+      bounds.width > 0
+        ? (midpointX - bounds.left) /
+            bounds.width
+        : 0.5,
+      0,
+      1,
+    )
+  }
+
+  function beginPinchGesture() {
+    const touchPair = getTouchPair()
+
+    if (
+      !touchPair ||
+      totalPointCount <= 1
+    ) {
+      return
+    }
+
+    const initialDistance =
+      getPinchDistance(
+        touchPair.firstPointer,
+        touchPair.secondPointer,
+      )
+
+    if (initialDistance <= 0) {
+      return
+    }
+
+    const currentViewport =
+      pendingViewportRef.current ??
+      viewportRef.current
+
+    pinchStateRef.current = {
+      pointerIds: touchPair.pointerIds,
+      initialDistance,
+      initialAnchorRatio:
+        getPinchAnchorRatio(
+          touchPair.firstPointer,
+          touchPair.secondPointer,
+        ),
+      viewport: normalizeViewport(
+        currentViewport,
+        totalPointCount,
+      ),
+    }
+
+    dragStateRef.current = null
+    setIsDragging(false)
+    clearChartInteractionState()
+    hideCrosshair()
+  }
+
   function handlePointerDown(
     event: ReactPointerEvent<HTMLDivElement>,
   ) {
-    if (event.button !== 0) {
+    if (
+      event.pointerType !== 'touch' &&
+      event.button !== 0
+    ) {
       return
     }
 
@@ -3093,6 +3235,40 @@ export function StockChart({
       )
     ) {
       return
+    }
+
+    if (event.pointerType === 'touch') {
+      touchPointersRef.current.set(
+        event.pointerId,
+        {
+          clientX: event.clientX,
+          clientY: event.clientY,
+        },
+      )
+
+      if (
+        touchPointersRef.current.size >= 2
+      ) {
+        event.preventDefault()
+        beginPinchGesture()
+
+        for (
+          const pointerId of
+          pinchStateRef.current?.pointerIds ??
+          []
+        ) {
+          try {
+            event.currentTarget.setPointerCapture(
+              pointerId,
+            )
+          } catch {
+            // A pointer can disappear between the
+            // second touch and capture on mobile.
+          }
+        }
+
+        return
+      }
     }
 
     // Pointer interaction should not move focus to the chart.
@@ -3112,15 +3288,86 @@ export function StockChart({
         pendingViewportRef.current ??
         viewportRef.current,
     }
-    event.currentTarget.setPointerCapture(
-      event.pointerId,
-    )
+
+    try {
+      event.currentTarget.setPointerCapture(
+        event.pointerId,
+      )
+    } catch {
+      // Pointer capture is an enhancement, not a
+      // prerequisite for mouse or touch panning.
+    }
+
     setIsDragging(true)
   }
 
   function handlePointerMove(
     event: ReactPointerEvent<HTMLDivElement>,
   ) {
+    if (
+      event.pointerType === 'touch' &&
+      touchPointersRef.current.has(
+        event.pointerId,
+      )
+    ) {
+      touchPointersRef.current.set(
+        event.pointerId,
+        {
+          clientX: event.clientX,
+          clientY: event.clientY,
+        },
+      )
+
+      const pinchState =
+        pinchStateRef.current
+
+      if (pinchState) {
+        const firstPointer =
+          touchPointersRef.current.get(
+            pinchState.pointerIds[0],
+          )
+        const secondPointer =
+          touchPointersRef.current.get(
+            pinchState.pointerIds[1],
+          )
+
+        if (
+          firstPointer &&
+          secondPointer
+        ) {
+          event.preventDefault()
+          hideCrosshair()
+
+          scheduleViewportUpdate(
+            createPinchViewport({
+              viewport: pinchState.viewport,
+              totalPointCount,
+              minimumViewportSpan:
+                getMinimumViewportSpan(
+                  totalPointCount,
+                ),
+              initialDistance:
+                pinchState.initialDistance,
+              currentDistance:
+                getPinchDistance(
+                  firstPointer,
+                  secondPointer,
+                ),
+              initialAnchorRatio:
+                pinchState.initialAnchorRatio,
+              currentAnchorRatio:
+                getPinchAnchorRatio(
+                  firstPointer,
+                  secondPointer,
+                ),
+            }),
+          )
+
+          return
+        }
+      }
+    }
+
     const dragState = dragStateRef.current
 
     if (!dragState) {
@@ -3260,16 +3507,34 @@ export function StockChart({
     }
   }
 
-  function finishDragging(
+  function finishPointerInteraction(
     event: ReactPointerEvent<HTMLDivElement>,
   ) {
+    if (event.pointerType === 'touch') {
+      touchPointersRef.current.delete(
+        event.pointerId,
+      )
+
+      const pinchState =
+        pinchStateRef.current
+
+      if (
+        pinchState?.pointerIds.includes(
+          event.pointerId,
+        )
+      ) {
+        pinchStateRef.current = null
+      }
+    }
+
     const dragState = dragStateRef.current
 
     if (
-      !dragState ||
-      dragState.pointerId !== event.pointerId
+      dragState &&
+      dragState.pointerId === event.pointerId
     ) {
-      return
+      dragStateRef.current = null
+      setIsDragging(false)
     }
 
     if (
@@ -3281,9 +3546,6 @@ export function StockChart({
         event.pointerId,
       )
     }
-
-    dragStateRef.current = null
-    setIsDragging(false)
   }
 
   function handleKeyDown(
@@ -3335,8 +3597,8 @@ export function StockChart({
       tabIndex={0}
       aria-label={
         isComparisonMode
-          ? `Gráfico comparativo normalizado de ${primarySymbol} e ${benchmarkSymbol}. Use o scroll para aproximar ou afastar e arraste para navegar pelas datas.`
-          : 'Gráfico de linha interativo. Use o scroll para aproximar ou afastar e arraste para navegar pelas datas.'
+          ? `Gráfico comparativo normalizado de ${primarySymbol} e ${benchmarkSymbol}. Use o scroll ou gesto de pinça para aproximar ou afastar e arraste para navegar pelas datas.`
+          : 'Gráfico de linha interativo. Use o scroll ou gesto de pinça para aproximar ou afastar e arraste para navegar pelas datas.'
       }
       onPointerEnter={refreshChartBounds}
       onPointerDown={handlePointerDown}
@@ -3344,8 +3606,8 @@ export function StockChart({
         event.stopPropagation()
         handlePointerMove(event)
       }}
-      onPointerUp={finishDragging}
-      onPointerCancel={finishDragging}
+      onPointerUp={finishPointerInteraction}
+      onPointerCancel={finishPointerInteraction}
       onPointerLeave={handlePointerLeave}
       onKeyDown={handleKeyDown}
     >

@@ -193,18 +193,6 @@ a {
   transform: translateY(-1px);
 }
 
-.top-navigation-link.active {
-  color: #ff78bd;
-  border-color: rgba(97, 122, 184, 0.18);
-  background:
-    linear-gradient(
-      145deg,
-      rgba(19, 31, 62, 0.94),
-      rgba(12, 22, 44, 0.9)
-    );
-  box-shadow:
-    0 8px 22px rgba(0, 0, 0, 0.2);
-}
 
 .navigation-icon {
   display: inline-grid;
@@ -234,39 +222,8 @@ a {
   background: rgba(12, 18, 37, 0.84);
 }
 
-.theme-toggle {
-  gap: 9px;
-  padding: 0 12px;
-  cursor: pointer;
-}
 
-.theme-toggle-track {
-  position: relative;
-  width: 42px;
-  height: 22px;
-  border-radius: 999px;
-  background:
-    linear-gradient(
-      90deg,
-      #fc36a0,
-      #bd55e9
-    );
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
-}
 
-.theme-toggle-thumb {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow:
-    0 2px 8px rgba(16, 10, 31, 0.42);
-  transition: transform 180ms ease;
-}
 
 :root[data-theme='night']
   .theme-toggle-thumb {
@@ -467,14 +424,6 @@ a {
   opacity: 0.42;
 }
 
-.price-card {
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.94),
-      rgba(255, 214, 231, 0.84)
-    );
-}
 
 .price-card::after {
   background:
@@ -485,14 +434,6 @@ a {
     );
 }
 
-.variation-card {
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.96),
-      rgba(241, 255, 245, 0.88)
-    );
-}
 
 .variation-card::after {
   background:
@@ -503,14 +444,6 @@ a {
     );
 }
 
-.volume-card {
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.96),
-      rgba(222, 237, 255, 0.9)
-    );
-}
 
 .volume-card::after {
   background:
@@ -521,14 +454,6 @@ a {
     );
 }
 
-.update-card {
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.94),
-      rgba(241, 210, 255, 0.88)
-    );
-}
 
 .update-card::after {
   background:
@@ -576,47 +501,10 @@ a {
     inset 0 0 0 1px rgba(255, 255, 255, 0.28);
 }
 
-.summary-icon svg {
-  width: 25px;
-  height: 25px;
-  fill: currentColor;
-}
 
-.price-icon {
-  background:
-    linear-gradient(
-      145deg,
-      #ff4ca6,
-      #e51c7e
-    );
-}
 
-.variation-icon {
-  background:
-    linear-gradient(
-      145deg,
-      #24c487,
-      #05a565
-    );
-}
 
-.volume-icon {
-  background:
-    linear-gradient(
-      145deg,
-      #45aaff,
-      #126ad9
-    );
-}
 
-.update-icon {
-  background:
-    linear-gradient(
-      145deg,
-      #b35eff,
-      #7d24d0
-    );
-}
 
 .summary-card strong {
   position: relative;
@@ -684,38 +572,9 @@ a {
   stroke-linejoin: round;
 }
 
-.summary-sparkline.positive polyline {
-  stroke: #0ab96c;
-}
 
-.summary-sparkline.negative polyline {
-  stroke: #e13b65;
-}
 
-.volume-bars {
-  position: absolute;
-  z-index: 2;
-  right: 20px;
-  bottom: 38px;
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 52px;
-}
 
-.volume-bars span {
-  width: 4px;
-  min-height: 8px;
-  border-radius: 3px 3px 0 0;
-  background:
-    linear-gradient(
-      180deg,
-      #46aaff,
-      #1675df
-    );
-  box-shadow:
-    0 0 7px rgba(35, 135, 235, 0.18);
-}
 
 .time-value {
   font-variant-numeric: tabular-nums;
@@ -833,26 +692,7 @@ a {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.chart-panel .chart-period-button.active,
-.chart-panel .calendar-period-button.active {
-  color: #ff6db7;
-  border-color: rgba(255, 72, 164, 0.62);
-  background:
-    linear-gradient(
-      145deg,
-      rgba(242, 49, 147, 0.2),
-      rgba(242, 49, 147, 0.08)
-    );
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 94, 179, 0.12),
-    0 5px 16px rgba(226, 31, 132, 0.12);
-}
 
-.chart-panel
-  .chart-period-button.active
-  .chart-period-label {
-  color: #ff6db7;
-}
 
 .chart-panel .custom-period-panel {
   border-color: rgba(135, 157, 205, 0.22);
@@ -1113,10 +953,6 @@ a {
     color 160ms ease;
 }
 
-.all-events-link:hover {
-  color: #ffffff;
-  background: rgba(236, 45, 144, 0.2);
-}
 
 .site-footer {
   display: grid;
@@ -1288,13 +1124,7 @@ a {
       repeat(2, minmax(0, 1fr));
   }
 
-  .dashboard-content {
-    grid-template-columns: 1fr;
-  }
 
-  .events-panel {
-    order: 2;
-  }
 
   .hero-art {
     width: 72%;
@@ -1307,16 +1137,7 @@ a {
     scroll-padding-top: 74px;
   }
 
-  .topbar {
-    grid-template-columns: auto 1fr auto;
-    min-height: 70px;
-    padding: 0 14px;
-  }
 
-  .brand-logo {
-    width: 86px;
-    height: 62px;
-  }
 
   .top-navigation {
     justify-content: flex-start;
@@ -1337,28 +1158,14 @@ a {
     display: none;
   }
 
-  .theme-toggle {
-    padding: 0 9px;
-  }
 
   .theme-toggle > span:first-child,
   .theme-toggle > span:last-child {
     display: none;
   }
 
-  .dashboard {
-    padding: 0 14px 18px;
-  }
 
-  .hero-banner {
-    min-height: 150px;
-    margin: 0 -14px;
-    padding: 26px 20px;
-  }
 
-  .hero-copy {
-    max-width: 78%;
-  }
 
   .hero-copy h1 {
     font-size: clamp(1.7rem, 7vw, 2.35rem);
@@ -1561,9 +1368,6 @@ body {
     0 9px 24px rgba(0, 0, 0, 0.24);
 }
 
-.topbar-actions {
-  justify-self: end;
-}
 
 .dashboard {
   width: 100%;
@@ -1592,20 +1396,6 @@ body {
   box-shadow: none;
 }
 
-.hero-banner::before {
-  inset: auto 0 0;
-  height: 64px;
-  background:
-    linear-gradient(
-      180deg,
-      transparent,
-      color-mix(
-        in srgb,
-        var(--page-background) 84%,
-        transparent
-      )
-    );
-}
 
 .hero-copy {
   max-width: 900px;
@@ -1635,9 +1425,6 @@ body {
   display: none;
 }
 
-.summary-grid {
-  margin-top: 2px;
-}
 
 .variation-card {
   display: flex;
@@ -1676,26 +1463,7 @@ body {
   padding-left: 58px;
 }
 
-.dashboard-content {
-  grid-template-columns:
-    minmax(0, 2fr) minmax(350px, 1fr);
-}
 
-.chart-panel,
-.events-panel {
-  border-color: rgba(116, 140, 194, 0.25);
-  background:
-    radial-gradient(
-      circle at 75% 10%,
-      rgba(92, 42, 126, 0.16),
-      transparent 35%
-    ),
-    linear-gradient(
-      145deg,
-      #0a162b,
-      #071126
-    );
-}
 
 .chart-panel .stock-chart-container .recharts-area-curve {
   stroke: var(--gta-pink) !important;
@@ -1706,10 +1474,6 @@ body {
     );
 }
 
-.chart-panel .stock-chart-container .recharts-area-area {
-  fill: var(--gta-magenta) !important;
-  fill-opacity: 0.24 !important;
-}
 
 .chart-panel .stock-chart-container .recharts-dot,
 .chart-panel .stock-chart-container .recharts-active-dot circle {
@@ -1742,10 +1506,6 @@ body {
 }
 
 @media (max-width: 1180px) {
-  .topbar {
-    grid-template-columns: 190px auto minmax(0, 1fr);
-    padding: 0 24px;
-  }
 
   .brand-logo {
     width: 132px;
@@ -1836,15 +1596,6 @@ body {
    Theme, banner and summary-card refinement
    ========================================================= */
 
-.app-shell {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 220, 236, 0.44) 0,
-      rgba(247, 241, 251, 0.94) 470px,
-      var(--page-background) 820px
-    );
-}
 
 :root[data-theme='night'] .app-shell {
   background:
@@ -1861,18 +1612,11 @@ body {
     );
 }
 
-.topbar {
-  grid-template-columns: 210px minmax(0, 1fr) auto;
-  min-height: 86px;
-}
 
 .top-navigation {
   justify-content: center;
 }
 
-.topbar-actions {
-  justify-self: end;
-}
 
 .symbol-control {
   display: none;
@@ -1923,10 +1667,6 @@ body {
   background: rgba(255, 201, 87, 0.12);
 }
 
-.theme-toggle.night .theme-toggle-status-icon {
-  color: #c2afff;
-  background: rgba(159, 124, 255, 0.14);
-}
 
 .theme-toggle-status-icon svg {
   display: block;
@@ -1973,14 +1713,6 @@ body {
     inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
-.theme-toggle.night .theme-toggle-track {
-  background:
-    linear-gradient(
-      90deg,
-      #8b54e8,
-      #ec3da0
-    );
-}
 
 .theme-toggle-thumb {
   position: absolute;
@@ -2095,28 +1827,8 @@ body {
   margin-bottom: 18px;
 }
 
-.summary-card {
-  grid-template-rows: auto minmax(70px, 1fr) auto;
-  min-height: 196px;
-  padding: 20px 20px 18px;
-  border-radius: 18px;
-  box-shadow:
-    0 16px 32px rgba(50, 37, 82, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.34);
-}
 
-.summary-card::before {
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.64),
-      transparent 56%
-    );
-}
 
-.summary-card-heading {
-  gap: 13px;
-}
 
 .summary-icon {
   display: grid;
@@ -2128,17 +1840,6 @@ body {
   line-height: 0;
 }
 
-.summary-icon svg {
-  display: block;
-  width: 25px;
-  height: 25px;
-  overflow: visible;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
 
 .summary-card-main {
   position: relative;
@@ -2181,14 +1882,7 @@ body {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.summary-card small {
-  padding-left: 61px;
-}
 
-.variation-card {
-  display: grid;
-  grid-template-rows: auto minmax(70px, 1fr) auto;
-}
 
 .variation-card .summary-card-main {
   margin: 0;
@@ -2200,28 +1894,9 @@ body {
   white-space: nowrap;
 }
 
-.variation-card .summary-sparkline {
-  position: absolute;
-  right: 18px;
-  bottom: 38px;
-  width: 42%;
-  height: 52px;
-  margin: 0;
-}
 
-.variation-card small {
-  margin: 0;
-}
 
-.volume-card .summary-card-main {
-  padding-right: 34%;
-}
 
-.volume-bars {
-  right: 22px;
-  bottom: 38px;
-  height: 62px;
-}
 
 .price-card::after,
 .update-card::after {
@@ -2387,22 +2062,22 @@ body {
    ========================================================= */
 
 :root {
-  --page-background: #f8f9fa;
-  --surface-background: #ffffff;
-  --card-background: #ffffff;
-  --border-color: rgba(11, 19, 43, 0.14);
+  --page-background: var(--vi-color-page);
+  --surface-background: var(--vi-color-surface);
+  --card-background: var(--vi-color-card);
+  --border-color: var(--vi-color-border);
 
-  --primary-text: #0b132b;
-  --secondary-text: #48516b;
-  --muted-text: #70788d;
+  --primary-text: var(--vi-color-text-primary);
+  --secondary-text: var(--vi-color-text-secondary);
+  --muted-text: var(--vi-color-text-muted);
 
-  --accent-pink: #e6007a;
-  --accent-purple: #9d4edd;
-  --accent-blue: #00b4d8;
-  --accent-cyan: #00b4d8;
+  --accent-pink: var(--vi-color-brand-pink);
+  --accent-purple: var(--vi-color-brand-purple);
+  --accent-blue: var(--vi-color-brand-cyan);
+  --accent-cyan: var(--vi-color-brand-cyan);
 
-  --positive: #079669;
-  --negative: #d9255f;
+  --positive: var(--vi-color-positive);
+  --negative: var(--vi-color-negative);
 
   --gta-pink: #e6007a;
   --gta-magenta: #e6007a;
@@ -2424,22 +2099,22 @@ body {
 }
 
 :root[data-theme='night'] {
-  --page-background: #0a0915;
-  --surface-background: #15132b;
-  --card-background: #15132b;
-  --border-color: rgba(157, 78, 221, 0.28);
+  --page-background: var(--vi-color-page);
+  --surface-background: var(--vi-color-surface);
+  --card-background: var(--vi-color-card);
+  --border-color: var(--vi-color-border);
 
-  --primary-text: #f8f7ff;
-  --secondary-text: #c8c4dc;
-  --muted-text: #918ca8;
+  --primary-text: var(--vi-color-text-primary);
+  --secondary-text: var(--vi-color-text-secondary);
+  --muted-text: var(--vi-color-text-muted);
 
-  --accent-pink: #ff2a85;
-  --accent-purple: #9d4edd;
-  --accent-blue: #00f2fe;
-  --accent-cyan: #00f2fe;
+  --accent-pink: var(--vi-color-brand-pink);
+  --accent-purple: var(--vi-color-brand-purple);
+  --accent-blue: var(--vi-color-brand-cyan);
+  --accent-cyan: var(--vi-color-brand-cyan);
 
-  --positive: #38df9d;
-  --negative: #ff628d;
+  --positive: var(--vi-color-positive);
+  --negative: var(--vi-color-negative);
 
   --gta-pink: #ff2a85;
   --gta-magenta: #ff2a85;
@@ -2515,9 +2190,6 @@ body {
     );
 }
 
-.topbar {
-  border-bottom-color: rgba(230, 0, 122, 0.28);
-}
 
 :root[data-theme='night'] .topbar {
   border-bottom-color: rgba(255, 42, 133, 0.3);
@@ -2790,21 +2462,6 @@ body {
   stroke: var(--negative);
 }
 
-.volume-bars span {
-  background:
-    linear-gradient(
-      180deg,
-      var(--accent-cyan),
-      var(--accent-blue)
-    );
-  box-shadow:
-    0 0 8px
-      color-mix(
-        in srgb,
-        var(--accent-cyan) 24%,
-        transparent
-      );
-}
 
 .chart-panel,
 .events-panel {
@@ -3015,10 +2672,6 @@ body {
   justify-self: center;
 }
 
-.topbar-actions {
-  grid-column: 3;
-  justify-self: end;
-}
 
 .hero-banner,
 :root:not([data-theme='night']) .hero-banner,
@@ -3128,10 +2781,6 @@ body {
 
 /* Dedicated columns prevent the variation values and sparkline
    from occupying the same space. */
-.variation-card {
-  display: grid;
-  grid-template-rows: auto minmax(76px, 1fr) auto;
-}
 
 .variation-content {
   position: relative;
@@ -3152,28 +2801,8 @@ body {
   min-width: 0;
 }
 
-.variation-values strong {
-  margin: 0;
-  padding: 0;
-  font-size: clamp(1.55rem, 2vw, 2.25rem);
-  line-height: 1;
-  white-space: nowrap;
-}
 
-.variation-percent {
-  font-size: clamp(0.85rem, 1vw, 1.05rem);
-  font-weight: 850;
-  line-height: 1;
-  white-space: nowrap;
-}
 
-.variation-card .summary-sparkline {
-  position: static;
-  width: 100%;
-  height: 54px;
-  margin: 0 0 1px;
-  align-self: end;
-}
 
 .variation-card small {
   margin: 0;
@@ -3186,9 +2815,6 @@ body {
   padding-right: 0;
 }
 
-.volume-card .summary-card-main {
-  max-width: calc(100% - 128px);
-}
 
 /* Footer now contains only the project description and data source. */
 .site-footer {
@@ -3225,17 +2851,7 @@ body {
     padding: 0 16px;
   }
 
-  .brand-link {
-    top: 4px;
-    left: 12px;
-    width: 108px;
-    height: 92px;
-  }
 
-  .brand-logo {
-    width: 108px;
-    height: 92px;
-  }
 
   .top-navigation {
     justify-content: flex-start;
@@ -3250,21 +2866,8 @@ body {
 }
 
 @media (max-width: 700px) {
-  .brand-link {
-    width: 92px;
-    height: 84px;
-  }
 
-  .brand-logo {
-    width: 92px;
-    height: 84px;
-  }
 
-  .variation-content {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding-left: 0;
-  }
 
   .variation-card .summary-sparkline {
     height: 48px;
@@ -3281,11 +2884,6 @@ body {
    Compact summary cards
    ========================================================= */
 
-.summary-grid {
-  gap: 12px;
-  margin-top: 8px;
-  margin-bottom: 14px;
-}
 
 .summary-card {
   min-height: 132px;
@@ -3317,11 +2915,6 @@ body {
     inset 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
-.summary-icon svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2;
-}
 
 .summary-card-main {
   align-self: center;
@@ -3329,11 +2922,6 @@ body {
   padding-left: 50px;
 }
 
-.summary-card-main strong,
-.summary-card strong {
-  font-size: clamp(1.55rem, 1.8vw, 2rem);
-  line-height: 1;
-}
 
 .summary-card small {
   align-self: end;
@@ -3352,9 +2940,6 @@ body {
     0 0 0 2px rgba(18, 189, 112, 0.12);
 }
 
-.variation-card {
-  grid-template-rows: 38px minmax(42px, 1fr) 18px;
-}
 
 .variation-content {
   grid-template-columns:
@@ -3365,49 +2950,16 @@ body {
   padding-left: 50px;
 }
 
-.variation-values {
-  display: grid;
-  align-content: center;
-  justify-items: start;
-  gap: 2px;
-}
 
-.variation-values strong {
-  font-size: clamp(1.45rem, 1.65vw, 1.88rem);
-  line-height: 1;
-}
 
-.variation-percent {
-  font-size: 0.76rem;
-  line-height: 1;
-}
 
-.variation-card .summary-sparkline {
-  width: 100%;
-  height: 39px;
-  align-self: center;
-  margin: 0;
-}
 
 .variation-card small {
   padding-left: 50px;
 }
 
-.volume-card .summary-card-main {
-  max-width: calc(100% - 116px);
-}
 
-.volume-bars {
-  right: 17px;
-  bottom: 32px;
-  height: 39px;
-  gap: 3px;
-}
 
-.volume-bars span {
-  width: 3px;
-  min-height: 5px;
-}
 
 .time-value {
   letter-spacing: -0.035em;
@@ -3425,13 +2977,7 @@ body {
 }
 
 @media (max-width: 700px) {
-  .summary-grid {
-    grid-template-columns: 1fr;
-  }
 
-  .summary-card {
-    min-height: 124px;
-  }
 
   .variation-content {
     grid-template-columns:
@@ -3459,24 +3005,13 @@ body {
     gap: 3px;
   }
 
-  .variation-card .summary-sparkline {
-    display: none;
-  }
 
-  .volume-bars {
-    opacity: 0.72;
   }
-}
 
 /* =========================================================
    Volume card alignment and stronger night-theme icon glow
    ========================================================= */
 
-.volume-card .summary-card-main {
-  width: 100%;
-  max-width: none;
-  padding-right: 132px;
-}
 
 .volume-bars {
   position: absolute;
@@ -3495,11 +3030,6 @@ body {
   pointer-events: none;
 }
 
-.volume-bars span {
-  flex: 0 0 3px;
-  width: 3px;
-  min-height: 5px;
-}
 
 :root[data-theme='night'] .price-card {
   --card-icon-glow: rgba(255, 42, 133, 0.58);
@@ -3552,9 +3082,6 @@ body {
 }
 
 @media (max-width: 700px) {
-  .volume-card .summary-card-main {
-    padding-right: 116px;
-  }
 
   .volume-bars {
     right: 14px;
@@ -3563,9 +3090,6 @@ body {
 }
 
 @media (max-width: 460px) {
-  .volume-card .summary-card-main {
-    padding-right: 94px;
-  }
 
   .volume-bars {
     right: 12px;
@@ -3601,11 +3125,7 @@ body {
 }
 
 :root {
-  font-family:
-    'ArtDecoMedium',
-    'Trebuchet MS',
-    'Segoe UI',
-    sans-serif;
+  font-family: var(--vi-font-body);
 
   --light-card-border: rgba(11, 19, 43, 0.16);
   --light-card-shadow:
@@ -3625,11 +3145,7 @@ a {
 }
 
 .hero-copy h1 {
-  font-family:
-    'ArtDecoCondensedBold',
-    'Arial Narrow',
-    'Franklin Gothic Condensed',
-    sans-serif;
+  font-family: var(--vi-font-display);
   font-weight: 800;
   letter-spacing: 0.01em;
 }
@@ -3711,11 +3227,11 @@ a {
 /* Financial losses use a semantic red in both themes. Pink remains
    reserved for the VI Impact identity and selected controls. */
 :root {
-  --negative: #dc2626;
+  --negative: var(--vi-color-negative);
 }
 
 :root[data-theme='night'] {
-  --negative: #ff4d6d;
+  --negative: var(--vi-color-negative);
 }
 
 .negative-value,
@@ -3889,10 +3405,7 @@ a {
     justify-content: flex-end;
   }
 
-  .topbar-actions {
-    margin-left: auto;
   }
-}
 
 
 /* =========================================================
@@ -4443,14 +3956,6 @@ a {
   overflow: hidden;
 }
 
-.event-focus-button {
-  width: 100%;
-  grid-template-columns:
-    92px
-    minmax(0, 1fr)
-    28px;
-  padding: 8px;
-}
 
 .event-expand-indicator {
   display: grid;
@@ -4676,26 +4181,9 @@ a {
 }
 
 @media (max-width: 700px) {
-  .event-focus-button {
-    grid-template-columns:
-      76px
-      minmax(0, 1fr)
-      26px;
-  }
 
-  .event-card-details {
-    margin: 0 8px 8px;
-    padding: 12px;
-  }
 
-  .event-detail-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 
-  .event-detail-footer {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 
   .event-detail-subcategory {
     max-width: 100%;
@@ -4808,11 +4296,6 @@ a {
 }
 
 @media (max-width: 700px) {
-  .event-focus-button {
-    min-height: 78px;
-    grid-template-columns: 76px minmax(0, 1fr) 26px;
-    gap: 10px;
-  }
 
   .event-chart-popup {
     width: min(286px, calc(100% - 16px));
@@ -5278,10 +4761,7 @@ a {
 }
 
 @media (max-width: 700px) {
-  .event-chart-popup.event-chart-popup-portal {
-    width: min(286px, calc(100vw - 16px));
   }
-}
 
 /* =========================================================
    Desktop viewport application layout
@@ -5366,11 +4846,6 @@ a {
     overflow: hidden;
   }
 
-  .chart-content > .stock-chart-container {
-    width: 100%;
-    height: 100% !important;
-    min-height: 0 !important;
-  }
 
   .chart-content > .chart-state-message {
     width: 100%;
@@ -5633,9 +5108,6 @@ a {
   transform: translateY(-1px);
 }
 
-.summary-card-heading {
-  align-items: flex-start;
-}
 
 .summary-card-heading-copy {
   display: grid;
@@ -5655,17 +5127,6 @@ a {
   white-space: nowrap;
 }
 
-.summary-card-symbol {
-  overflow: hidden;
-  color: var(--muted-text);
-  font-size: 0.62rem;
-  font-weight: 800;
-  line-height: 1;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-  letter-spacing: 0.045em;
-}
 
 .summary-card-main-stacked {
   align-items: flex-start;
@@ -5692,13 +5153,7 @@ a {
   white-space: nowrap;
 }
 
-.volume-comparison-positive {
-  color: var(--positive);
-}
 
-.volume-comparison-negative {
-  color: var(--negative);
-}
 
 .update-age {
   font-variant-numeric: tabular-nums;
@@ -5715,14 +5170,7 @@ a {
     42px minmax(58px, 1fr) 18px;
 }
 
-.variation-content {
-  align-items: center;
-}
 
-.variation-values {
-  align-content: center;
-  gap: 4px;
-}
 
 .variation-percent {
   display: flex;
@@ -5732,25 +5180,12 @@ a {
   max-width: 100%;
 }
 
-.variation-period-copy {
-  color: var(--secondary-text);
-  font-size: 0.62rem;
-  font-weight: 700;
-  line-height: 1.18;
-  white-space: normal;
-}
 
 .volume-card .summary-card-main {
   padding-right: 112px;
 }
 
-.volume-card .summary-card-context {
-  max-width: 190px;
-}
 
-.volume-bars {
-  bottom: 34px;
-}
 
 @media (max-width: 1280px) {
   .summary-card {
@@ -5767,9 +5202,6 @@ a {
     min-height: 146px;
   }
 
-  .summary-card-title {
-    font-size: 0.76rem;
-  }
 
   .summary-card-main-stacked {
     align-items: flex-start;
@@ -5799,43 +5231,18 @@ a {
     max-width: calc(100% - 78px);
   }
 
-  .volume-bars {
-    opacity: 0.58;
   }
-}
 
 
 /* =========================================================
    Summary card heading and daily variation refinements
    ========================================================= */
 
-.summary-card-heading {
-  align-items: center;
-}
 
-.summary-card-title {
-  font-size: 0.88rem;
-  line-height: 1.1;
-}
 
-.variation-percent {
-  flex-wrap: nowrap;
-  gap: 5px;
-  white-space: nowrap;
-}
 
-.variation-period-copy {
-  color: inherit;
-  font-size: 0.68rem;
-  font-weight: 750;
-  line-height: 1;
-  white-space: nowrap;
-}
 
 @media (max-width: 700px) {
-  .summary-card-title {
-    font-size: 0.84rem;
-  }
 
   .variation-period-copy {
     font-size: 0.65rem;
@@ -5852,29 +5259,12 @@ a {
    Final approved daily-variation spacing
    ========================================================= */
 
-.variation-content {
-  grid-template-columns:
-    minmax(148px, 1fr)
-    minmax(88px, 30%);
-  gap: 14px;
-}
 
-.variation-card .summary-sparkline {
-  width: 100%;
-  max-width: 92px;
-  justify-self: end;
-}
 
 /* =========================================================
    Compact impact ranking
    ========================================================= */
 
-.dashboard-content {
-  grid-template-columns:
-    minmax(0, 1.55fr)
-    minmax(300px, 0.72fr)
-    minmax(270px, 0.62fr);
-}
 
 .chart-panel,
 .events-panel,
@@ -6061,65 +5451,11 @@ a {
     0 2px 8px rgba(3, 6, 17, 0.5);
 }
 
-.impact-ranking-icon.official {
-  background:
-    linear-gradient(
-      145deg,
-      #ff9b78,
-      #f048a1 52%,
-      #5c3dd8
-    );
-}
 
-.impact-ranking-icon.delay {
-  background:
-    linear-gradient(
-      145deg,
-      #4e69e7,
-      #ca3eac 55%,
-      #ff936a
-    );
-}
 
-.impact-ranking-icon.financial {
-  color: #67b5ff;
-  background:
-    linear-gradient(
-      145deg,
-      #0b1223,
-      #082b51
-    );
-}
 
-.impact-ranking-icon.news {
-  background:
-    linear-gradient(
-      145deg,
-      #ff935f,
-      #ca3d9d 55%,
-      #34309c
-    );
-}
 
-.impact-ranking-icon.market {
-  background:
-    linear-gradient(
-      145deg,
-      #1a7e9b,
-      #4a42c4 55%,
-      #db3b99
-    );
-}
 
-.impact-ranking-icon.event {
-  background:
-    linear-gradient(
-      145deg,
-      #933cdd,
-      #f0389a 55%,
-      #ff925e
-    );
-}
 
 .impact-ranking-copy {
   min-width: 0;
@@ -6249,16 +5585,9 @@ a {
     grid-template-columns: 1fr;
   }
 
-  .impact-ranking-panel {
-    order: 3;
   }
-}
 
 @media (max-width: 700px) {
-  .impact-ranking-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 
   .impact-ranking-periods {
     width: 100%;
@@ -7146,12 +6475,6 @@ a {
 }
 
 @media (max-width: 1080px) {
-  .dashboard-content,
-  .dashboard-content.has-expanded-event,
-  .dashboard-content.ranking-collapsed,
-  .dashboard-content.ranking-collapsed.has-expanded-event {
-    grid-template-columns: 1fr;
-  }
 
   .impact-ranking-list {
     grid-template-columns: 1fr;
@@ -7496,10 +6819,6 @@ a {
   color: #77839d;
 }
 
-.impact-ranking-panel.complete
-  .impact-ranking-list {
-  padding-right: 3px;
-}
 
 .impact-ranking-panel.complete
   .impact-ranking-item {
@@ -7664,9 +6983,6 @@ a {
 }
 
 @media (max-width: 700px) {
-  .impact-ranking-filter-row {
-    grid-template-columns: 1fr;
-  }
 
   .impact-ranking-panel.complete {
     min-width: 0;
@@ -7821,15 +7137,6 @@ a {
   overflow: visible;
 }
 
-.volume-average-marker {
-  position: absolute;
-  z-index: 4;
-  right: -3px;
-  left: -3px;
-  height: 0;
-  border-top: 1px dashed rgba(255, 238, 151, 0.92);
-  pointer-events: none;
-}
 
 .volume-average-marker em {
   position: absolute;
@@ -7847,19 +7154,7 @@ a {
 }
 
 /* Market-closed update card. */
-.update-card .market-closed-summary {
-  display: grid !important;
-  align-content: center;
-  align-items: initial;
-  gap: 6px;
-}
 
-.update-card .market-closed-value {
-  padding-left: 58px;
-  font-size: clamp(1.25rem, 1.65vw, 1.72rem);
-  letter-spacing: -0.025em;
-  white-space: nowrap;
-}
 
 .update-session-details {
   display: grid;
@@ -7959,10 +7254,6 @@ a {
     min-width: 42px;
   }
 
-  .timeline-mode-selector button {
-    padding: 0 5px;
-    font-size: 0.58rem;
-  }
 
   .update-card .market-closed-value,
   .update-session-details {
@@ -8040,25 +7331,6 @@ a {
       minmax(380px, 0.88fr);
   }
 
-  .dashboard-content.ranking-collapsed
-    .impact-ranking-panel.collapsed {
-    position: absolute;
-    z-index: 12;
-    top: 50%;
-    right: 0;
-    display: block;
-    width: auto;
-    min-width: 0;
-    height: auto;
-    min-height: 0;
-    padding: 0;
-    overflow: visible;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    transform: translateY(-50%);
-  }
 
   .dashboard-content.ranking-collapsed
     .impact-ranking-expand-button {
@@ -8077,20 +7349,8 @@ a {
       -8px 8px 22px rgba(4, 9, 22, 0.2);
   }
 
-  .dashboard-content.ranking-collapsed
-    .impact-ranking-expand-button strong {
-    font-size: 0.68rem;
-    letter-spacing: 0.035em;
-    text-transform: none;
-    writing-mode: initial;
-    transform: none;
-  }
 
-  .dashboard-content.ranking-collapsed
-    .impact-ranking-expand-button > span {
-    font-size: 0.95rem;
   }
-}
 
 /* Keep a regular in-flow launcher in stacked layouts. */
 @media (max-width: 1450px) {
@@ -8162,9 +7422,6 @@ a {
    Ajustes do card de volume e do card de atualização
    ========================================================= */
 
-.volume-average-marker em {
-  display: none;
-}
 
 .update-card .market-closed-summary {
   display: grid !important;
@@ -8173,18 +7430,7 @@ a {
   gap: 10px;
 }
 
-.update-card .market-closed-value {
-  padding-left: 58px;
-  line-height: 1.05;
-}
 
-.update-session-details {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding-left: 58px;
-  font-size: 0.68rem;
-}
 
 .update-session-row {
   display: grid;
@@ -8193,10 +7439,6 @@ a {
   column-gap: 10px;
 }
 
-.update-session-label {
-  color: var(--dark-panel-secondary);
-  font-weight: 700;
-}
 
 .update-session-value {
   color: var(--dark-panel-primary);
@@ -8290,9 +7532,6 @@ a {
    ========================================================= */
 
 /* Remove totalmente a linha de média do card de volume. */
-.volume-average-marker {
-  display: none !important;
-}
 
 /* Reorganiza o estado de mercado fechado para uma hierarquia limpa. */
 .update-card .market-closed-summary {
@@ -8322,26 +7561,8 @@ a {
   font-size: 0.74rem;
 }
 
-.update-session-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
 
-.update-session-label {
-  color: var(--dark-panel-secondary);
-  font-size: 0.72rem;
-  font-weight: 700;
-}
 
-.update-session-inline-value {
-  color: var(--dark-panel-primary);
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
 
 :root:not([data-theme='night']) .update-session-label {
   color: #61708a;
@@ -8710,27 +7931,8 @@ a {
   flex: 1 1 auto;
 }
 
-.variation-values {
-  display: grid;
-  align-content: start;
-  justify-items: start;
-  gap: 6px;
-}
 
-.variation-values strong {
-  font-size: clamp(1.46rem, 1.7vw, 1.8rem);
-}
 
-.variation-percent {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 3px 5px;
-  font-size: 0.69rem;
-  font-weight: 700;
-  line-height: 1.2;
-  white-space: normal;
-}
 
 .variation-period-copy {
   color: #a69bac;
@@ -8758,14 +7960,7 @@ a {
   stroke-width: 2.25;
 }
 
-.volume-card .summary-card-main {
-  width: calc(100% - 118px);
-  margin-top: 14px;
-}
 
-.volume-card .summary-card-context {
-  max-width: 170px;
-}
 
 .volume-bars {
   position: absolute;
@@ -8791,9 +7986,6 @@ a {
   box-shadow: none;
 }
 
-.volume-average-marker {
-  display: none !important;
-}
 
 .update-card .market-closed-summary {
   display: flex !important;
@@ -8957,11 +8149,6 @@ a {
   line-height: 1;
 }
 
-.market-status-indicator .live-dot {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
-}
 
 .market-status-indicator .live-dot.market-closed {
   background: #838797;
@@ -9219,19 +8406,6 @@ a {
 
 /* Gráfico do volume mais à esquerda e próximo da referência:
    barras mais largas, pouco espaçamento e linha pontilhada roxa. */
-.volume-bars {
-  position: relative;
-  width: 154px;
-  max-width: 100%;
-  height: 47px;
-  margin: 12px 0 0;
-  padding-top: 5px;
-  align-self: flex-start;
-  gap: 1px;
-  border-top:
-    1px dashed rgba(169, 70, 219, 0.78);
-  transform: translateX(-1px);
-}
 
 .volume-bars span {
   min-width: 7px;
@@ -9285,10 +8459,7 @@ a {
     font-size: clamp(1.56rem, 1.82vw, 1.88rem);
   }
 
-  .volume-bars {
-    width: 148px;
   }
-}
 
 @media (max-width: 700px) {
   .summary-card,
@@ -9309,14 +8480,8 @@ a {
     flex-basis: 17px;
   }
 
-  .summary-card-title {
-    font-size: 0.72rem;
-  }
 
-  .volume-bars {
-    width: 146px;
   }
-}
 
 /* =========================================================
    Correção do mini gráfico de volume
@@ -9780,11 +8945,11 @@ a {
    ========================================================= */
 
 :root {
-  --date-text-color: #526078;
+  --date-text-color: var(--vi-date-text);
 }
 
 :root[data-theme='night'] {
-  --date-text-color: #b4bfd3;
+  --date-text-color: var(--vi-date-text);
 }
 
 .event-category-icon,
@@ -11079,9 +10244,6 @@ a {
   cursor: pointer;
 }
 
-.event-analysis-back:hover {
-  color: #ffffff;
-}
 
 .event-analysis-badges {
   display: flex;
@@ -11507,11 +10669,6 @@ a {
     background-position: 62% 44%;
   }
 
-  .event-analysis-hero-content {
-    width: calc(100% - 36px);
-    min-height: 300px;
-    padding: 32px 0;
-  }
 
   .event-analysis-hero-overlay {
     background:
@@ -11772,23 +10929,6 @@ a {
 /* The regular desktop dashboard intentionally locks the viewport.
    Event analysis is a document-style page, so it gets its own
    vertical scroller instead of being clipped at 100dvh. */
-@media (min-width: 1181px) {
-  .event-analysis-shell {
-    height: 100dvh;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .event-analysis-shell .event-analysis-page {
-    height: 100dvh;
-    min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-    scrollbar-gutter: stable;
-  }
-}
-
 @media (max-width: 820px) {
   .event-analysis-page {
     padding: 0 0 24px;
@@ -11821,9 +10961,6 @@ a {
     grid-row: auto;
   }
 
-  .event-analysis-hero-content {
-    padding-top: 76px;
-  }
 }
 
 .event-marker-tooltip-impact {
@@ -12015,29 +11152,9 @@ a {
     overflow: hidden;
   }
 
-  .event-analysis-hero {
-    min-height: 166px;
-    flex: 0 0 166px;
-    margin: 0 0 9px;
-    background-position: center 46%;
-  }
 
-  .event-analysis-hero-content {
-    width: min(1660px, calc(100% - 56px));
-    min-height: 166px;
-    justify-content: center;
-    padding: 10px 0 12px;
-  }
 
-  .event-analysis-back {
-    margin-bottom: 7px;
-    font-size: 0.68rem;
-  }
 
-  .event-analysis-badges {
-    gap: 6px;
-    margin-bottom: 7px;
-  }
 
   .event-analysis-badge {
     min-height: 22px;
@@ -12086,49 +11203,16 @@ a {
     font-size: 0.64rem;
   }
 
-  .event-analysis-metric-grid {
-    gap: 9px;
-  }
 
-  .event-analysis-metric-card {
-    min-height: 88px;
-    padding: 11px 13px;
-    border-radius: 13px;
-  }
 
-  .event-analysis-metric-card > span {
-    font-size: 0.58rem;
-  }
 
-  .event-analysis-metric-card > strong {
-    margin-top: 9px;
-    font-size: clamp(1.28rem, 1.65vw, 1.72rem);
-  }
 
   .event-analysis-metric-card.editorial > strong {
     font-size: clamp(1.08rem, 1.35vw, 1.35rem);
   }
 
-  .event-analysis-metric-card > small {
-    margin-top: 5px;
-    font-size: 0.58rem;
-  }
 
-  .event-analysis-layout {
-    width: min(1660px, calc(100% - 56px));
-    min-height: 0;
-    flex: 1 1 0;
-    grid-template-columns: minmax(0, 1.72fr) minmax(350px, 0.72fr);
-    align-items: stretch;
-    gap: 10px;
-    margin: 0 auto 10px;
-  }
 
-  .event-analysis-main-column {
-    min-height: 0;
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 9px;
-  }
 
   .event-analysis-sidebar {
     display: block;
@@ -12174,50 +11258,18 @@ a {
     line-height: 1.35;
   }
 
-  .event-analysis-market-panel {
-    padding: 10px 11px;
-  }
 
-  .event-analysis-market-panel .event-analysis-card-heading {
-    margin-bottom: 6px;
-  }
 
-  .event-analysis-market-grid {
-    gap: 6px;
-  }
 
   .event-analysis-market-grid > div {
     padding: 7px 9px;
     border-radius: 9px;
   }
 
-  .event-analysis-market-grid span {
-    min-height: 1.8em;
-    font-size: 0.52rem;
-  }
 
-  .event-analysis-market-grid strong {
-    margin-top: 4px;
-    font-size: 0.76rem;
-  }
 
-  .event-analysis-context-card {
-    height: 100%;
-    min-height: 0;
-    padding: 12px 14px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    scrollbar-width: thin;
-  }
 
-  .event-analysis-context-card .event-analysis-card-heading {
-    margin-bottom: 8px;
-  }
 
-  .event-analysis-description {
-    font-size: 0.7rem;
-    line-height: 1.48;
-  }
 
   .event-analysis-source-link {
     min-height: 30px;
@@ -12226,48 +11278,18 @@ a {
     font-size: 0.63rem;
   }
 
-  .event-analysis-reading {
-    margin-top: 10px;
-    padding-top: 9px;
-  }
 
-  .event-analysis-reading-label {
-    margin-bottom: 4px;
-    font-size: 0.56rem;
-  }
 
   .event-analysis-reading p {
     font-size: 0.67rem;
     line-height: 1.45;
   }
 
-  .event-analysis-reading .event-analysis-explanation {
-    margin-top: 6px;
-    font-size: 0.6rem;
-  }
 
-  .event-analysis-facts-list.compact {
-    margin-top: 10px;
-  }
 
-  .event-analysis-facts-list.compact > div {
-    min-height: 34px;
-  }
 
-  .event-analysis-facts-list.compact span {
-    font-size: 0.6rem;
-  }
 
-  .event-analysis-facts-list.compact strong {
-    font-size: 0.64rem;
-  }
 
-  .event-analysis-context-card .event-analysis-disclaimer {
-    margin-top: 9px;
-    padding: 7px 8px;
-    font-size: 0.56rem;
-    line-height: 1.35;
-  }
 }
 
 /* =========================================================
@@ -12408,63 +11430,16 @@ a {
     height: 76px;
   }
 
-  .event-analysis-shell .event-analysis-page {
-    height: calc(100dvh - 68px);
-  }
 
-  .event-analysis-hero {
-    min-height: 184px;
-    flex: 0 0 184px;
-    margin-bottom: 10px;
-    background-position: center 48%;
-  }
 
-  .event-analysis-hero-content {
-    width: min(1800px, calc(100% - 64px));
-    min-height: 184px;
-    padding: 12px 0 14px;
-  }
 
-  .event-analysis-back {
-    margin-bottom: 8px;
-    font-size: 0.7rem;
-  }
 
-  .event-analysis-badges {
-    margin-bottom: 8px;
-  }
 
-  .event-analysis-badge {
-    min-height: 24px;
-    padding: 0 9px;
-    font-size: 0.57rem;
-  }
 
-  .event-analysis-hero h1 {
-    max-width: 900px;
-    font-size: clamp(2.05rem, 2.75vw, 3.2rem);
-    line-height: 0.98;
-  }
 
-  .event-analysis-meta {
-    margin-top: 9px;
-    font-size: 0.72rem;
-  }
 
-  .event-analysis-impact-overview {
-    width: min(1800px, calc(100% - 64px));
-    margin: 0 auto 10px;
-  }
 
-  .event-analysis-metric-grid {
-    gap: 10px;
-  }
 
-  .event-analysis-metric-card {
-    min-height: 104px;
-    padding: 13px 14px;
-    border-radius: 13px;
-  }
 
   .event-analysis-metric-card > span {
     font-size: 0.6rem;
@@ -12481,56 +11456,22 @@ a {
     line-height: 1.25;
   }
 
-  .event-analysis-metric-card.editorial {
-    grid-template-columns: minmax(0, 1fr) 76px;
-    padding-right: 16px;
-  }
 
-  .event-analysis-editorial-copy > span {
-    font-size: 0.6rem;
-  }
 
-  .event-analysis-editorial-copy > strong {
-    margin-top: 9px;
-    font-size: 1.3rem;
-  }
 
-  .event-analysis-editorial-copy > small {
-    margin-top: 6px;
-    font-size: 0.58rem;
-  }
 
   .event-analysis-priority-meter {
     height: 50px;
   }
 
-  .event-analysis-layout {
-    width: min(1800px, calc(100% - 64px));
-    grid-template-columns: minmax(0, 2fr) minmax(360px, 0.72fr);
-    gap: 12px;
-    margin: 0 auto 10px;
-  }
 
-  .event-analysis-main-column {
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 10px;
-  }
 
-  .event-analysis-chart-panel {
-    padding: 12px 13px 9px;
-  }
 
-  .event-analysis-card-heading {
-    margin-bottom: 8px;
-  }
 
   .event-analysis-card-heading p {
     font-size: 0.58rem;
   }
 
-  .event-analysis-card-heading h2 {
-    font-size: 1.03rem;
-  }
 
   .event-analysis-chart-content {
     min-height: 300px;
@@ -12549,13 +11490,7 @@ a {
     font-size: 0.57rem;
   }
 
-  .event-analysis-market-panel {
-    padding: 10px 12px;
-  }
 
-  .event-analysis-market-grid {
-    gap: 7px;
-  }
 
   .event-analysis-market-grid > div {
     padding: 8px 10px;
@@ -12580,9 +11515,6 @@ a {
     overflow: hidden;
   }
 
-  .event-analysis-context-card .event-analysis-card-heading {
-    margin-bottom: 8px;
-  }
 
   .event-analysis-description {
     display: -webkit-box;
@@ -12633,22 +11565,9 @@ a {
     line-height: 1.35;
   }
 
-  .event-analysis-facts-list.compact {
-    margin-top: auto;
-    padding-top: 8px;
-  }
 
-  .event-analysis-facts-list.compact > div {
-    min-height: 32px;
-  }
 
-  .event-analysis-facts-list.compact span {
-    font-size: 0.58rem;
-  }
 
-  .event-analysis-facts-list.compact strong {
-    font-size: 0.62rem;
-  }
 
   .event-analysis-context-card .event-analysis-disclaimer {
     margin-top: 8px;
@@ -12669,9 +11588,6 @@ a {
 }
 
 @media (max-width: 700px) {
-  .event-analysis-metric-card.editorial {
-    grid-template-columns: minmax(0, 1fr) 68px;
-  }
 
   .event-analysis-priority-meter {
     height: 42px;
@@ -12866,19 +11782,7 @@ a {
   color: #ff708f;
 }
 
-.event-analysis-metric-sparkline {
-  width: 100%;
-  height: 44px;
-  align-self: end;
-  overflow: visible;
-}
 
-.event-analysis-metric-sparkline polyline {
-  stroke: #8f9ab2;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
 
 .event-analysis-metric-sparkline.impact-positive polyline {
   stroke: #31d9a0;
@@ -12993,11 +11897,6 @@ a {
     font-size: 0.55rem;
   }
 
-  .event-analysis-hero h1 {
-    max-width: 880px;
-    font-size: clamp(2rem, 2.6vw, 3rem);
-    line-height: 0.98;
-  }
 
   .event-analysis-meta {
     margin-top: 7px;
@@ -13072,9 +11971,6 @@ a {
     min-height: 315px;
   }
 
-  .event-analysis-market-panel {
-    padding: 10px 12px;
-  }
 
   .event-analysis-market-panel .event-analysis-card-heading {
     min-height: auto;
@@ -13155,9 +12051,6 @@ a {
     grid-template-columns: minmax(0, 1fr) 92px;
   }
 
-  .event-analysis-metric-sparkline {
-    height: 40px;
-  }
 
   .event-analysis-metric-card.editorial {
     grid-template-columns: minmax(0, 1fr) 92px;
@@ -13191,18 +12084,6 @@ a {
     transform 170ms ease;
 }
 
-.event-analysis-back-icon {
-  display: inline-grid;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  place-items: center;
-  border-radius: 50%;
-  color: #ffffff;
-  background: rgba(255, 72, 164, 0.2);
-  font-size: 0.86rem;
-  line-height: 1;
-}
 
 .event-analysis-back:hover {
   color: #ffffff;
@@ -13718,16 +12599,6 @@ a {
   stroke: rgba(73, 82, 113, 0.18) !important;
 }
 
-:root:not([data-theme='night'])
-  .event-analysis-hero::after {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(245, 243, 250, 0) 0%,
-      rgba(245, 243, 250, 0.32) 48%,
-      #f5f3fa 100%
-    );
-}
 
 :root:not([data-theme='night'])
   .event-analysis-context-tag {
@@ -13896,25 +12767,8 @@ a {
   color: #ff5a83;
 }
 
-.event-analysis-metric-sparkline-area {
-  fill: currentColor;
-  opacity: 0.075;
-}
 
-.event-analysis-metric-sparkline-baseline {
-  stroke: currentColor;
-  stroke-width: 0.75;
-  opacity: 0.12;
-  vector-effect: non-scaling-stroke;
-}
 
-.event-analysis-metric-sparkline-event {
-  stroke: currentColor;
-  stroke-width: 1;
-  stroke-dasharray: 2.5 2.5;
-  opacity: 0.32;
-  vector-effect: non-scaling-stroke;
-}
 
 .event-analysis-metric-sparkline polyline {
   stroke: currentColor;
@@ -13923,12 +12777,6 @@ a {
   stroke-linejoin: round;
 }
 
-.event-analysis-metric-sparkline-point {
-  fill: currentColor;
-  stroke: var(--panel-background, #081327);
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-}
 
 :root:not([data-theme='night'])
   .event-analysis-metric-sparkline {
@@ -14307,13 +13155,18 @@ a {
 .event-preview-impact > span,
 .event-preview-impact > small,
 .event-marker-tooltip-impact span {
-  font-size: 0.66rem;
+  font-size: var(--vi-font-size-caption);
+}
+
+.panel-eyebrow,
+.event-analysis-meta {
+  font-size: var(--vi-font-size-caption);
 }
 
 .event-impact-price-grid span,
 .event-impact-disclaimer,
 .volume-average-marker em {
-  font-size: 0.63rem;
+  font-size: var(--vi-font-size-micro);
 }
 
 /* Event analysis: keep labels and secondary explanations readable even in
@@ -14329,7 +13182,7 @@ a {
 .event-analysis-context-tag,
 .event-analysis-priority-gauge-low,
 .event-analysis-priority-gauge-high {
-  font-size: 0.66rem;
+  font-size: var(--vi-font-size-caption);
 }
 
 .event-analysis-metric-card > small,
@@ -14337,19 +13190,19 @@ a {
 .event-analysis-reading .event-analysis-explanation,
 .event-analysis-highlight-list li,
 .event-analysis-context-card .event-analysis-disclaimer {
-  font-size: 0.68rem;
+  font-size: var(--vi-font-size-caption);
 }
 
 .event-analysis-market-grid
   .event-analysis-market-card-heading
   > span:not(.event-analysis-market-icon) {
-  font-size: 0.64rem;
-  line-height: 1.3;
+  font-size: var(--vi-font-size-micro);
+  line-height: var(--vi-line-height-compact);
 }
 
 .event-analysis-market-card > small {
-  font-size: 0.64rem;
-  line-height: 1.35;
+  font-size: var(--vi-font-size-caption);
+  line-height: var(--vi-line-height-compact);
 }
 
 .event-analysis-benchmark-heading > div > span,
@@ -14357,29 +13210,29 @@ a {
 .event-analysis-benchmark-table thead th,
 .event-analysis-benchmark-note,
 .event-analysis-benchmark-unavailable span {
-  font-size: 0.62rem !important;
+  font-size: var(--vi-font-size-micro) !important;
 }
 
 .event-analysis-benchmark-heading > div > strong {
-  font-size: 0.78rem;
+  font-size: var(--vi-font-size-body-sm);
 }
 
 .event-analysis-benchmark-table tbody th,
 .event-analysis-benchmark-table tbody td {
-  font-size: 0.66rem;
+  font-size: var(--vi-font-size-caption);
 }
 
 .event-analysis-benchmark-reading {
-  font-size: 0.68rem !important;
-  line-height: 1.5 !important;
+  font-size: var(--vi-font-size-caption) !important;
+  line-height: var(--vi-line-height-readable) !important;
 }
 
 .event-analysis-facts-list.compact span {
-  font-size: 0.62rem;
+  font-size: var(--vi-font-size-micro);
 }
 
 .event-analysis-facts-list.compact strong {
-  font-size: 0.69rem;
+  font-size: var(--vi-font-size-caption);
 }
 
 /* Desktop-specific rules earlier in the stylesheet intentionally compress
@@ -14390,42 +13243,47 @@ a {
   .event-analysis-card-heading p,
   .event-analysis-chart-note,
   .event-analysis-reading-label {
-    font-size: 0.66rem;
+    font-size: var(--vi-font-size-caption);
   }
 
   .event-analysis-metric-card > small,
   .event-analysis-editorial-copy > small,
   .event-analysis-highlight-list li,
   .event-analysis-reading .event-analysis-explanation {
-    font-size: 0.68rem;
+    font-size: var(--vi-font-size-caption);
   }
 
   .event-analysis-market-grid span {
-    font-size: 0.64rem;
+    font-size: var(--vi-font-size-micro);
   }
 
   .event-analysis-market-card > small {
-    font-size: 0.64rem;
+    font-size: var(--vi-font-size-caption);
   }
 
   .event-analysis-facts-list.compact span {
-    font-size: 0.62rem;
+    font-size: var(--vi-font-size-micro);
   }
 
   .event-analysis-facts-list.compact strong {
-    font-size: 0.69rem;
+    font-size: var(--vi-font-size-caption);
   }
+}
+
+.event-analysis-description {
+  font-size: var(--vi-font-size-body-sm);
+  line-height: var(--vi-line-height-readable);
 }
 
 @media (max-width: 700px) {
   .event-analysis-benchmark-table tbody th,
   .event-analysis-benchmark-table tbody td {
-    font-size: 0.68rem;
+    font-size: var(--vi-font-size-caption);
   }
 
   .event-analysis-benchmark-table thead th,
   .event-analysis-benchmark-note {
-    font-size: 0.63rem !important;
+    font-size: var(--vi-font-size-micro) !important;
   }
 
   .event-analysis-market-card > small,
@@ -14433,7 +13291,7 @@ a {
   .price-card-footer small,
   .update-card-footer small,
   .summary-card-context {
-    font-size: 0.66rem;
+    font-size: var(--vi-font-size-caption);
   }
 }
 
@@ -14968,7 +13826,7 @@ a {
   width: 100%;
   align-items: flex-start;
   justify-content: flex-start;
-  gap: 8px;
+  gap: var(--vi-space-2);
   margin-bottom: 9px;
 }
 
@@ -14985,7 +13843,7 @@ a {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
-  gap: 8px;
+  gap: var(--vi-space-2);
 }
 
 /* All hero actions share one visual language in both themes.
@@ -14993,21 +13851,21 @@ a {
 .event-analysis-hero-actions .event-analysis-back,
 .event-analysis-share-button {
   min-height: 36px;
-  border: 1px solid rgba(255, 111, 187, 0.28);
-  border-radius: 999px;
-  color: #ffe0ef;
-  background: rgba(8, 13, 30, 0.56);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--vi-hero-control-border);
+  border-radius: var(--vi-radius-pill);
+  color: var(--vi-hero-control-text);
+  background: var(--vi-hero-control-background);
+  box-shadow: var(--vi-hero-control-shadow);
   backdrop-filter: blur(12px);
   font: inherit;
   font-size: 0.72rem;
   font-weight: 800;
   cursor: pointer;
   transition:
-    color 170ms ease,
-    border-color 170ms ease,
-    background 170ms ease,
-    transform 170ms ease;
+    color var(--vi-motion-fast) var(--vi-ease-standard),
+    border-color var(--vi-motion-fast) var(--vi-ease-standard),
+    background var(--vi-motion-fast) var(--vi-ease-standard),
+    transform var(--vi-motion-fast) var(--vi-ease-standard);
 }
 
 .event-analysis-hero-actions .event-analysis-back {
@@ -15038,9 +13896,9 @@ a {
 }
 
 .event-analysis-share-button.secondary {
-  color: #ffe0ef;
-  border-color: rgba(255, 111, 187, 0.28);
-  background: rgba(8, 13, 30, 0.56);
+  color: var(--vi-hero-control-text);
+  border-color: var(--vi-hero-control-border);
+  background: var(--vi-hero-control-background);
 }
 
 .event-analysis-share-button svg {
@@ -15052,9 +13910,9 @@ a {
 .event-analysis-hero-actions .event-analysis-back:hover,
 .event-analysis-share-button:hover,
 .event-analysis-share-button.secondary:hover {
-  color: #ffffff;
-  border-color: rgba(255, 111, 187, 0.56);
-  background: rgba(25, 19, 47, 0.76);
+  color: var(--vi-hero-control-text-hover);
+  border-color: var(--vi-hero-control-border-hover);
+  background: var(--vi-hero-control-background-hover);
 }
 
 .event-analysis-hero-actions .event-analysis-back:hover {
@@ -15067,7 +13925,7 @@ a {
 
 .event-analysis-hero-actions .event-analysis-back:focus-visible,
 .event-analysis-share-button:focus-visible {
-  outline: 2px solid rgba(255, 132, 197, 0.86);
+  outline: 2px solid var(--vi-hero-control-focus);
   outline-offset: 2px;
 }
 
@@ -15105,12 +13963,12 @@ a {
 }
 
 .event-analysis-metric-card.pending {
-  border-color: rgba(240, 190, 92, 0.24);
+  border-color: var(--vi-color-pending-border);
   background:
     linear-gradient(
       145deg,
-      rgba(25, 27, 39, 0.98),
-      rgba(17, 21, 35, 0.98)
+      var(--vi-color-pending-surface-start),
+      var(--vi-color-pending-surface-end)
     );
 }
 
@@ -15124,17 +13982,17 @@ a {
 }
 
 .event-analysis-metric-copy strong.impact-pending {
-  color: #f0c46d;
+  color: var(--vi-color-pending);
   font-size: clamp(1.05rem, 1.35vw, 1.35rem);
   letter-spacing: -0.02em;
 }
 
 .event-analysis-metric-copy small.impact-pending {
-  color: #cbb98f;
+  color: var(--vi-color-pending-muted);
 }
 
 .event-analysis-benchmark-table .impact-pending {
-  color: #d8b66f;
+  color: var(--vi-color-pending-table);
   font-weight: 750;
 }
 
@@ -15156,7 +14014,7 @@ a {
 }
 
 .event-analysis-state-card.pending strong {
-  color: #f0c46d;
+  color: var(--vi-color-pending);
   font-size: 0.82rem;
 }
 
@@ -15194,11 +14052,11 @@ a {
 }
 
 .event-preview-impact.pending > strong {
-  color: #f0c46d;
+  color: var(--vi-color-pending);
 }
 
 .event-preview-impact.pending > small {
-  color: #cbb98f;
+  color: var(--vi-color-pending-muted);
   white-space: normal;
   text-align: right;
 }
@@ -15211,12 +14069,12 @@ a {
 
 :root:not([data-theme='night'])
   .event-preview-impact.pending > strong {
-  color: #8a651d;
+  color: var(--vi-color-pending);
 }
 
 :root:not([data-theme='night'])
   .event-preview-impact.pending > small {
-  color: #76633f;
+  color: var(--vi-color-pending-muted);
 }
 
 /* Keep pending metric states semantically amber in the light theme.
@@ -15225,12 +14083,12 @@ a {
    color without affecting calculated positive/negative values. */
 :root:not([data-theme='night'])
   .event-analysis-metric-card.pending {
-  border-color: rgba(181, 126, 24, 0.28);
+  border-color: var(--vi-color-pending-border);
   background:
     linear-gradient(
       145deg,
-      rgba(255, 250, 237, 0.98),
-      rgba(255, 255, 255, 0.94)
+      var(--vi-color-pending-surface-start),
+      var(--vi-color-pending-surface-end)
     );
 }
 
@@ -15240,11 +14098,670 @@ a {
 :root:not([data-theme='night'])
   .event-analysis-benchmark-table
   .impact-pending {
-  color: #b77912;
+  color: var(--vi-color-pending-table);
 }
 
 :root:not([data-theme='night'])
   .event-analysis-metric-copy
   small.impact-pending {
-  color: #8a6b2e;
+  color: var(--vi-color-pending-muted);
+}
+
+/* =========================================================
+   Site-wide V1.34 — explicit typographic hierarchy
+   ========================================================= */
+
+/* Section hierarchy: one consistent relationship between eyebrow, title and
+   supporting metadata. The values stay compact so the financial dashboard
+   keeps its current information density. */
+.panel-eyebrow {
+  font-size: var(--vi-font-size-caption);
+  font-weight: var(--vi-font-weight-heading);
+  line-height: 1.1;
+  letter-spacing: var(--vi-letter-spacing-eyebrow);
+}
+
+.panel-header h2,
+.impact-ranking-header h2,
+.event-analysis-card-heading h2,
+.event-analysis-section-heading h2 {
+  font-weight: var(--vi-font-weight-heading);
+  line-height: var(--vi-line-height-tight);
+  letter-spacing: -0.018em;
+}
+
+.panel-header h2 {
+  font-size: var(--vi-font-size-section-title);
+}
+
+/* Dashboard summary cards: labels read as labels, while financial values use
+   a stable numeric rhythm instead of visually shifting between digits. */
+.summary-card-title {
+  font-size: var(--vi-font-size-label);
+  font-weight: var(--vi-font-weight-heading);
+  line-height: 1.12;
+  letter-spacing: var(--vi-letter-spacing-label);
+}
+
+.summary-card-main strong,
+.summary-card strong,
+.variation-values strong,
+.volume-card .summary-card-main strong,
+.chart-period-button strong,
+.chart-period-button small,
+.event-preview-impact strong,
+.event-preview-impact small {
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-card-main strong,
+.summary-card strong,
+.variation-values strong,
+.volume-card .summary-card-main strong {
+  font-weight: var(--vi-font-weight-heading);
+  line-height: 1;
+  letter-spacing: var(--vi-letter-spacing-data);
+}
+
+.summary-card-symbol,
+.summary-card-context,
+.market-status-indicator,
+.summary-card-footer small,
+.price-card-footer small,
+.update-card-footer small {
+  line-height: var(--vi-line-height-compact);
+}
+
+/* Event analysis: strengthen the reading hierarchy without adding another
+   visual surface. The editorial copy remains the quietest long-form layer. */
+.event-analysis-meta {
+  font-weight: 700;
+  line-height: var(--vi-line-height-compact);
+  letter-spacing: 0.005em;
+}
+
+.event-analysis-card-heading h2,
+.event-analysis-section-heading h2 {
+  font-size: var(--vi-font-size-section-title);
+}
+
+.event-analysis-reading-title {
+  margin-bottom: 9px;
+  font-size: var(--vi-font-size-body);
+  font-weight: var(--vi-font-weight-heading);
+  line-height: 1.2;
+}
+
+.event-analysis-description {
+  font-size: var(--vi-font-size-body-sm);
+  line-height: 1.58;
+}
+
+.event-analysis-metric-card-header > span:first-child,
+.event-analysis-market-grid
+  .event-analysis-market-card-heading
+  > span:not(.event-analysis-market-icon),
+.event-analysis-facts-list.compact span {
+  font-weight: var(--vi-font-weight-label);
+  letter-spacing: var(--vi-letter-spacing-label);
+}
+
+.event-analysis-metric-copy strong,
+.event-analysis-market-grid .event-analysis-market-card > strong,
+.event-analysis-benchmark-table tbody td,
+.event-analysis-benchmark-table tbody th,
+.event-analysis-facts-list.compact strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.event-analysis-metric-copy strong,
+.event-analysis-market-grid .event-analysis-market-card > strong {
+  font-weight: var(--vi-font-weight-heading);
+  letter-spacing: var(--vi-letter-spacing-data);
+}
+
+.event-analysis-market-grid .event-analysis-market-card > strong {
+  font-size: var(--vi-font-size-data-sm);
+}
+
+.event-analysis-benchmark-heading > div > strong {
+  font-weight: var(--vi-font-weight-heading);
+  line-height: 1.2;
+}
+
+.event-analysis-benchmark-table thead th {
+  letter-spacing: var(--vi-letter-spacing-label);
+}
+
+.event-analysis-benchmark-table tbody th,
+.event-analysis-benchmark-table tbody td {
+  line-height: 1.25;
+}
+
+.event-analysis-facts-list.compact strong {
+  font-weight: var(--vi-font-weight-heading);
+  line-height: 1.25;
+}
+
+.event-analysis-chart-note,
+.event-analysis-benchmark-note,
+.event-analysis-context-card .event-analysis-disclaimer {
+  line-height: var(--vi-line-height-readable) !important;
+}
+
+/* On narrow screens preserve the same hierarchy instead of letting older
+   mobile overrides compress labels and metadata back into micro-text. */
+@media (max-width: 700px) {
+  .panel-header h2,
+  .event-analysis-card-heading h2,
+  .event-analysis-section-heading h2 {
+    line-height: 1.18;
+  }
+
+  .event-analysis-meta {
+    font-size: var(--vi-font-size-caption);
+  }
+
+  .event-analysis-description {
+    line-height: 1.56;
+  }
+}
+
+/* =========================================================
+   Design system — shared component language
+   ========================================================= */
+
+/* Neutral segmented controls use the same geometry and state hierarchy while
+   preserving their existing placement and content density. */
+.timeline-mode-selector,
+.impact-ranking-periods {
+  border-color: var(--vi-control-border);
+  border-radius: var(--vi-radius-control);
+  background: var(--vi-control-background);
+}
+
+.timeline-mode-selector button,
+.impact-ranking-periods button {
+  border-radius: var(--vi-radius-control-sm);
+  color: var(--vi-control-text);
+  transition:
+    color var(--vi-motion-control) var(--vi-ease-control),
+    border-color var(--vi-motion-control) var(--vi-ease-control),
+    background var(--vi-motion-control) var(--vi-ease-control),
+    box-shadow var(--vi-motion-control) var(--vi-ease-control),
+    transform var(--vi-motion-control) var(--vi-ease-control);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.timeline-mode-selector button:hover,
+.impact-ranking-periods button:hover {
+  color: var(--vi-control-text-strong);
+  background: var(--vi-control-background-hover);
+}
+
+.timeline-mode-selector button.active,
+.impact-ranking-periods button.active {
+  color: var(--vi-control-active-text);
+  border-color: var(--vi-control-active-border);
+  background: var(--vi-control-active-background);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--vi-control-active-border) 55%, transparent);
+}
+
+.timeline-mode-selector button:focus-visible,
+.impact-ranking-periods button:focus-visible,
+.impact-ranking-collapse-button:focus-visible,
+.event-focus-button:focus-visible,
+.event-analysis-cta:focus-visible,
+.event-preview-source-link:focus-visible,
+.event-detail-source-link:focus-visible,
+.event-analysis-source-link:focus-visible,
+.impact-ranking-expand-button:focus-visible,
+.impact-ranking-info:focus-visible,
+.impact-ranking-unavailable-count:focus-visible {
+  outline: 2px solid var(--vi-control-focus-ring);
+  outline-offset: 2px;
+}
+
+.event-focus-button:focus-visible {
+  box-shadow: none;
+}
+
+/* Actions share timing, radius and pressed/disabled feedback. Accent actions
+   keep their current hierarchy instead of being flattened into one generic button. */
+.impact-ranking-collapse-button,
+.event-analysis-cta,
+.event-preview-source-link,
+.event-detail-source-link,
+.event-analysis-source-link,
+.impact-ranking-expand-button {
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color var(--vi-motion-control) var(--vi-ease-control),
+    border-color var(--vi-motion-control) var(--vi-ease-control),
+    background var(--vi-motion-control) var(--vi-ease-control),
+    box-shadow var(--vi-motion-control) var(--vi-ease-control),
+    transform var(--vi-motion-control) var(--vi-ease-control);
+}
+
+.impact-ranking-collapse-button {
+  border-radius: var(--vi-radius-control);
+  color: var(--vi-control-text);
+  border-color: var(--vi-control-border);
+  background: var(--vi-control-background);
+}
+
+.impact-ranking-collapse-button:hover {
+  color: var(--vi-control-text-strong);
+  border-color: var(--vi-control-border-hover);
+  background: var(--vi-control-background-hover);
+}
+
+.event-analysis-cta,
+.event-detail-source-link,
+.event-analysis-source-link {
+  border-radius: var(--vi-radius-control);
+  color: var(--vi-control-accent-text);
+  border-color: var(--vi-control-accent-border);
+  background: var(--vi-control-accent-background);
+}
+
+.event-analysis-cta:hover,
+.event-detail-source-link:hover,
+.event-analysis-source-link:hover {
+  color: var(--vi-control-accent-text);
+  border-color: var(--vi-control-border-hover);
+  background: var(--vi-control-accent-background-hover);
+}
+
+.event-preview-source-link {
+  border-radius: var(--vi-radius-control);
+  color: var(--vi-control-text);
+  border-color: var(--vi-control-border);
+  background: var(--vi-control-background);
+}
+
+.event-preview-source-link:hover {
+  color: var(--vi-control-text-strong);
+  border-color: var(--vi-control-border-hover);
+  background: var(--vi-control-background-hover);
+}
+
+.timeline-mode-selector button:active,
+.impact-ranking-periods button:active,
+.impact-ranking-collapse-button:active,
+.event-analysis-cta:active,
+.event-preview-source-link:active,
+.event-detail-source-link:active,
+.event-analysis-source-link:active,
+.impact-ranking-expand-button:active {
+  transform: translateY(0) scale(0.985);
+}
+
+.timeline-mode-selector button:disabled,
+.impact-ranking-periods button:disabled,
+.impact-ranking-collapse-button:disabled,
+.event-analysis-cta:disabled,
+.event-preview-source-link:disabled,
+.event-detail-source-link:disabled,
+.event-analysis-source-link:disabled,
+.impact-ranking-expand-button:disabled {
+  opacity: var(--vi-control-disabled-opacity);
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+}
+
+/* Classification badges keep category colors, but their geometry and label
+   rhythm now come from the same component vocabulary. */
+.event-badge,
+.event-analysis-badge,
+.event-analysis-context-tag {
+  border-radius: var(--vi-radius-chip);
+  font-weight: var(--vi-font-weight-label);
+  line-height: 1;
+}
+
+.events-count,
+.event-analysis-benchmark-chip {
+  border-radius: var(--vi-radius-pill);
+}
+
+.event-analysis-period-chip {
+  border-radius: var(--vi-radius-control);
+}
+
+/* The hero is intentionally dark in both themes, so its actions retain their
+   separate hero palette while adopting the same press feedback. */
+.event-analysis-hero-actions .event-analysis-back,
+.event-analysis-share-button,
+.theme-toggle {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--vi-hero-control-focus);
+  outline-offset: 2px;
+}
+
+.event-analysis-hero-actions .event-analysis-back:active,
+.event-analysis-share-button:active,
+.theme-toggle:active {
+  transform: translateY(0) scale(0.985);
+}
+
+/* =========================================================
+   Task 14.4 — editorial hierarchy / fewer nested surfaces
+   ========================================================= */
+
+/* Keep one clear sidebar surface, but remove the floating-card treatment so
+   the content reads as one editorial column rather than a stack of widgets. */
+.event-analysis-context-card {
+  border-color: var(--vi-editorial-divider-strong);
+  background: var(--vi-color-surface);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+:root:not([data-theme='night']) .event-analysis-context-card {
+  border-color: var(--vi-editorial-divider);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: none;
+}
+
+.event-analysis-card-heading.compact {
+  margin-bottom: 10px;
+}
+
+.event-analysis-context-tags {
+  margin-bottom: 12px;
+}
+
+/* Source attribution is editorial metadata, not another full-width card. */
+.event-analysis-source-link {
+  width: fit-content;
+  min-height: 30px;
+  margin-top: 13px;
+  padding: 0 1px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--vi-color-brand-pink) 58%, transparent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.event-analysis-source-link:hover {
+  border-color: var(--vi-color-brand-pink);
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.event-analysis-source-link:focus-visible {
+  border-radius: 3px;
+}
+
+/* "Leitura de mercado" becomes a section inside the editorial column. */
+.event-analysis-reading {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top-color: var(--vi-editorial-divider-strong);
+}
+
+.event-analysis-reading-title {
+  margin-bottom: 12px;
+}
+
+/* Benchmark data stays dense, but no longer lives inside another rounded
+   surface. The table and dividers provide enough grouping on their own. */
+.event-analysis-benchmark,
+:root:not([data-theme='night']) .event-analysis-benchmark {
+  margin: 0;
+  padding: 0 0 14px;
+  border: 0;
+  border-bottom: 1px solid var(--vi-editorial-divider);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.event-analysis-benchmark-heading {
+  margin-bottom: 10px;
+}
+
+.event-analysis-benchmark-chip {
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  letter-spacing: 0.08em;
+}
+
+.event-analysis-benchmark-table th,
+.event-analysis-benchmark-table td {
+  border-bottom-color: var(--vi-editorial-divider);
+}
+
+.event-analysis-benchmark-reading {
+  margin-top: 11px !important;
+  padding: 7px 0 7px 10px;
+  border-left: 2px solid var(--vi-editorial-insight-accent);
+  border-radius: 0;
+  background: transparent;
+}
+
+.event-analysis-benchmark-unavailable {
+  padding: 9px 0 9px 10px;
+  border: 0;
+  border-left: 2px dashed var(--vi-editorial-divider-strong);
+  border-radius: 0;
+}
+
+.event-analysis-benchmark + .event-analysis-highlight-list {
+  margin-top: 13px;
+}
+
+/* Facts are metadata rows, not four additional cards. */
+
+.event-analysis-facts-list.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+  margin-top: 18px;
+  padding-top: 0;
+  border-top: 1px solid var(--vi-editorial-divider-strong);
+}
+
+.event-analysis-facts-list.compact > div,
+:root:not([data-theme='night']) .event-analysis-facts-list.compact > div {
+  min-height: 48px;
+  padding: 9px 0;
+  border: 0;
+  border-bottom: 1px solid var(--vi-editorial-divider);
+  border-radius: 0;
+  background: transparent;
+}
+
+.event-analysis-facts-list.compact strong {
+  max-width: none;
+  text-align: left;
+}
+
+/* Explanations and disclaimers use a quiet rule instead of another box. */
+.event-analysis-reading .event-analysis-explanation,
+.event-analysis-context-card .event-analysis-disclaimer {
+  padding: 9px 0 9px 10px;
+  border: 0;
+  border-left: 2px solid var(--vi-editorial-divider-strong);
+  border-radius: 0;
+  background: transparent;
+}
+
+@media (max-width: 700px) {
+  .event-analysis-context-card {
+    padding: 15px;
+  }
+
+  .event-analysis-facts-list.compact {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .event-analysis-source-link {
+    min-height: 34px;
+  }
+}
+
+/* =========================================================
+   Event analysis V1.33 — compact phone information grids
+   ========================================================= */
+
+/* On phones, keep the analysis scannable without forcing every independent
+   metric into a full-width row. The 1/5/30-session cards and editorial
+   priority form a balanced 2x2 grid, while detailed market metrics use two
+   columns with the final volume card spanning the row. */
+@media (min-width: 361px) and (max-width: 700px) {
+  .event-analysis-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .event-analysis-metric-card {
+    min-height: 118px;
+    padding: 12px;
+    border-radius: 13px;
+  }
+
+  .event-analysis-metric-card-body {
+    grid-template-columns: minmax(0, 1fr) 62px;
+    gap: 6px;
+    align-items: end;
+  }
+
+  .event-analysis-metric-card.editorial {
+    grid-template-columns: minmax(0, 1fr) 68px;
+    align-items: center;
+  }
+
+  .event-analysis-metric-card-header {
+    gap: 6px;
+  }
+
+  .event-analysis-metric-card-header > span:first-child,
+  .event-analysis-editorial-copy > span {
+    font-size: var(--vi-font-size-micro);
+  }
+
+  .event-analysis-metric-copy strong {
+    font-size: clamp(1.2rem, 6vw, 1.45rem);
+  }
+
+  .event-analysis-metric-copy small,
+  .event-analysis-editorial-copy > small {
+    font-size: var(--vi-font-size-micro);
+    line-height: 1.3;
+  }
+
+  .event-analysis-editorial-copy > strong {
+    margin-top: 6px;
+    font-size: 1.2rem;
+  }
+
+  .event-analysis-metric-sparkline {
+    width: 62px;
+    height: 42px;
+  }
+
+  .event-analysis-priority-gauge {
+    width: 68px;
+  }
+
+  .event-analysis-market-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .event-analysis-market-grid > div,
+  .event-analysis-market-card {
+    min-height: 108px;
+    padding: 11px;
+  }
+
+  .event-analysis-market-grid > :nth-child(5) {
+    grid-column: 1 / -1;
+    min-height: 94px;
+  }
+
+  .event-analysis-market-grid > :nth-child(5) span {
+    min-height: 0;
+  }
+}
+
+/* Very narrow devices benefit more from full-width cards than from squeezing
+   data into two columns. */
+@media (max-width: 360px) {
+  .event-analysis-metric-grid,
+  .event-analysis-market-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .event-analysis-market-grid > :nth-child(5) {
+    grid-column: auto;
+  }
+}
+
+/* =========================================================
+   Task 14.6 — event ↔ chart motion pilot
+   ========================================================= */
+
+/* This pilot intentionally stays dependency-free. Selection already changes
+   the marker geometry; motion only clarifies where the chosen timeline event
+   landed on the chart. */
+.event-chart-marker .event-chart-marker-rail,
+.event-chart-marker .event-chart-marker-point,
+.event-chart-marker .event-chart-marker-ring {
+  transition:
+    stroke-opacity var(--vi-motion-fast) var(--vi-ease-control),
+    stroke-width var(--vi-motion-fast) var(--vi-ease-control),
+    opacity var(--vi-motion-fast) var(--vi-ease-control);
+}
+
+.event-chart-marker .event-chart-marker-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.event-chart-marker.is-selected .event-chart-marker-halo {
+  animation:
+    vi-event-marker-selection-pulse
+    380ms
+    var(--vi-ease-control)
+    1;
+}
+
+@keyframes vi-event-marker-selection-pulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+
+  48% {
+    opacity: 0.34;
+    transform: scale(1.18);
+  }
+
+  100% {
+    opacity: 0.18;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-chart-marker .event-chart-marker-rail,
+  .event-chart-marker .event-chart-marker-point,
+  .event-chart-marker .event-chart-marker-ring {
+    transition: none;
+  }
+
+  .event-chart-marker.is-selected .event-chart-marker-halo {
+    animation: none;
+  }
 }

@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import './styles/design-tokens.css'
 import './App.css'
 import { ChartPeriodSelector } from './components/ChartPeriodSelector'
 import { EventIcon } from './components/EventIcon'
