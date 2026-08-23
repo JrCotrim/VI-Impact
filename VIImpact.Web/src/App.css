@@ -15768,3 +15768,21 @@ a {
     animation: none !important;
   }
 }
+/* Pending preview copy can be substantially longer than calculated impact
+   labels. Stack it vertically so narrow timeline cards do not force the
+   status and explanation into competing grid columns on desktop. */
+.event-preview-impact.pending {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.event-preview-impact.pending > strong,
+.event-preview-impact.pending > small {
+  grid-column: 1;
+  grid-row: auto;
+  min-width: 0;
+}
+
+.event-preview-impact.pending > small {
+  margin-top: 2px;
+  text-align: left;
+}
