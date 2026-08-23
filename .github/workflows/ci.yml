@@ -3,8 +3,10 @@ name: Continuous Integration
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
@@ -50,7 +52,7 @@ jobs:
           --verbosity normal
 
   frontend:
-    name: Frontend lint and build
+    name: Frontend lint, tests and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -66,30 +68,31 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
+          cache: npm
+          cache-dependency-path: VIImpact.Web/package-lock.json
 
       - name: Install frontend dependencies
-        shell: bash
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+        run: npm ci
 
       - name: Lint frontend
         run: npm run lint
+
+      - name: Run frontend tests
+        run: npm test
 
       - name: Build frontend
         run: npm run build
 
   compose:
-    name: Validate Docker Compose
+    name: Build and smoke test Docker Compose
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
 
     env:
       POSTGRES_PASSWORD: CI_StrongPassword_2026!
       TWELVE_DATA_API_KEY: ci-placeholder-key
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+      STOCK_COLLECTION_ENABLED: "false"
 
     steps:
       - name: Checkout repository
@@ -97,3 +100,22 @@ jobs:
 
       - name: Validate Docker Compose configuration
         run: docker compose config --quiet
+
+      - name: Build and start Docker Compose stack
+        run: docker compose up --detach --build --wait --wait-timeout 180
+
+      - name: Smoke test API readiness
+        run: curl --fail --silent --show-error http://localhost:5170/health/ready
+
+      - name: Smoke test public GTA events endpoint
+        run: curl --fail --silent --show-error http://localhost:5170/api/gtaevents > /dev/null
+
+      - name: Show Docker Compose status on failure
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs --no-color --tail=200
+
+      - name: Stop Docker Compose stack
+        if: always()
+        run: docker compose down --volumes --remove-orphans

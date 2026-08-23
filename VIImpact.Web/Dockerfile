@@ -7,13 +7,9 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 WORKDIR /app
 
-COPY VIImpact.Web/package*.json ./
+COPY VIImpact.Web/package.json VIImpact.Web/package-lock.json ./
 
-RUN if [ -f package-lock.json ]; then \
-        npm ci; \
-    else \
-        npm install; \
-    fi
+RUN npm ci
 
 COPY VIImpact.Web/ ./
 
