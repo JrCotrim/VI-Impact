@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using VIImpact.API.Contracts.Dashboard;
+using VIImpact.API.Security;
 using VIImpact.Application.Interfaces;
 using VIImpact.Domain.Entities;
 
@@ -49,8 +50,16 @@ public sealed class DashboardController : ControllerBase
             });
         }
 
-        string normalizedSymbol =
-            symbol.Trim().ToUpperInvariant();
+        if (!PublicMarketSymbolPolicy.TryNormalize(
+                symbol,
+                out string normalizedSymbol))
+        {
+            return BadRequest(new
+            {
+                Message =
+                    $"Unsupported stock symbol. Supported symbols: {PublicMarketSymbolPolicy.SupportedSymbolsDisplay}."
+            });
+        }
 
         IReadOnlyList<StockQuote> quotes =
             await _stockQuoteRepository.GetHistoryAsync(

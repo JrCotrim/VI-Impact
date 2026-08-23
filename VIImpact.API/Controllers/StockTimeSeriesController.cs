@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using VIImpact.API.Contracts.Stocks;
+using VIImpact.API.Security;
 using VIImpact.Application.Interfaces;
 using VIImpact.Application.Models;
 
@@ -76,6 +77,18 @@ public sealed class StockTimeSeriesController : ControllerBase
                 });
         }
 
+        if (!PublicMarketSymbolPolicy.TryNormalize(
+                symbol,
+                out string normalizedSymbol))
+        {
+            return BadRequest(
+                new
+                {
+                    Message =
+                        $"Unsupported stock symbol. Supported symbols: {PublicMarketSymbolPolicy.SupportedSymbolsDisplay}."
+                });
+        }
+
         string normalizedPeriod =
             period.Trim().ToUpperInvariant();
 
@@ -113,7 +126,7 @@ public sealed class StockTimeSeriesController : ControllerBase
         {
             StockTimeSeries timeSeries =
                 await _stockMarketService.GetTimeSeriesAsync(
-                    symbol,
+                    normalizedSymbol,
                     query,
                     cancellationToken);
 

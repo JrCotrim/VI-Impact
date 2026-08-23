@@ -17,6 +17,11 @@ const string FrontendCorsPolicy = "Frontend";
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AddServerHeader = false;
+});
+
 // Controllers
 builder.Services.AddControllers();
 
@@ -29,15 +34,10 @@ builder.Services.AddSingleton<TimeProvider>(
 
 // Frontend access
 string[] allowedOrigins =
-    (builder.Configuration["Cors:AllowedOrigins"]
-        ?? "http://localhost:5173")
-    .Split(
-        ',',
-        StringSplitOptions.RemoveEmptyEntries |
-        StringSplitOptions.TrimEntries)
-    .Append("http://localhost:5173")
-    .Distinct(StringComparer.OrdinalIgnoreCase)
-    .ToArray();
+    RuntimeConfigurationValidator.GetAllowedOrigins(
+        builder.Configuration["Cors:AllowedOrigins"],
+        builder.Environment.IsDevelopment(),
+        builder.Environment.IsProduction());
 
 builder.Services.AddCors(options =>
 {
@@ -48,7 +48,7 @@ builder.Services.AddCors(options =>
             policy
                 .WithOrigins(allowedOrigins)
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .WithMethods(HttpMethods.Get);
         });
 });
 
@@ -66,17 +66,29 @@ builder.Services.AddExceptionHandler<
     ApiExceptionHandler>();
 
 // Automatic stock quote collection
-builder.Services.Configure<StockCollectionOptions>(
+IConfigurationSection stockCollectionSection =
     builder.Configuration.GetSection(
-        StockCollectionOptions.SectionName));
+        StockCollectionOptions.SectionName);
+
+var stockCollectionOptions =
+    new StockCollectionOptions();
+
+stockCollectionSection.Bind(
+    stockCollectionOptions);
+
+RuntimeConfigurationValidator.ValidateStockCollectionOptions(
+    stockCollectionOptions);
+
+builder.Services.Configure<StockCollectionOptions>(
+    stockCollectionSection);
 
 builder.Services.AddHostedService<StockQuoteCollectionWorker>();
 
 // PostgreSQL configuration
 string connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException(
-        "The database connection string was not configured.");
+    RuntimeConfigurationValidator.GetRequiredConnectionString(
+        builder.Configuration.GetConnectionString(
+            "DefaultConnection"));
 
 builder.Services.AddDbContext<VIImpactDbContext>(options =>
     options.UseNpgsql(
@@ -116,6 +128,10 @@ builder.Configuration
     .GetSection(TwelveDataOptions.SectionName)
     .Bind(twelveDataOptions);
 
+RuntimeConfigurationValidator.ValidateTwelveDataOptions(
+    twelveDataOptions,
+    builder.Environment.IsProduction());
+
 builder.Services.AddSingleton(twelveDataOptions);
 
 builder.Services.AddSingleton<
@@ -143,10 +159,13 @@ await InitializeDatabaseAsync(app);
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-if (!app.Environment.IsDevelopment())
+app.Use(async (context, next) =>
 {
-    app.UseHttpsRedirection();
-}
+    context.Response.Headers.XContentTypeOptions =
+        "nosniff";
+
+    await next();
+});
 
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthorization();

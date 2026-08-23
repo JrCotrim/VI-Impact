@@ -1,17 +1,14 @@
-using System.Globalization;
-using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using VIImpact.API.Contracts.GtaEvents;
+using VIImpact.API.Security;
 using VIImpact.Application.Interfaces;
 using VIImpact.Application.Models;
 using VIImpact.Domain.Entities;
-using VIImpact.Domain.Enums;
 
 namespace VIImpact.API.Controllers;
 
 /// <summary>
-/// Provides endpoints for creating, retrieving and analyzing
-/// GTA VI events.
+/// Provides endpoints for retrieving and analyzing GTA VI events.
 /// </summary>
 [ApiController]
 [Route("api/gtaevents")]
@@ -43,56 +40,6 @@ public sealed class GtaEventsController : ControllerBase
     }
 
     /// <summary>
-    /// Creates and stores a manually entered GTA VI event.
-    /// </summary>
-    [HttpPost]
-    public async Task<ActionResult<GtaEvent>> Create(
-        CreateGtaEventRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (request.OccurredAtUtc == default)
-        {
-            return BadRequest(new
-            {
-                Message = "The event date is required."
-            });
-        }
-
-        Guid eventId = Guid.NewGuid();
-        string title = request.Title.Trim();
-        string description = request.Description.Trim();
-
-        var gtaEvent = new GtaEvent
-        {
-            Id = eventId,
-            Slug = CreateManualSlug(title, eventId),
-            Title = title,
-            Summary = description,
-            Description = description,
-            Category = GtaEventCategory.Announcement,
-            Subcategory = "Manual entry",
-            Priority = GtaEventPriority.Relevant,
-            SourceType = GtaEventSourceType.Unofficial,
-            SourceName = "Manual entry",
-            SourceUrl = request.SourceUrl.Trim(),
-            OccurredAtUtc =
-                request.OccurredAtUtc.ToUniversalTime(),
-            DatePrecision = GtaEventDatePrecision.ExactTime,
-            Status = GtaEventStatus.Occurred,
-            IsOfficial = false,
-            IsImpactAnalysisEligible = true
-        };
-
-        await _gtaEventRepository.AddAsync(
-            gtaEvent,
-            cancellationToken);
-
-        return Created(
-            $"/api/gtaevents/{gtaEvent.Id}",
-            gtaEvent);
-    }
-
-    /// <summary>
     /// Calculates the market reaction for all eligible occurred
     /// GTA VI events using shared historical market series.
     /// </summary>
@@ -119,10 +66,32 @@ public sealed class GtaEventsController : ControllerBase
             });
         }
 
+        if (!PublicMarketSymbolPolicy.TryNormalize(
+                symbol,
+                out string normalizedSymbol))
+        {
+            return BadRequest(new
+            {
+                Message =
+                    $"Unsupported stock symbol. Supported symbols: {PublicMarketSymbolPolicy.SupportedSymbolsDisplay}."
+            });
+        }
+
+        if (!PublicMarketSymbolPolicy.TryNormalize(
+                benchmarkSymbol,
+                out string normalizedBenchmarkSymbol))
+        {
+            return BadRequest(new
+            {
+                Message =
+                    $"Unsupported benchmark symbol. Supported symbols: {PublicMarketSymbolPolicy.SupportedSymbolsDisplay}."
+            });
+        }
+
         IReadOnlyList<GtaEventImpactResult> results =
             await _gtaEventImpactService.CalculateRankingAsync(
-                symbol,
-                benchmarkSymbol,
+                normalizedSymbol,
+                normalizedBenchmarkSymbol,
                 cancellationToken);
 
         IReadOnlyList<GtaEventImpactResponse> response =
@@ -161,11 +130,33 @@ public sealed class GtaEventsController : ControllerBase
             });
         }
 
+        if (!PublicMarketSymbolPolicy.TryNormalize(
+                symbol,
+                out string normalizedSymbol))
+        {
+            return BadRequest(new
+            {
+                Message =
+                    $"Unsupported stock symbol. Supported symbols: {PublicMarketSymbolPolicy.SupportedSymbolsDisplay}."
+            });
+        }
+
+        if (!PublicMarketSymbolPolicy.TryNormalize(
+                benchmarkSymbol,
+                out string normalizedBenchmarkSymbol))
+        {
+            return BadRequest(new
+            {
+                Message =
+                    $"Unsupported benchmark symbol. Supported symbols: {PublicMarketSymbolPolicy.SupportedSymbolsDisplay}."
+            });
+        }
+
         GtaEventImpactResult? result =
             await _gtaEventImpactService.CalculateAsync(
                 eventId,
-                symbol,
-                benchmarkSymbol,
+                normalizedSymbol,
+                normalizedBenchmarkSymbol,
                 cancellationToken);
 
         if (result is null)
@@ -256,54 +247,5 @@ public sealed class GtaEventsController : ControllerBase
             PriceChange = result.PriceChange,
             PriceChangePercent = result.PriceChangePercent
         };
-    }
-
-    private static string CreateManualSlug(
-        string title,
-        Guid eventId)
-    {
-        string normalized = title
-            .Normalize(NormalizationForm.FormD);
-
-        var builder = new StringBuilder();
-        bool previousCharacterWasSeparator = false;
-
-        foreach (char character in normalized)
-        {
-            UnicodeCategory category =
-                CharUnicodeInfo.GetUnicodeCategory(character);
-
-            if (category == UnicodeCategory.NonSpacingMark)
-            {
-                continue;
-            }
-
-            if (char.IsLetterOrDigit(character))
-            {
-                builder.Append(char.ToLowerInvariant(character));
-                previousCharacterWasSeparator = false;
-                continue;
-            }
-
-            if (!previousCharacterWasSeparator && builder.Length > 0)
-            {
-                builder.Append('-');
-                previousCharacterWasSeparator = true;
-            }
-        }
-
-        string slugBase = builder
-            .ToString()
-            .Trim('-');
-
-        if (string.IsNullOrWhiteSpace(slugBase))
-        {
-            slugBase = "gta-vi-event";
-        }
-
-        string shortId = eventId
-            .ToString("N")[..8];
-
-        return $"{slugBase}-{shortId}";
     }
 }

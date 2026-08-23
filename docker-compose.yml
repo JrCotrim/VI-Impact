@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-VIImpactDb}
       POSTGRES_USER: ${POSTGRES_USER:-viimpact}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no arquivo .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD in the .env file}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -31,7 +31,7 @@ services:
       args:
         BUILD_CONFIGURATION: Release
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: >-
         Host=postgres;
@@ -40,9 +40,15 @@ services:
         Username=${POSTGRES_USER:-viimpact};
         Password=${POSTGRES_PASSWORD};
         SSL Mode=Disable
-      Cors__AllowedOrigins: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
-      TwelveData__ApiKey: ${TWELVE_DATA_API_KEY:?Defina TWELVE_DATA_API_KEY no arquivo .env}
+      Cors__AllowedOrigins: ${CORS_ALLOWED_ORIGINS:?Define CORS_ALLOWED_ORIGINS in the .env file}
+      TwelveData__ApiKey: ${TWELVE_DATA_API_KEY:?Define TWELVE_DATA_API_KEY in the .env file}
       TwelveData__BaseUrl: ${TWELVE_DATA_BASE_URL:-https://api.twelvedata.com}
+      TwelveData__RequestTimeoutSeconds: ${TWELVE_DATA_REQUEST_TIMEOUT_SECONDS:-10}
+      TwelveData__MaxRetryAttempts: ${TWELVE_DATA_MAX_RETRY_ATTEMPTS:-2}
+      TwelveData__RetryBaseDelayMilliseconds: ${TWELVE_DATA_RETRY_BASE_DELAY_MILLISECONDS:-400}
+      TwelveData__MaximumRetryDelaySeconds: ${TWELVE_DATA_MAXIMUM_RETRY_DELAY_SECONDS:-5}
+      TwelveData__CircuitBreakerFailureThreshold: ${TWELVE_DATA_CIRCUIT_BREAKER_FAILURE_THRESHOLD:-3}
+      TwelveData__CircuitBreakerDurationSeconds: ${TWELVE_DATA_CIRCUIT_BREAKER_DURATION_SECONDS:-30}
       StockCollection__Enabled: ${STOCK_COLLECTION_ENABLED:-true}
       StockCollection__Symbol: ${STOCK_SYMBOL:-TTWO}
       StockCollection__IntervalMinutes: ${STOCK_INTERVAL_MINUTES:-5}

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using VIImpact.API.Security;
 using VIImpact.Application.Interfaces;
 using VIImpact.Domain.Entities;
 
@@ -30,9 +31,28 @@ public sealed class StocksController : ControllerBase
         string symbol,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(symbol))
+        {
+            return BadRequest(new
+            {
+                Message = "The stock symbol is required."
+            });
+        }
+
+        if (!PublicMarketSymbolPolicy.TryNormalize(
+                symbol,
+                out string normalizedSymbol))
+        {
+            return BadRequest(new
+            {
+                Message =
+                    $"Unsupported stock symbol. Supported symbols: {PublicMarketSymbolPolicy.SupportedSymbolsDisplay}."
+            });
+        }
+
         StockQuote quote =
             await _stockMarketService.GetLatestQuoteAsync(
-                symbol,
+                normalizedSymbol,
                 cancellationToken);
 
         return Ok(quote);
@@ -47,6 +67,25 @@ public sealed class StocksController : ControllerBase
         [FromQuery] int limit = 100,
         CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(symbol))
+        {
+            return BadRequest(new
+            {
+                Message = "The stock symbol is required."
+            });
+        }
+
+        if (!PublicMarketSymbolPolicy.TryNormalize(
+                symbol,
+                out string normalizedSymbol))
+        {
+            return BadRequest(new
+            {
+                Message =
+                    $"Unsupported stock symbol. Supported symbols: {PublicMarketSymbolPolicy.SupportedSymbolsDisplay}."
+            });
+        }
+
         if (limit is < 1 or > 500)
         {
             return BadRequest(new
@@ -57,7 +96,7 @@ public sealed class StocksController : ControllerBase
 
         IReadOnlyList<StockQuote> quotes =
             await _stockQuoteRepository.GetHistoryAsync(
-                symbol,
+                normalizedSymbol,
                 limit,
                 cancellationToken);
 
