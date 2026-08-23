@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
@@ -100,6 +100,32 @@ async function openFullEventAnalysis(
   })
 }
 
+
+const SITE_URL = 'https://vi-impact.vercel.app'
+const DASHBOARD_TITLE = 'VI Impact — GTA VI × Take-Two (TTWO)'
+const DASHBOARD_DESCRIPTION =
+  'Acompanhe eventos públicos de GTA VI e movimentos observados da Take-Two (TTWO), com comparação ao Nasdaq-100 (QQQ), linha do tempo e análise de impacto.'
+
+function getMetaContent(selector: string): string | null {
+  return document.head
+    .querySelector<HTMLMetaElement>(selector)
+    ?.getAttribute('content') ?? null
+}
+
+function getCanonicalHref(): string | null {
+  return document.head
+    .querySelector<HTMLLinkElement>('link[rel="canonical"]')
+    ?.href ?? null
+}
+
+function getStructuredData(): Record<string, unknown> | null {
+  const text = document.head.querySelector<HTMLScriptElement>(
+    'script[type="application/ld+json"]',
+  )?.textContent
+
+  return text ? JSON.parse(text) : null
+}
+
 describe('App regression flows', () => {
   beforeEach(() => {
     window.history.replaceState({}, '', '/')
@@ -154,6 +180,133 @@ describe('App regression flows', () => {
     expect(window.location.pathname).toBe(
       `/events/${occurredEvent.slug}`,
     )
+  })
+
+  it('synchronizes event metadata when the full analysis opens client-side', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await waitForDashboard()
+    await openFullEventAnalysis(user)
+
+    const canonicalUrl = `${SITE_URL}/events/${occurredEvent.slug}`
+    const expectedTitle = `${occurredEvent.title} — VI Impact`
+
+    await waitFor(() => {
+      expect(document.title).toBe(expectedTitle)
+    })
+
+    expect(
+      getMetaContent('meta[name="description"]'),
+    ).toBe(occurredEvent.summary)
+    expect(getCanonicalHref()).toBe(canonicalUrl)
+    expect(
+      getMetaContent('meta[property="og:title"]'),
+    ).toBe(expectedTitle)
+    expect(
+      getMetaContent('meta[property="og:description"]'),
+    ).toBe(occurredEvent.summary)
+    expect(
+      getMetaContent('meta[property="og:url"]'),
+    ).toBe(canonicalUrl)
+    expect(
+      getMetaContent('meta[name="twitter:title"]'),
+    ).toBe(expectedTitle)
+    expect(
+      getMetaContent('meta[name="twitter:description"]'),
+    ).toBe(occurredEvent.summary)
+    expect(getStructuredData()).toMatchObject({
+      '@type': 'WebPage',
+      name: expectedTitle,
+      description: occurredEvent.summary,
+      url: canonicalUrl,
+    })
+  })
+
+  it('restores dashboard metadata when the full analysis closes', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await waitForDashboard()
+    await openFullEventAnalysis(user)
+
+    await user.click(
+      screen.getAllByRole('button', {
+        name: 'Voltar ao dashboard',
+      })[0],
+    )
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/')
+      expect(document.title).toBe(DASHBOARD_TITLE)
+    })
+
+    expect(
+      getMetaContent('meta[name="description"]'),
+    ).toBe(DASHBOARD_DESCRIPTION)
+    expect(getCanonicalHref()).toBe(`${SITE_URL}/`)
+    expect(
+      getMetaContent('meta[property="og:title"]'),
+    ).toBe(DASHBOARD_TITLE)
+    expect(
+      getMetaContent('meta[property="og:description"]'),
+    ).toBe(DASHBOARD_DESCRIPTION)
+    expect(
+      getMetaContent('meta[property="og:url"]'),
+    ).toBe(`${SITE_URL}/`)
+    expect(getStructuredData()).toMatchObject({
+      '@type': 'WebSite',
+      name: 'VI Impact',
+      url: `${SITE_URL}/`,
+      description: DASHBOARD_DESCRIPTION,
+    })
+  })
+
+  it('keeps metadata synchronized with browser history navigation', async () => {
+    window.history.replaceState(
+      {},
+      '',
+      `/events/${occurredEvent.slug}`,
+    )
+
+    render(<App />)
+
+    await screen.findByRole('heading', {
+      name: occurredEvent.title,
+      level: 1,
+    })
+
+    const eventTitle = `${occurredEvent.title} — VI Impact`
+    const eventCanonicalUrl = `${SITE_URL}/events/${occurredEvent.slug}`
+
+    await waitFor(() => {
+      expect(document.title).toBe(eventTitle)
+      expect(getCanonicalHref()).toBe(eventCanonicalUrl)
+    })
+
+    act(() => {
+      window.history.replaceState({}, '', '/')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    })
+
+    await waitFor(() => {
+      expect(document.title).toBe(DASHBOARD_TITLE)
+      expect(getCanonicalHref()).toBe(`${SITE_URL}/`)
+    })
+
+    act(() => {
+      window.history.replaceState(
+        {},
+        '',
+        `/events/${occurredEvent.slug}`,
+      )
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    })
+
+    await waitFor(() => {
+      expect(document.title).toBe(eventTitle)
+      expect(getCanonicalHref()).toBe(eventCanonicalUrl)
+    })
   })
 
   it('shows the TTWO versus QQQ benchmark comparison in the full analysis', async () => {

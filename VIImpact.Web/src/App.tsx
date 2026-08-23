@@ -21,6 +21,10 @@ import {
 } from './services/apiClient'
 import type { ApiRequestError } from './services/apiClient'
 import {
+  syncDashboardMetadata,
+  syncEventMetadata,
+} from './utils/seoMetadata'
+import {
   formatGtaEventDate,
   getGtaEventCategoryLabel,
   getGtaEventConfirmationLabel,
@@ -2213,6 +2217,29 @@ function App() {
         canonicalEventKey,
       )
     }
+  }, [analysisEventKey, dashboard])
+
+  useEffect(() => {
+    if (!analysisEventKey) {
+      syncDashboardMetadata()
+      return
+    }
+
+    if (!dashboard) {
+      return
+    }
+
+    const analysisEvent = findAnalysisEvent(
+      dashboard.gtaEvents,
+      analysisEventKey,
+    )
+
+    if (!analysisEvent) {
+      syncDashboardMetadata()
+      return
+    }
+
+    syncEventMetadata(analysisEvent)
   }, [analysisEventKey, dashboard])
 
   useEffect(() => {

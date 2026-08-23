@@ -1,8 +1,10 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/events/:slug",
-      "destination": "/index.html"
+      "destination": "/"
     }
   ]
 }

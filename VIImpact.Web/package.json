@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && npm run seo:generate",
+    "seo:generate": "node scripts/generate-seo.mjs",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -4,6 +4,7 @@ FROM node:24-alpine AS build
 
 ARG VITE_API_BASE_URL=""
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VI_IMPACT_EVENT_CATALOG_PATH=/tmp/vi-impact/gta-events.json
 
 WORKDIR /app
 
@@ -12,6 +13,7 @@ COPY VIImpact.Web/package.json VIImpact.Web/package-lock.json ./
 RUN npm ci
 
 COPY VIImpact.Web/ ./
+COPY VIImpact.Infrastructure/Data/Seed/gta-events.json /tmp/vi-impact/gta-events.json
 
 RUN npm run build
 
