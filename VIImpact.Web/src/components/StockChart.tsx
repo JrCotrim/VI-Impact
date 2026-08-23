@@ -2779,10 +2779,15 @@ export function StockChart({
       startTimestamp,
     ],
   )
+  const minimumEventMarkerTopMargin =
+    chartSize.width < 700 &&
+    eventMarkers.length <= 2
+      ? 76
+      : 112
   const chartTopMargin =
     eventMarkers.length > 0
       ? Math.max(
-          112,
+          minimumEventMarkerTopMargin,
           ...eventMarkers.map(
             (marker) =>
               marker.iconY +
@@ -2790,6 +2795,22 @@ export function StockChart({
           ),
         )
       : 30
+  const usesDashboardPlotLayout =
+    chartSize.width >= 700 &&
+    events.length > 1
+  const chartMarginRight =
+    usesDashboardPlotLayout ? 10 : 24
+  const chartMarginBottom =
+    usesDashboardPlotLayout ? 12 : 26
+  const chartMarginLeft =
+    usesDashboardPlotLayout ? 14 : 22
+  const yAxisWidth =
+    usesDashboardPlotLayout ? 66 : 78
+  const axisTickMargin =
+    usesDashboardPlotLayout ? 8 : 10
+  const xAxisTickMargin =
+    usesDashboardPlotLayout ? 10 : 14
+
   const selectedMarker = useMemo(
     () =>
       eventMarkers.find(
@@ -3620,9 +3641,9 @@ export function StockChart({
           data={renderPoints}
           margin={{
             top: chartTopMargin,
-            right: 24,
-            bottom: 26,
-            left: 22,
+            right: chartMarginRight,
+            bottom: chartMarginBottom,
+            left: chartMarginLeft,
           }}
         >
           <CartesianGrid
@@ -3676,7 +3697,7 @@ export function StockChart({
                 'var(--border-color)',
             }}
             tickLine={false}
-            tickMargin={14}
+            tickMargin={xAxisTickMargin}
           />
 
           <YAxis
@@ -3684,8 +3705,8 @@ export function StockChart({
             domain={priceAxisScale.domain}
             ticks={priceAxisScale.ticks}
             orientation="right"
-            width={78}
-            tickMargin={10}
+            width={yAxisWidth}
+            tickMargin={axisTickMargin}
             tickFormatter={(price: unknown) =>
               Number(price).toFixed(2)
             }

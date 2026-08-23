@@ -14765,3 +14765,1006 @@ a {
     animation: none;
   }
 }
+/* =========================================================
+   Task 15 — final consolidated professional UI/UX layer
+   Final cascade only; historical implementation passes removed.
+   ========================================================= */
+.event-analysis-chart-panel, .event-analysis-market-panel {
+  border-color: var(--vi-editorial-divider);
+  border-radius: 14px;
+  background: var(--vi-color-surface);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+:root:not([data-theme="night"]) .event-analysis-chart-panel, :root:not([data-theme="night"]) .event-analysis-market-panel {
+  border-color: var(--vi-editorial-divider);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: none;
+}
+.event-analysis-chart-panel > .event-analysis-card-heading, .event-analysis-market-panel > .event-analysis-card-heading {
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.event-analysis-chart-panel > .event-analysis-card-heading h2, .event-analysis-market-panel > .event-analysis-card-heading h2 {
+  font-size: 1.12rem;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-align: left;
+}
+.event-analysis-period-chip {
+  min-height: 30px;
+  padding: 0 9px;
+  border-color: var(--vi-editorial-divider-strong);
+  border-radius: 7px;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.event-analysis-metric-grid {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--vi-editorial-divider);
+  background: var(--vi-color-surface);
+}
+.event-analysis-metric-card, :root:not([data-theme="night"]) .event-analysis-metric-card {
+  min-height: 132px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.event-analysis-metric-card::after {
+  display: none;
+}
+.event-analysis-metric-card:nth-child(n + 2) {
+  border-left: 1px solid var(--vi-editorial-divider);
+}
+.event-analysis-metric-card-header > span:first-child, .event-analysis-editorial-copy > span {
+  color: var(--vi-color-text-secondary);
+  font-size: 0.74rem;
+  font-weight: 650;
+  line-height: 1.25;
+  text-transform: none;
+  letter-spacing: 0.015em;
+}
+.event-analysis-metric-copy strong {
+  font-size: clamp(1.45rem, 2.5vw, 1.9rem);
+}
+.event-analysis-metric-copy small, .event-analysis-editorial-copy > small {
+  color: var(--vi-color-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.42;
+}
+.event-analysis-market-grid {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--vi-editorial-divider);
+  border-radius: 10px;
+  background: transparent;
+}
+.event-analysis-market-grid > div, .event-analysis-market-card, :root:not([data-theme="night"]) .event-analysis-market-grid > div {
+  min-height: 96px;
+  padding: 14px 15px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.event-analysis-market-grid > :nth-child(n + 2) {
+  border-left: 1px solid var(--vi-editorial-divider);
+}
+.event-analysis-market-card::before {
+  display: none;
+}
+.event-analysis-market-grid .event-analysis-market-card-heading > span:not(.event-analysis-market-icon) {
+  color: var(--vi-color-text-secondary);
+  font-size: 0.73rem;
+  font-weight: 650;
+  line-height: 1.3;
+  text-transform: none;
+  letter-spacing: 0.015em;
+}
+.event-analysis-market-grid .event-analysis-market-card > strong {
+  margin-top: 10px;
+  font-size: 1rem;
+  font-weight: 750;
+}
+.event-analysis-market-card > small {
+  margin-top: 6px;
+  color: var(--vi-color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+.event-analysis-description {
+  font-size: 0.94rem;
+  line-height: 1.64;
+}
+.event-analysis-chart-note, .event-analysis-benchmark-note, .event-analysis-context-card .event-analysis-disclaimer {
+  font-size: 0.8rem !important;
+  line-height: 1.55 !important;
+}
+.event-analysis-chart-content {
+  border-color: var(--vi-editorial-divider);
+  border-radius: 10px;
+  box-shadow: none;
+}
+@media (max-width: 700px) {
+  .event-analysis-impact-overview, .event-analysis-layout {
+    width: calc(100% - 24px);
+  }
+  .event-analysis-chart-panel, .event-analysis-market-panel {
+    padding: 14px 12px 12px;
+    border-radius: 14px;
+  }
+  .event-analysis-chart-panel > .event-analysis-card-heading {
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 8px 12px;
+  }
+  .event-analysis-chart-panel > .event-analysis-card-heading h2 {
+    min-width: 190px;
+    flex: 1 1 190px;
+    font-size: 1.12rem;
+  }
+  .event-analysis-period-chip {
+    flex: 0 0 auto;
+  }
+  .event-analysis-chart-content {
+    display: block;
+    width: 100%;
+    height: clamp(380px, 58svh, 460px);
+    min-height: 0;
+    flex: none;
+  }
+  .event-analysis-chart-content .stock-chart-container {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+  .event-analysis-metric-grid {
+    gap: 0;
+    border-radius: 12px;
+  }
+  .event-analysis-metric-card {
+    min-height: 124px;
+    border-top: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+  .event-analysis-metric-card:nth-child(even) {
+    border-left: 1px solid var(--vi-editorial-divider);
+  }
+  .event-analysis-metric-card:nth-child(n + 3) {
+    border-top: 1px solid var(--vi-editorial-divider);
+  }
+  .event-analysis-market-panel > .event-analysis-card-heading {
+    justify-content: flex-start;
+    margin-bottom: 12px;
+  }
+  .event-analysis-market-grid {
+    gap: 0;
+    border-radius: 10px;
+  }
+  .event-analysis-market-grid > div, .event-analysis-market-card {
+    min-height: 104px;
+    border-top: 0;
+    border-left: 0;
+  }
+  .event-analysis-market-grid > :nth-child(even) {
+    border-left: 1px solid var(--vi-editorial-divider);
+  }
+  .event-analysis-market-grid > :nth-child(n + 3) {
+    border-top: 1px solid var(--vi-editorial-divider);
+  }
+  .event-analysis-market-grid > :nth-child(5) {
+    border-left: 0;
+  }
+  .event-analysis-market-grid .event-analysis-market-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+  }
+  .event-analysis-chart-note {
+    font-size: 0.84rem !important;
+  }
+}
+@media (max-width: 360px) {
+  .event-analysis-metric-card, .event-analysis-market-grid > div, .event-analysis-market-card {
+    border-left: 0 !important;
+  }
+  .event-analysis-metric-card:nth-child(n + 2), .event-analysis-market-grid > :nth-child(n + 2) {
+    border-top: 1px solid var(--vi-editorial-divider);
+  }
+  .event-analysis-chart-content {
+    height: 360px;
+  }
+}
+@media (min-width: 901px) {
+  .summary-grid {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--vi-editorial-divider);
+    border-radius: 14px;
+    background: var(--vi-color-surface);
+  }
+  .summary-card, .variation-card, .volume-card, :root[data-theme="night"] .summary-card, :root:not([data-theme="night"]) .summary-card {
+    min-height: 154px;
+    padding: 17px 18px 15px;
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none;
+    transform: none;
+  }
+  .summary-card + .summary-card {
+    border-left: 1px solid var(--vi-editorial-divider) !important;
+  }
+  .summary-card:hover, :root:not([data-theme="night"]) .summary-card:hover {
+    border-color: transparent !important;
+    background: color-mix( in srgb, var(--vi-control-background-hover) 58%, transparent ) !important;
+    box-shadow: none !important;
+    transform: none;
+  }
+  .summary-card-title {
+    color: var(--vi-color-text-secondary);
+    font-size: 0.74rem;
+    font-weight: 650;
+    text-transform: none;
+    letter-spacing: 0.012em;
+  }
+  .summary-card-symbol, .summary-card-context, .variation-period-copy {
+    color: var(--vi-color-text-muted);
+    font-size: 0.72rem;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .summary-card-main, .summary-card-main-stacked, .volume-card .summary-card-main, .variation-content {
+    margin-top: 14px;
+  }
+  .summary-card-main strong, .summary-card strong, .variation-values strong, .volume-card .summary-card-main strong {
+    font-size: clamp(1.55rem, 1.65vw, 1.88rem);
+    font-weight: 760;
+    letter-spacing: -0.025em;
+  }
+  .summary-card-footer small, .price-card-footer small, .update-card-footer small, .update-session-label, .update-session-inline-value {
+    font-size: 0.68rem;
+  }
+  .chart-panel, .events-panel {
+    border-color: var(--vi-editorial-divider);
+    border-radius: 14px;
+    background: var(--vi-color-surface);
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  :root[data-theme="night"] .chart-panel, :root[data-theme="night"] .events-panel {
+    background: var(--vi-color-surface);
+    box-shadow: none;
+  }
+  .panel-header {
+    margin-bottom: 12px;
+  }
+  .panel-header h2 {
+    font-size: 1.06rem;
+    font-weight: 760;
+    letter-spacing: -0.015em;
+  }
+  .panel-eyebrow {
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+  }
+  .events-count {
+    min-height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    color: var(--vi-control-accent-text);
+    background: transparent;
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+  .chart-panel .chart-period-toolbar {
+    border: 0;
+    border-top: 1px solid var(--vi-editorial-divider);
+    border-bottom: 1px solid var(--vi-editorial-divider);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .chart-panel .chart-period-options {
+    gap: 0;
+  }
+  .chart-panel .chart-period-button, .chart-panel .calendar-period-button {
+    height: 54px;
+    border: 0;
+    border-right: 1px solid var(--vi-editorial-divider);
+    border-radius: 0;
+    background: transparent;
+  }
+  .chart-panel .chart-period-button:last-child, .chart-panel .calendar-period-button:last-child {
+    border-right: 0;
+  }
+  .chart-panel .chart-period-button:hover, .chart-panel .calendar-period-button:hover {
+    border-color: var(--vi-editorial-divider);
+    background: color-mix( in srgb, var(--vi-control-background-hover) 58%, transparent );
+  }
+  .chart-panel .chart-period-button.active {
+    border-color: var(--vi-editorial-divider);
+    background: color-mix( in srgb, var(--vi-control-active-background) 78%, transparent );
+    box-shadow: inset 0 -2px 0 var(--vi-control-accent-text);
+  }
+  .chart-panel .chart-period-button.active .chart-period-label {
+    color: var(--vi-control-active-text);
+  }
+  .timeline-mode-selector {
+    gap: 0;
+    margin: -2px 0 12px;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--vi-editorial-divider);
+    border-radius: 0;
+    background: transparent;
+  }
+  .timeline-mode-selector button {
+    min-height: 36px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 0.67rem;
+    font-weight: 650;
+  }
+  .timeline-mode-selector button:hover {
+    background: color-mix( in srgb, var(--vi-control-background-hover) 54%, transparent );
+  }
+  .timeline-mode-selector button.active {
+    border: 0;
+    background: transparent;
+    box-shadow: inset 0 -2px 0 var(--vi-control-accent-text);
+  }
+  .events-list {
+    gap: 0;
+    padding-right: 5px;
+  }
+  .event-date-group {
+    gap: 0;
+  }
+  .event-date-group + .event-date-group {
+    margin-top: 8px;
+  }
+  .event-date-heading {
+    min-height: 32px;
+    gap: 10px;
+    padding: 0 4px;
+  }
+  .event-date-heading::after {
+    background: var(--vi-editorial-divider);
+  }
+  .event-date-heading time {
+    font-size: 0.64rem;
+    letter-spacing: 0.075em;
+  }
+  .event-date-items {
+    gap: 0;
+  }
+  .event-card {
+    min-height: 84px;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-bottom: 1px solid var(--vi-editorial-divider);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+  .event-card:hover {
+    border-color: var(--vi-editorial-divider);
+    background: color-mix( in srgb, var(--vi-control-background-hover) 62%, transparent );
+    transform: none;
+  }
+  .event-focus-button, .event-card.expanded .event-focus-button {
+    min-height: 84px;
+    padding: 7px 6px;
+  }
+  .event-thumbnail, .event-focus-button .event-thumbnail {
+    width: 76px;
+    height: 64px;
+    border-radius: 8px;
+  }
+  .event-card.selected, :root:not([data-theme="night"]) .event-card.selected {
+    border: 0;
+    border-left: 2px solid var(--vi-control-accent-text);
+    border-bottom: 1px solid var(--vi-editorial-divider);
+    background: color-mix( in srgb, var(--vi-control-active-background) 68%, transparent );
+    box-shadow: none;
+    transform: none;
+  }
+  .event-card.selected .event-thumbnail {
+    box-shadow: none;
+  }
+  .event-card h3 {
+    font-size: 0.84rem;
+    line-height: 1.28;
+  }
+  .event-metadata {
+    font-size: 0.66rem;
+  }
+  .event-badge {
+    border-radius: 5px;
+    font-size: 0.6rem;
+    font-weight: 650;
+  }
+  .dashboard-content.ranking-collapsed .impact-ranking-expand-button {
+    min-width: 46px;
+    min-height: 184px;
+    padding: 12px 7px;
+    border-radius: 10px 0 0 10px;
+    box-shadow: none;
+  }
+  .dashboard-content.ranking-collapsed .impact-ranking-expand-button strong {
+    font-size: 0.66rem;
+    letter-spacing: 0.065em;
+  }
+}
+@media (min-width: 901px) {
+  .summary-grid {
+    border-color: var(--vi-editorial-divider-strong);
+  }
+  :root[data-theme="night"] .summary-grid > .summary-card + .summary-card {
+    border-left: 1px solid var(--vi-editorial-divider-strong) !important;
+  }
+  :root:not([data-theme="night"]) .summary-grid > .summary-card + .summary-card {
+    border-left: 1px solid var(--vi-editorial-divider-strong) !important;
+  }
+}
+.summary-grid, .summary-card, .variation-card, .volume-card, .chart-panel, .events-panel, .impact-ranking-panel, .impact-ranking-panel.complete, .impact-ranking-panel.collapsed {
+  border-radius: 0 !important;
+}
+.event-analysis-metric-grid, .event-analysis-metric-card, .event-analysis-chart-panel, .event-analysis-market-panel, .event-analysis-context-card, .event-analysis-chart-content, .event-analysis-market-grid, .event-analysis-market-grid > div, .event-analysis-market-card, .event-analysis-story-card, .event-analysis-facts-card, .event-analysis-state-card, .event-analysis-not-found {
+  border-radius: 0 !important;
+}
+:root:not([data-theme="night"]) .summary-grid, :root:not([data-theme="night"]) .summary-card, :root:not([data-theme="night"]) .chart-panel, :root:not([data-theme="night"]) .events-panel, :root:not([data-theme="night"]) .impact-ranking-panel, :root:not([data-theme="night"]) .event-analysis-metric-grid, :root:not([data-theme="night"]) .event-analysis-metric-card, :root:not([data-theme="night"]) .event-analysis-chart-panel, :root:not([data-theme="night"]) .event-analysis-market-panel, :root:not([data-theme="night"]) .event-analysis-context-card, :root:not([data-theme="night"]) .event-analysis-chart-content, :root:not([data-theme="night"]) .event-analysis-market-grid {
+  border-radius: 0 !important;
+}
+@media (min-width: 1181px) {
+  .chart-panel > .panel-header {
+    margin-bottom: 8px;
+  }
+  .chart-panel .chart-period-button, .chart-panel .calendar-period-button {
+    height: 50px;
+  }
+  .chart-footnote {
+    margin-top: 6px;
+  }
+}
+@media (min-width: 1451px) {
+  html, body, #root {
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  body {
+    min-height: 0 !important;
+  }
+  .app-shell {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  .dashboard {
+    display: flex !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding-bottom: 14px !important;
+    overflow: visible !important;
+  }
+  .hero-banner, .summary-grid {
+    flex: 0 0 auto !important;
+  }
+  .dashboard-content, .dashboard-content.has-expanded-event, .dashboard-content.ranking-collapsed, .dashboard-content.ranking-collapsed.has-expanded-event {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    flex: 1 1 0 !important;
+    align-items: stretch !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .chart-panel, .events-panel, .impact-ranking-panel, .impact-ranking-panel.complete {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+  .chart-content {
+    height: auto !important;
+    min-height: 0 !important;
+    flex: 1 1 0 !important;
+    overflow: hidden !important;
+  }
+  .chart-content > .stock-chart-container, .chart-content > .stock-chart-container > .recharts-responsive-container {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+  .events-list {
+    min-height: 0 !important;
+    overflow-y: auto !important;
+  }
+}
+@media (min-width: 901px) {
+  .event-analysis-context-card {
+    padding: 16px 18px;
+  }
+  .event-analysis-context-card .event-analysis-card-heading.compact {
+    margin-bottom: 8px;
+    padding-bottom: 9px;
+    border-bottom: 1px solid var(--vi-editorial-divider);
+  }
+  .event-analysis-context-card .event-analysis-card-heading.compact h2 {
+    font-size: 0.96rem;
+    font-weight: 760;
+    letter-spacing: -0.015em;
+  }
+  .event-analysis-context-tags {
+    margin: 0 0 12px;
+  }
+  .event-analysis-description {
+    color: var(--vi-color-text-secondary);
+    font-size: 0.86rem;
+    line-height: 1.66;
+  }
+  .event-analysis-source-link {
+    margin-top: 14px;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .event-analysis-reading {
+    margin-top: 18px;
+    padding-top: 15px;
+  }
+  .event-analysis-reading-title {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--vi-editorial-divider);
+    font-size: 0.88rem;
+    font-weight: 760;
+    letter-spacing: -0.01em;
+  }
+  .event-analysis-benchmark-heading {
+    margin-bottom: 8px;
+  }
+  .event-analysis-benchmark-heading > div > span {
+    color: var(--vi-color-text-muted);
+    font-size: 0.68rem !important;
+    font-weight: 650;
+    text-transform: none;
+    letter-spacing: 0.015em;
+  }
+  .event-analysis-benchmark-heading > div > strong {
+    margin-top: 3px;
+    font-size: 0.78rem;
+    font-weight: 760;
+  }
+  .event-analysis-benchmark-chip {
+    color: var(--vi-editorial-insight-accent);
+    font-size: 0.64rem !important;
+    font-weight: 750;
+    letter-spacing: 0.055em;
+  }
+  .event-analysis-benchmark-table {
+    min-width: 0;
+  }
+  .event-analysis-benchmark-table th, .event-analysis-benchmark-table td {
+    padding: 7px 5px;
+  }
+  .event-analysis-benchmark-table thead th {
+    color: var(--vi-color-text-muted);
+    font-size: 0.64rem !important;
+    font-weight: 650;
+    letter-spacing: 0.025em;
+  }
+  .event-analysis-benchmark-table tbody th, .event-analysis-benchmark-table tbody td {
+    font-size: 0.72rem;
+  }
+  .event-analysis-benchmark-table tbody th {
+    font-weight: 650;
+  }
+  .event-analysis-benchmark-table tbody td {
+    font-weight: 760;
+  }
+  .event-analysis-benchmark-note {
+    margin-top: 8px !important;
+    font-size: 0.68rem !important;
+    line-height: 1.48 !important;
+  }
+  .event-analysis-benchmark-reading {
+    margin-top: 12px !important;
+    padding: 8px 0 8px 11px;
+    font-size: 0.72rem !important;
+    line-height: 1.55 !important;
+  }
+  .event-analysis-highlight-list {
+    gap: 0;
+    margin-top: 12px;
+    border-top: 1px solid var(--vi-editorial-divider);
+  }
+  .event-analysis-highlight-list li {
+    grid-template-columns: 14px minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--vi-editorial-divider);
+    color: var(--vi-color-text-secondary);
+    font-size: 0.72rem;
+    line-height: 1.48;
+  }
+  .event-analysis-highlight-check {
+    display: inline;
+    width: auto;
+    height: auto;
+    margin-top: 0;
+    border-radius: 0;
+    color: var(--vi-color-positive);
+    background: transparent;
+    font-size: 0.72rem;
+    font-weight: 850;
+    line-height: 1.48;
+    box-shadow: none;
+  }
+  .event-analysis-facts-list.compact {
+    gap: 0 18px;
+    margin-top: 16px;
+  }
+  .event-analysis-facts-list.compact > div {
+    min-height: 46px;
+    padding: 9px 0;
+  }
+  .event-analysis-facts-list.compact span {
+    color: var(--vi-color-text-muted);
+    font-size: 0.67rem;
+    font-weight: 650;
+    text-transform: none;
+    letter-spacing: 0.015em;
+  }
+  .event-analysis-facts-list.compact strong {
+    margin-top: 2px;
+    font-size: 0.73rem;
+    font-weight: 720;
+  }
+  .event-analysis-reading .event-analysis-explanation {
+    margin-top: 12px;
+    font-size: 0.72rem;
+    line-height: 1.55;
+  }
+}
+@media (max-width: 700px) {
+  .summary-grid, .summary-card, .chart-panel, .events-panel, .event-analysis-metric-grid, .event-analysis-chart-panel, .event-analysis-market-panel, .event-analysis-context-card, .event-analysis-chart-content, .event-analysis-market-grid {
+    border-radius: 0 !important;
+  }
+  .theme-toggle, .event-analysis-hero-actions button, .event-analysis-hero-actions a, .event-analysis-back, .timeline-mode-selector button, .chart-period-button, .calendar-period-button {
+    min-height: 44px;
+  }
+  .event-analysis-hero-actions {
+    gap: 8px;
+  }
+  .event-analysis-hero-actions .event-analysis-share-button, .event-analysis-hero-actions .event-analysis-copy-button {
+    min-height: 44px;
+    padding-inline: 14px;
+  }
+  .event-analysis-hero-actions .event-analysis-back {
+    min-height: 44px;
+    padding-inline: 14px;
+  }
+  .event-analysis-title {
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+  }
+  .event-analysis-card-heading h2, .event-analysis-context-card .event-analysis-card-heading.compact h2, .event-analysis-reading-title {
+    letter-spacing: -0.018em;
+  }
+  .event-analysis-metric-card-header > span:first-child, .event-analysis-editorial-copy > span, .event-analysis-market-grid .event-analysis-market-card-heading > span:not(.event-analysis-market-icon) {
+    text-transform: none;
+    letter-spacing: 0.01em;
+  }
+  .event-analysis-metric-card {
+    padding: 14px 13px;
+  }
+  .event-analysis-metric-copy strong {
+    font-size: clamp(1.35rem, 6vw, 1.72rem);
+    line-height: 1.05;
+  }
+  .event-analysis-metric-copy small, .event-analysis-editorial-copy > small {
+    margin-top: 5px;
+    font-size: 0.75rem;
+    line-height: 1.38;
+  }
+  .event-analysis-market-grid > div, .event-analysis-market-card {
+    padding: 13px 12px;
+  }
+  .event-analysis-market-grid .event-analysis-market-card > strong {
+    margin-top: 8px;
+    font-size: 0.98rem;
+  }
+  .event-analysis-market-card > small {
+    margin-top: 5px;
+    font-size: 0.74rem;
+  }
+  .event-analysis-description {
+    font-size: 0.94rem;
+    line-height: 1.66;
+  }
+  .event-analysis-context-card {
+    padding: 16px 14px;
+  }
+  .event-analysis-reading {
+    margin-top: 18px;
+    padding-top: 14px;
+  }
+  .event-analysis-benchmark-table th, .event-analysis-benchmark-table td {
+    padding-block: 7px;
+  }
+  .event-analysis-benchmark-reading {
+    padding-left: 10px;
+  }
+  .event-analysis-highlight-list li {
+    padding-block: 9px;
+  }
+  .event-date-heading {
+    min-height: 34px;
+  }
+  .event-card {
+    border-radius: 0 !important;
+  }
+  .event-focus-button {
+    min-height: 76px;
+  }
+  .event-card h3 {
+    line-height: 1.28;
+  }
+  .event-analysis-chart-panel {
+    padding-inline: 12px;
+  }
+  .event-analysis-chart-panel > .event-analysis-card-heading {
+    margin-bottom: 10px;
+  }
+  .event-analysis-chart-note {
+    margin-top: 10px;
+  }
+}
+@media (max-width: 360px) {
+  .event-analysis-hero-actions {
+    gap: 6px;
+  }
+  .event-analysis-hero-actions .event-analysis-share-button, .event-analysis-hero-actions .event-analysis-copy-button, .event-analysis-hero-actions .event-analysis-back {
+    padding-inline: 11px;
+  }
+}
+.summary-grid {
+  border-radius: 12px 12px 0 0 !important;
+}
+.event-analysis-metric-grid {
+  border-radius: 12px 12px 0 0 !important;
+}
+.summary-card, .variation-card, .volume-card, .event-analysis-metric-card {
+  border-radius: 0 !important;
+}
+.chart-panel, .events-panel, .impact-ranking-panel, .impact-ranking-panel.complete, .impact-ranking-panel.collapsed, .event-analysis-chart-panel, .event-analysis-market-panel, .event-analysis-context-card, .event-analysis-chart-content, .event-analysis-market-grid, .event-analysis-market-grid > div, .event-analysis-market-card, .event-analysis-story-card, .event-analysis-facts-card, .event-analysis-state-card, .event-analysis-not-found {
+  border-radius: 0 !important;
+}
+:root[data-theme="night"] .summary-grid, :root:not([data-theme="night"]) .summary-grid {
+  border-radius: 12px 12px 0 0 !important;
+}
+:root[data-theme="night"] .event-analysis-metric-grid, :root:not([data-theme="night"]) .event-analysis-metric-grid {
+  border-radius: 12px 12px 0 0 !important;
+}
+:root[data-theme="night"] .chart-panel, :root[data-theme="night"] .events-panel, :root[data-theme="night"] .event-analysis-chart-panel, :root[data-theme="night"] .event-analysis-market-panel, :root[data-theme="night"] .event-analysis-context-card, :root:not([data-theme="night"]) .chart-panel, :root:not([data-theme="night"]) .events-panel, :root:not([data-theme="night"]) .event-analysis-chart-panel, :root:not([data-theme="night"]) .event-analysis-market-panel, :root:not([data-theme="night"]) .event-analysis-context-card {
+  border-radius: 0 !important;
+}
+@media (max-width: 700px) {
+  .summary-grid, .event-analysis-metric-grid {
+    border-radius: 12px 12px 0 0 !important;
+  }
+  .summary-card, .chart-panel, .events-panel, .event-card, .event-analysis-metric-card, .event-analysis-chart-panel, .event-analysis-market-panel, .event-analysis-context-card, .event-analysis-chart-content, .event-analysis-market-grid {
+    border-radius: 0 !important;
+  }
+}
+@media (min-width: 701px) {
+  .chart-panel, :root[data-theme="night"] .chart-panel, :root:not([data-theme="night"]) .chart-panel {
+    border-radius: 0 0 0 12px !important;
+  }
+  .events-panel, :root[data-theme="night"] .events-panel, :root:not([data-theme="night"]) .events-panel {
+    border-radius: 0 0 12px 0 !important;
+  }
+  .event-analysis-chart-panel, :root[data-theme="night"] .event-analysis-chart-panel, :root:not([data-theme="night"]) .event-analysis-chart-panel {
+    border-radius: 0 !important;
+  }
+  .event-analysis-market-panel, :root[data-theme="night"] .event-analysis-market-panel, :root:not([data-theme="night"]) .event-analysis-market-panel {
+    border-radius: 0 0 0 12px !important;
+  }
+  .event-analysis-context-card, :root[data-theme="night"] .event-analysis-context-card, :root:not([data-theme="night"]) .event-analysis-context-card {
+    border-radius: 0 0 12px 0 !important;
+  }
+}
+:root:not([data-theme="night"]) {
+  --page-background: #f3f5f8;
+  --surface-background: #ffffff;
+  --card-background: #ffffff;
+  --border-color: rgba(11, 19, 43, 0.16);
+  --primary-text: #0b132b;
+  --secondary-text: #46516a;
+  --muted-text: #667187;
+  --vi-color-page: #f3f5f8;
+  --vi-color-surface: #ffffff;
+  --vi-color-card: #ffffff;
+  --vi-color-border: rgba(11, 19, 43, 0.16);
+  --vi-color-text-primary: #0b132b;
+  --vi-color-text-secondary: #46516a;
+  --vi-color-text-muted: #667187;
+  --vi-editorial-divider: rgba(11, 19, 43, 0.16);
+  --vi-editorial-divider-strong: rgba(11, 19, 43, 0.24);
+  --vi-control-text: #46516a;
+  --vi-control-text-strong: #0b132b;
+  --vi-control-border: rgba(11, 19, 43, 0.18);
+  --vi-control-background: transparent;
+  --vi-control-background-hover: rgba(11, 19, 43, 0.035);
+  --vi-control-active-text: #ad0b61;
+  --vi-control-active-border: rgba(230, 0, 122, 0.38);
+  --vi-control-active-background: rgba(230, 0, 122, 0.065);
+}
+:root:not([data-theme="night"]) body, :root:not([data-theme="night"]) .app-shell, :root:not([data-theme="night"]) .dashboard, :root:not([data-theme="night"]) .event-analysis-shell {
+  background: var(--vi-color-page);
+}
+:root:not([data-theme="night"]) .summary-grid, :root:not([data-theme="night"]) .chart-panel, :root:not([data-theme="night"]) .events-panel, :root:not([data-theme="night"]) .impact-ranking-panel, :root:not([data-theme="night"]) .impact-ranking-panel.complete {
+  border-color: var(--vi-editorial-divider-strong);
+  background: var(--vi-color-surface);
+  box-shadow: none !important;
+  backdrop-filter: none;
+}
+:root:not([data-theme="night"]) .summary-grid {
+  padding: 0;
+}
+:root:not([data-theme="night"]) .summary-card, :root:not([data-theme="night"]) .variation-card, :root:not([data-theme="night"]) .volume-card {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+:root:not([data-theme="night"]) .summary-grid > .summary-card + .summary-card {
+  border-left: 1px solid var(--vi-editorial-divider-strong) !important;
+}
+:root:not([data-theme="night"]) .summary-card:hover {
+  border-color: transparent !important;
+  background: rgba(230, 0, 122, 0.025) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+:root:not([data-theme="night"]) .summary-card-title, :root:not([data-theme="night"]) .summary-card-symbol, :root:not([data-theme="night"]) .summary-card-context, :root:not([data-theme="night"]) .variation-period-copy, :root:not([data-theme="night"]) .chart-footnote {
+  color: var(--vi-color-text-secondary);
+}
+:root:not([data-theme="night"]) .chart-panel .chart-period-toolbar, :root:not([data-theme="night"]) .timeline-mode-selector {
+  border-color: var(--vi-editorial-divider);
+  background: transparent;
+  box-shadow: none;
+}
+:root:not([data-theme="night"]) .chart-panel .chart-period-button, :root:not([data-theme="night"]) .chart-panel .calendar-period-button, :root:not([data-theme="night"]) .timeline-mode-selector button {
+  color: var(--vi-control-text);
+  border-color: var(--vi-editorial-divider);
+  background: transparent;
+  box-shadow: none;
+}
+:root:not([data-theme="night"]) .chart-panel .chart-period-button:hover, :root:not([data-theme="night"]) .chart-panel .calendar-period-button:hover, :root:not([data-theme="night"]) .timeline-mode-selector button:hover {
+  color: var(--vi-control-text-strong);
+  border-color: var(--vi-editorial-divider);
+  background: rgba(11, 19, 43, 0.035);
+  box-shadow: none;
+}
+:root:not([data-theme="night"]) .chart-panel .chart-period-button.active, :root:not([data-theme="night"]) .chart-panel .calendar-period-button.active, :root:not([data-theme="night"]) .timeline-mode-selector button.active {
+  color: var(--vi-control-active-text);
+  border-color: var(--vi-editorial-divider);
+  background: rgba(230, 0, 122, 0.055);
+  box-shadow: inset 0 -2px 0 var(--vi-color-brand-pink);
+}
+:root:not([data-theme="night"]) .event-card, :root:not([data-theme="night"]) .empty-event-card {
+  color: var(--vi-color-text-primary);
+  border-color: var(--vi-editorial-divider);
+  background: transparent;
+  box-shadow: none;
+}
+:root:not([data-theme="night"]) .event-card:hover {
+  border-color: var(--vi-editorial-divider);
+  background: rgba(11, 19, 43, 0.028);
+  box-shadow: none;
+}
+:root:not([data-theme="night"]) .event-card.selected {
+  border-left-color: var(--vi-color-brand-pink) !important;
+  border-bottom-color: var(--vi-editorial-divider) !important;
+  background: rgba(230, 0, 122, 0.055);
+  box-shadow: none;
+}
+:root:not([data-theme="night"]) .event-date-heading::after, :root:not([data-theme="night"]) .event-date-items, :root:not([data-theme="night"]) .event-card {
+  border-color: var(--vi-editorial-divider);
+}
+:root:not([data-theme="night"]) .event-metadata, :root:not([data-theme="night"]) .empty-event-card p {
+  color: var(--vi-color-text-muted);
+}
+:root:not([data-theme="night"]) .chart-content, :root:not([data-theme="night"]) .event-analysis-chart-content {
+  border-color: var(--vi-editorial-divider);
+  background: #f8fafc;
+  box-shadow: none;
+}
+:root:not([data-theme="night"]) .stock-chart-container .recharts-cartesian-grid line {
+  stroke: rgba(11, 19, 43, 0.11) !important;
+}
+:root:not([data-theme="night"]) .stock-chart-container .recharts-text, :root:not([data-theme="night"]) .stock-chart-container .recharts-cartesian-axis-tick-value {
+  fill: #56627a !important;
+}
+:root:not([data-theme="night"]) .event-analysis-metric-grid, :root:not([data-theme="night"]) .event-analysis-chart-panel, :root:not([data-theme="night"]) .event-analysis-market-panel, :root:not([data-theme="night"]) .event-analysis-context-card {
+  border-color: var(--vi-editorial-divider-strong);
+  background: var(--vi-color-surface);
+  box-shadow: none !important;
+  backdrop-filter: none;
+}
+:root:not([data-theme="night"]) .event-analysis-metric-card, :root:not([data-theme="night"]) .event-analysis-metric-card.editorial {
+  border-color: var(--vi-editorial-divider);
+  color: var(--vi-color-text-primary);
+  background: transparent;
+  box-shadow: none;
+}
+:root:not([data-theme="night"]) .event-analysis-market-grid, :root:not([data-theme="night"]) .event-analysis-market-grid > div, :root:not([data-theme="night"]) .event-analysis-market-card {
+  border-color: var(--vi-editorial-divider);
+  background: transparent;
+  box-shadow: none;
+}
+:root:not([data-theme="night"]) .event-analysis-card-heading h2, :root:not([data-theme="night"]) .event-analysis-reading-title, :root:not([data-theme="night"]) .event-analysis-metric-copy strong, :root:not([data-theme="night"]) .event-analysis-market-card > strong, :root:not([data-theme="night"]) .event-analysis-facts-list.compact strong {
+  color: var(--vi-color-text-primary);
+}
+:root:not([data-theme="night"]) .event-analysis-description, :root:not([data-theme="night"]) .event-analysis-highlight-list li, :root:not([data-theme="night"]) .event-analysis-reading p, :root:not([data-theme="night"]) .event-analysis-metric-copy small, :root:not([data-theme="night"]) .event-analysis-editorial-copy > small, :root:not([data-theme="night"]) .event-analysis-market-card > small {
+  color: var(--vi-color-text-secondary);
+}
+:root:not([data-theme="night"]) .event-analysis-metric-card-header > span:first-child, :root:not([data-theme="night"]) .event-analysis-editorial-copy > span, :root:not([data-theme="night"]) .event-analysis-market-card-heading > span:not(.event-analysis-market-icon), :root:not([data-theme="night"]) .event-analysis-facts-list.compact span, :root:not([data-theme="night"]) .event-analysis-benchmark-table thead th {
+  color: var(--vi-color-text-muted);
+}
+:root:not([data-theme="night"]) .event-analysis-reading, :root:not([data-theme="night"]) .event-analysis-benchmark, :root:not([data-theme="night"]) .event-analysis-benchmark-table th, :root:not([data-theme="night"]) .event-analysis-benchmark-table td, :root:not([data-theme="night"]) .event-analysis-highlight-list, :root:not([data-theme="night"]) .event-analysis-highlight-list li, :root:not([data-theme="night"]) .event-analysis-facts-list.compact, :root:not([data-theme="night"]) .event-analysis-facts-list.compact > div {
+  border-color: var(--vi-editorial-divider);
+}
+:root:not([data-theme="night"]) .event-analysis-benchmark-reading {
+  border-left-color: var(--vi-editorial-insight-accent);
+  background: transparent;
+}
+:root:not([data-theme="night"]) .positive-value, :root:not([data-theme="night"]) .impact-positive {
+  color: #047857 !important;
+}
+:root:not([data-theme="night"]) .negative-value, :root:not([data-theme="night"]) .impact-negative {
+  color: #c81e4b !important;
+}
+:root:not([data-theme="night"]) .event-analysis-hero-actions button, :root:not([data-theme="night"]) .event-analysis-hero-actions a, :root:not([data-theme="night"]) .event-analysis-theme-actions .theme-toggle {
+  color: var(--vi-hero-control-text);
+}
+:where( button, a[href], input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"]) ):focus-visible {
+  outline: 2px solid var(--vi-control-focus-ring);
+  outline-offset: 2px;
+}
+@media (max-width: 700px) {
+  .event-analysis-description, .event-preview-description {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+  .loading-splash::before, .loading-splash-logo, .loading-splash-content, .loading-splash-progress span, .live-dot, .event-impact-loading::before, .event-chart-marker.is-selected .event-chart-marker-halo {
+    animation: none !important;
+  }
+}
