@@ -1596,6 +1596,165 @@ function getMarketStatus(
     : 'Mercado fechado'
 }
 
+function useLiveTimestamp(): number {
+  const [
+    currentTimestamp,
+    setCurrentTimestamp,
+  ] = useState(() => Date.now())
+
+  useEffect(() => {
+    const intervalId = window.setInterval(
+      () => {
+        setCurrentTimestamp(Date.now())
+      },
+      1000,
+    )
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [])
+
+  return currentTimestamp
+}
+
+interface MarketTimingProps {
+  latestQuote: StockQuote
+  exchangeTimezone: string
+}
+
+function MarketStatusIndicator({
+  latestQuote,
+  exchangeTimezone,
+}: MarketTimingProps) {
+  const currentTimestamp = useLiveTimestamp()
+  const marketStatus = getMarketStatus(
+    latestQuote,
+    currentTimestamp,
+    exchangeTimezone,
+  )
+
+  return (
+    <span className="market-status-indicator">
+      <span
+        className={[
+          'live-dot',
+          marketStatus === 'Mercado aberto'
+            ? ''
+            : 'market-closed',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        aria-hidden="true"
+      />
+
+      {marketStatus}
+    </span>
+  )
+}
+
+function MarketUpdateSummaryCard({
+  latestQuote,
+  exchangeTimezone,
+}: MarketTimingProps) {
+  const currentTimestamp = useLiveTimestamp()
+  const marketStatus = getMarketStatus(
+    latestQuote,
+    currentTimestamp,
+    exchangeTimezone,
+  )
+  const nextRegularSessionLabel =
+    getNextRegularSessionLabel(
+      currentTimestamp,
+      exchangeTimezone,
+    )
+
+  return (
+    <article className="summary-card update-card">
+      <div className="summary-card-heading">
+        <span className="summary-icon update-icon">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M12 7.5V12l3 2" />
+          </svg>
+        </span>
+
+        <span className="summary-card-title">
+          Última atualização
+        </span>
+      </div>
+
+      <div
+        className={[
+          'summary-card-main',
+          'summary-card-main-stacked',
+          marketStatus === 'Mercado fechado'
+            ? 'market-closed-summary'
+            : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        {marketStatus === 'Mercado fechado' ? (
+          <>
+            <strong className="market-closed-value">
+              Mercado fechado
+            </strong>
+
+            <div className="summary-card-context update-session-details">
+              <div className="update-session-row">
+                <span className="update-session-label">
+                  Último dado:
+                </span>
+
+                <span className="update-session-inline-value">
+                  {formatTime(
+                    latestQuote.recordedAtUtc,
+                  )}
+                </span>
+              </div>
+
+              <div className="update-session-row">
+                <span className="update-session-label">
+                  Próxima sessão:
+                </span>
+
+                <span className="update-session-inline-value">
+                  {nextRegularSessionLabel}
+                </span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <strong className="time-value">
+              {formatTime(
+                latestQuote.recordedAtUtc,
+              )}
+            </strong>
+
+            <span className="summary-card-context update-age">
+              {formatUpdatedAgo(
+                latestQuote.recordedAtUtc,
+                currentTimestamp,
+              )}
+            </span>
+          </>
+        )}
+      </div>
+
+      <div className="summary-card-footer update-card-footer">
+        <small>
+          Sessão Nasdaq · 9:30–16:00 ET
+        </small>
+      </div>
+    </article>
+  )
+}
+
 function calculateAverageVolumeForPreviousSessions(
   timeSeries: StockTimeSeries,
   latestQuote: StockQuote,
@@ -2014,11 +2173,6 @@ function App() {
     useState<Theme>(getInitialTheme)
 
   const [
-    currentTimestamp,
-    setCurrentTimestamp,
-  ] = useState(() => Date.now())
-
-  const [
     averageVolume30Sessions,
     setAverageVolume30Sessions,
   ] = useState<number | null>(null)
@@ -2251,19 +2405,6 @@ function App() {
       theme,
     )
   }, [theme])
-
-  useEffect(() => {
-    const intervalId = window.setInterval(
-      () => {
-        setCurrentTimestamp(Date.now())
-      },
-      1000,
-    )
-
-    return () => {
-      window.clearInterval(intervalId)
-    }
-  }, [])
 
   useEffect(
     () => () => {
@@ -3363,19 +3504,6 @@ function App() {
   const exchangeTimezone =
     timeSeries?.exchangeTimezone ||
     'America/New_York'
-
-  const marketStatus =
-    getMarketStatus(
-      latestQuote,
-      currentTimestamp,
-      exchangeTimezone,
-    )
-
-  const nextRegularSessionLabel =
-    getNextRegularSessionLabel(
-      currentTimestamp,
-      exchangeTimezone,
-    )
 
   const volumeChangePercent =
     averageVolume30Sessions &&
@@ -4702,21 +4830,12 @@ function App() {
             </div>
 
             <div className="summary-card-footer price-card-footer">
-              <span className="market-status-indicator">
-                <span
-                  className={[
-                    'live-dot',
-                    marketStatus === 'Mercado aberto'
-                      ? ''
-                      : 'market-closed',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  aria-hidden="true"
-                />
-
-                {marketStatus}
-              </span>
+              <MarketStatusIndicator
+                latestQuote={latestQuote}
+                exchangeTimezone={
+                  exchangeTimezone
+                }
+              />
 
             </div>
           </article>
@@ -4846,90 +4965,12 @@ function App() {
             </div>
           </article>
 
-          <article className="summary-card update-card">
-            <div className="summary-card-heading">
-              <span className="summary-icon update-icon">
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="8.5" />
-                  <path d="M12 7.5V12l3 2" />
-                </svg>
-              </span>
-
-              <span className="summary-card-title">
-                Última atualização
-              </span>
-            </div>
-
-            <div
-              className={[
-                'summary-card-main',
-                'summary-card-main-stacked',
-                marketStatus ===
-                'Mercado fechado'
-                  ? 'market-closed-summary'
-                  : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              {marketStatus ===
-              'Mercado fechado' ? (
-                <>
-                  <strong className="market-closed-value">
-                    Mercado fechado
-                  </strong>
-
-                  <div className="summary-card-context update-session-details">
-                    <div className="update-session-row">
-                      <span className="update-session-label">
-                        Último dado:
-                      </span>
-
-                      <span className="update-session-inline-value">
-                        {formatTime(
-                          latestQuote.recordedAtUtc,
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="update-session-row">
-                      <span className="update-session-label">
-                        Próxima sessão:
-                      </span>
-
-                      <span className="update-session-inline-value">
-                        {nextRegularSessionLabel}
-                      </span>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <strong className="time-value">
-                    {formatTime(
-                      latestQuote.recordedAtUtc,
-                    )}
-                  </strong>
-
-                  <span className="summary-card-context update-age">
-                    {formatUpdatedAgo(
-                      latestQuote.recordedAtUtc,
-                      currentTimestamp,
-                    )}
-                  </span>
-                </>
-              )}
-            </div>
-
-            <div className="summary-card-footer update-card-footer">
-              <small>
-                Sessão Nasdaq · 9:30–16:00 ET
-              </small>
-            </div>
-          </article>
+          <MarketUpdateSummaryCard
+            latestQuote={latestQuote}
+            exchangeTimezone={
+              exchangeTimezone
+            }
+          />
         </section>
 
         <section

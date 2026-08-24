@@ -2285,7 +2285,7 @@ body {
       rgba(230, 0, 122, 0.12) 70%,
       rgba(248, 249, 250, 0.02) 100%
     ),
-    url('/vice-city-banner-day.png')
+    url('./assets/vice-city-banner-day.webp')
       center 46% / cover no-repeat;
 }
 
@@ -2298,7 +2298,7 @@ body {
       rgba(157, 78, 221, 0.2) 70%,
       rgba(255, 42, 133, 0.08) 100%
     ),
-    url('/vice-city-banner-night.png')
+    url('./assets/vice-city-banner-night.webp')
       center 46% / cover no-repeat;
 }
 
@@ -9801,7 +9801,7 @@ a {
 .loading-splash::before {
   z-index: -2;
   background:
-    url('/vice-city-banner-night.png')
+    url('./assets/vice-city-banner-night.webp')
       center 48% / cover no-repeat;
   opacity: 0.48;
   filter: saturate(0.82) contrast(1.08);
@@ -10182,7 +10182,7 @@ a {
       rgba(74, 23, 93, 0.55) 72%,
       rgba(146, 25, 101, 0.42) 100%
     ),
-    url('/vice-city-banner-night.png')
+    url('./assets/vice-city-banner-night.webp')
       center 44% / cover no-repeat;
 }
 
@@ -12212,7 +12212,7 @@ a {
       rgba(230, 0, 122, 0.12) 70%,
       rgba(248, 249, 250, 0.02) 100%
     ),
-    url('/vice-city-banner-day.png')
+    url('./assets/vice-city-banner-day.webp')
       center 46% / cover no-repeat;
 }
 
