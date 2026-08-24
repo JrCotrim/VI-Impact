@@ -3386,7 +3386,7 @@ function App() {
         >
           <img
             className="brand-logo"
-            src="/vi-impact-logo.png"
+            src="/vi-impact-logo.webp"
             alt="VI Impact"
           />
         </a>
@@ -3415,8 +3415,11 @@ function App() {
         <div className="loading-splash-content">
           <img
             className="loading-splash-logo"
-            src="/vi-impact-logo.png"
+            src="/vi-impact-logo.webp"
             alt="VI Impact"
+            width={183}
+            height={176}
+            fetchPriority="high"
           />
 
           <div className="loading-splash-heading">
@@ -3759,7 +3762,7 @@ function App() {
                 aria-label="Voltar ao dashboard"
               >
                 <img
-                  src="/vi-impact-logo.png"
+                  src="/vi-impact-logo.webp"
                   alt="VI Impact"
                 />
               </button>

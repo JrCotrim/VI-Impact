@@ -9801,10 +9801,23 @@ a {
 .loading-splash::before {
   z-index: -2;
   background:
-    url('./assets/vice-city-banner-night.webp')
-      center 48% / cover no-repeat;
-  opacity: 0.48;
-  filter: saturate(0.82) contrast(1.08);
+    radial-gradient(
+      circle at 50% 36%,
+      rgba(157, 78, 221, 0.2),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 72% 68%,
+      rgba(255, 42, 133, 0.16),
+      transparent 34%
+    ),
+    linear-gradient(
+      145deg,
+      #110923 0%,
+      #090713 48%,
+      #080611 100%
+    );
+  opacity: 1;
   transform: scale(1.035);
   animation:
     loading-splash-background 8s ease-in-out
