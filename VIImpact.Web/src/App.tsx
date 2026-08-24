@@ -7,6 +7,8 @@ import {
 } from 'react'
 import './styles/design-tokens.css'
 import './App.css'
+import dayHeroBannerUrl from './assets/vice-city-banner-day.webp'
+import nightHeroBannerUrl from './assets/vice-city-banner-night.webp'
 import { ChartPeriodSelector } from './components/ChartPeriodSelector'
 import { EventIcon } from './components/EventIcon'
 import { getDashboardData } from './services/dashboardService'
@@ -2404,6 +2406,33 @@ function App() {
       'vi-impact-theme',
       theme,
     )
+  }, [theme])
+  useEffect(() => {
+    const heroBannerUrl =
+      theme === 'night'
+        ? nightHeroBannerUrl
+        : dayHeroBannerUrl
+
+    const preloadLink =
+      document.createElement('link')
+
+    preloadLink.rel = 'preload'
+    preloadLink.as = 'image'
+    preloadLink.href = heroBannerUrl
+    preloadLink.setAttribute(
+      'fetchpriority',
+      'high',
+    )
+    preloadLink.dataset.viImpactHeroPreload =
+      theme
+
+    document.head.appendChild(
+      preloadLink,
+    )
+
+    return () => {
+      preloadLink.remove()
+    }
   }, [theme])
 
   useEffect(
