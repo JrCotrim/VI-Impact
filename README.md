@@ -89,17 +89,17 @@ A comparação com o QQQ ajuda a contextualizar movimentos da ação em relaçã
 
 ```mermaid
 flowchart LR
-    U[Usuário] --> V[Vercel<br/>React + Vite]
-    V --> R[Render<br/>ASP.NET Core API]
-    R --> N[Neon<br/>PostgreSQL 18]
-    R --> T[Twelve Data<br/>Dados de mercado]
+    U["Usuário"] --> V["Vercel - React + Vite"]
+    V --> R["Render - ASP.NET Core API"]
+    R --> N["Neon - PostgreSQL 18"]
+    R --> T["Twelve Data - Dados de mercado"]
 
-    C[gta-events.json] --> R
-    C --> S[Gerador SEO]
+    C["gta-events.json"] --> R
+    C --> S["Gerador SEO"]
     S --> V
 
-    G[GitHub<br/>master] --> CI[GitHub Actions]
-    CI --> RG[Gate de deploy da API]
+    G["GitHub - master"] --> CI["GitHub Actions"]
+    CI --> RG["Gate de deploy da API"]
     RG --> R
     G --> V
 ```
