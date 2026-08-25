@@ -8579,7 +8579,7 @@ a {
 }
 
 /* =========================================================
-   Teste de aparência — cards mais altos e painéis maiores
+   Layout para telas largas — cards mais altos e painéis maiores
    ========================================================= */
 
 @media (min-width: 1451px) {
