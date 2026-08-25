@@ -15799,3 +15799,20 @@ a {
   margin-top: 2px;
   text-align: left;
 }
+/* Task 21 accessibility contrast fixes */
+:root:not([data-theme='night'])
+  .chart-panel
+  .chart-period-button.active
+  .chart-period-label {
+  color: var(--vi-control-accent-text);
+}
+
+:root:not([data-theme='night'])
+  .event-impact-direction.positive {
+  color: #246b52;
+}
+
+:root:not([data-theme='night'])
+  .event-impact-direction.negative {
+  color: #a82e51;
+}

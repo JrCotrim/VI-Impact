@@ -88,7 +88,7 @@ describe('ChartPeriodSelector', () => {
 
     await user.click(
       screen.getByRole('button', {
-        name: 'Selecionar período personalizado',
+        name: 'Datas — selecionar período personalizado',
       }),
     )
 
@@ -113,7 +113,7 @@ describe('ChartPeriodSelector', () => {
 
     await user.click(
       screen.getByRole('button', {
-        name: 'Selecionar período personalizado',
+        name: 'Datas — selecionar período personalizado',
       }),
     )
     await user.click(
@@ -140,7 +140,7 @@ describe('ChartPeriodSelector', () => {
     const calendarButton = screen.getByRole(
       'button',
       {
-        name: 'Selecionar período personalizado',
+        name: 'Datas — selecionar período personalizado',
       },
     )
 

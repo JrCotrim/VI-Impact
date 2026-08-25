@@ -3346,8 +3346,8 @@ function App() {
           onClick={toggleTheme}
           aria-label={
             theme === 'night'
-              ? 'Ativar tema Dia'
-              : 'Ativar tema Noite'
+              ? 'Noite Tema — ativar tema Dia'
+              : 'Dia Tema — ativar tema Noite'
           }
           aria-pressed={
             theme === 'night'

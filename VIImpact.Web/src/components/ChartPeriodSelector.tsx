@@ -344,7 +344,7 @@ export function ChartPeriodSelector({
               .join(' ')}
             type="button"
             title="Selecionar período personalizado"
-            aria-label="Selecionar período personalizado"
+            aria-label="Datas — selecionar período personalizado"
             aria-expanded={isCalendarOpen}
             aria-busy={
               selectedPeriod === 'CUSTOM' &&

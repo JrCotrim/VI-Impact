@@ -3615,6 +3615,7 @@ export function StockChart({
         isolation: 'isolate',
         touchAction: 'pan-y',
       }}
+      role="group"
       tabIndex={0}
       aria-label={
         isComparisonMode
