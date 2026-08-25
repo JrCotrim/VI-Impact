@@ -2694,8 +2694,6 @@ function App() {
     timelineScrollRequest,
   ])
 
-  const hasDashboard = Boolean(dashboard)
-
   useEffect(() => {
     let isActive = true
 
@@ -2737,10 +2735,6 @@ function App() {
   }, [dashboardReloadRequest])
 
   useEffect(() => {
-    if (!hasDashboard) {
-      return
-    }
-
     const abortController =
       new AbortController()
 
@@ -2783,10 +2777,7 @@ function App() {
     return () => {
       abortController.abort()
     }
-  }, [
-    hasDashboard,
-    impactRankingReloadRequest,
-  ])
+  }, [impactRankingReloadRequest])
 
   useEffect(() => {
     let isActive = true
