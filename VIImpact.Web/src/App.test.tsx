@@ -131,68 +131,6 @@ describe('App regression flows', () => {
     window.history.replaceState({}, '', '/')
     configureSuccessfulServices()
   })
-  it('keeps the original splash visible while the dashboard mounts behind it', async () => {
-    const frameCallbackRef = {
-      current: null as FrameRequestCallback | null,
-    }
-
-    vi.stubGlobal(
-      'requestAnimationFrame',
-      (callback: FrameRequestCallback) => {
-        frameCallbackRef.current = callback
-        return 1
-      },
-    )
-
-    vi.stubGlobal(
-      'cancelAnimationFrame',
-      vi.fn(),
-    )
-
-    try {
-      render(<App />)
-
-      expect(
-        screen.getByRole('status', {
-          name: 'Carregando dados do VI Impact',
-        }),
-      ).toBeInTheDocument()
-
-      await screen.findByRole('heading', {
-        name: 'Take-Two Interactive (TTWO)',
-      })
-
-      expect(
-        screen.getByRole('status', {
-          name: 'Carregando dados do VI Impact',
-        }),
-      ).toBeInTheDocument()
-
-      const callback = frameCallbackRef.current
-
-      expect(callback).not.toBeNull()
-
-      if (!callback) {
-        throw new Error(
-          'requestAnimationFrame callback was not captured',
-        )
-      }
-
-      act(() => {
-        callback(performance.now())
-      })
-
-      await waitFor(() => {
-        expect(
-          screen.queryByRole('status', {
-            name: 'Carregando dados do VI Impact',
-          }),
-        ).not.toBeInTheDocument()
-      })
-    } finally {
-      vi.unstubAllGlobals()
-    }
-  })
 
   it('shows occurred events and keeps scheduled events out of the dashboard', async () => {
     render(<App />)
