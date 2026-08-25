@@ -132,6 +132,53 @@ describe('App regression flows', () => {
     configureSuccessfulServices()
   })
 
+  it('defers impact ranking until dashboard data is available', async () => {
+    let resolveDashboard:
+      | ((
+          dashboardData: ReturnType<
+            typeof createDashboardData
+          >,
+        ) => void)
+      | undefined
+
+    const dashboardPromise =
+      new Promise<
+        ReturnType<typeof createDashboardData>
+      >((resolve) => {
+        resolveDashboard = resolve
+      })
+
+    getDashboardDataMock.mockReturnValueOnce(
+      dashboardPromise,
+    )
+
+    render(<App />)
+
+    await waitFor(() => {
+      expect(
+        getDashboardDataMock,
+      ).toHaveBeenCalledTimes(1)
+
+      expect(
+        getStockTimeSeriesMock,
+      ).toHaveBeenCalled()
+    })
+
+    expect(
+      getGtaEventImpactRankingMock,
+    ).not.toHaveBeenCalled()
+
+    await act(async () => {
+      resolveDashboard?.(createDashboardData())
+    })
+
+    await waitFor(() => {
+      expect(
+        getGtaEventImpactRankingMock,
+      ).toHaveBeenCalledTimes(1)
+    })
+  })
+
   it('shows occurred events and keeps scheduled events out of the dashboard', async () => {
     render(<App />)
 
