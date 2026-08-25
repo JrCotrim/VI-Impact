@@ -2147,6 +2147,11 @@ function App() {
   ] = useState(true)
 
   const [
+    isInitialSplashVisible,
+    setIsInitialSplashVisible,
+  ] = useState(true)
+
+  const [
     isChartLoading,
     setIsChartLoading,
   ] = useState(true)
@@ -2733,6 +2738,23 @@ function App() {
       isActive = false
     }
   }, [dashboardReloadRequest])
+  useEffect(() => {
+    if (
+      !dashboard ||
+      !isInitialSplashVisible
+    ) {
+      return
+    }
+
+    const frameId =
+      window.requestAnimationFrame(() => {
+        setIsInitialSplashVisible(false)
+      })
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
+    }
+  }, [dashboard, isInitialSplashVisible])
 
   useEffect(() => {
     const abortController =
@@ -3425,10 +3447,7 @@ function App() {
     )
   }
 
-  if (
-    isDashboardLoading &&
-    !dashboard
-  ) {
+  function renderLoadingSplash() {
     return (
       <main
         className="loading-splash"
@@ -3476,6 +3495,13 @@ function App() {
         </div>
       </main>
     )
+  }
+
+  if (
+    isDashboardLoading &&
+    !dashboard
+  ) {
+    return renderLoadingSplash()
   }
 
   if (dashboardError && !dashboard) {
@@ -4780,6 +4806,8 @@ function App() {
 
   return (
     <div className="app-shell">
+      {isInitialSplashVisible &&
+        renderLoadingSplash()}
       {renderTopbar()}
 
       <main
