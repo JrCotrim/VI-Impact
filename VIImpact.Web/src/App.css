@@ -6410,7 +6410,7 @@ a {
 
 :root:not([data-theme='night'])
   .impact-ranking-expand-button {
-  color: #d91173;
+  color: var(--vi-control-active-text);
   border-color: rgba(230, 0, 122, 0.25);
   background:
     linear-gradient(
@@ -15219,7 +15219,7 @@ a {
     box-shadow: none;
   }
   .dashboard-content.ranking-collapsed .impact-ranking-expand-button strong {
-    font-size: 0.66rem;
+    font-size: var(--vi-font-size-caption-readable);
     letter-spacing: 0.065em;
   }
 }
@@ -15805,6 +15805,16 @@ a {
   .chart-period-button.active
   .chart-period-label {
   color: var(--vi-control-accent-text);
+}
+
+/* Pricing and Launch markers keep their brighter green in the
+   night theme. On light chart surfaces, the icon glyph uses the
+   existing light-theme category green for readable contrast. */
+:root:not([data-theme='night'])
+  .event-chart-marker.category-pricing > g,
+:root:not([data-theme='night'])
+  .event-chart-marker.category-launch > g {
+  color: #087044;
 }
 
 :root:not([data-theme='night'])

@@ -2183,6 +2183,7 @@ function EventMarkerShape({
     <g
       className={[
         'event-chart-marker',
+        marker.presentation.className,
         marker.isSelected ? 'is-selected' : '',
       ]
         .filter(Boolean)
