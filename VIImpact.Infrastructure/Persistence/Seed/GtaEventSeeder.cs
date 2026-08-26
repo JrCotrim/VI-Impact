@@ -20,6 +20,16 @@ public static class GtaEventSeeder
         "GTA VI impact calculation test"
     ];
 
+    private static readonly string[] RetiredEventSlugs =
+    [
+        "cfxre-joins-rockstar-games",
+        "gta-vi-hacker-sentenced",
+        "rockstar-workers-union-public-announcement",
+        "rockstar-labor-dispute-full-trial",
+        "gta-vi-console-market-impact-analysis",
+        "gta-vi-download-code-boxes-available"
+    ];
+
     private static readonly JsonSerializerOptions SerializerOptions =
         new()
         {
@@ -57,6 +67,16 @@ public static class GtaEventSeeder
             dbContext.GtaEvents.RemoveRange(legacyTestEvents);
         }
 
+        List<GtaEvent> retiredEvents =
+            await dbContext.GtaEvents
+                .Where(gtaEvent =>
+                    RetiredEventSlugs.Contains(gtaEvent.Slug))
+                .ToListAsync(cancellationToken);
+
+        if (retiredEvents.Count > 0)
+        {
+            dbContext.GtaEvents.RemoveRange(retiredEvents);
+        }
         string[] slugs = seedItems
             .Select(seedItem => seedItem.Slug)
             .ToArray();

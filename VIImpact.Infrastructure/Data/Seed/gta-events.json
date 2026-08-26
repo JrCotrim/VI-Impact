@@ -76,25 +76,6 @@
     "isImpactAnalysisEligible": true
   },
   {
-    "slug": "cfxre-joins-rockstar-games",
-    "title": "Cfx.re, responsável por FiveM e RedM, passa a fazer parte da Rockstar",
-    "summary": "A Rockstar Games anunciou que a equipe Cfx.re, responsável pelas plataformas FiveM e RedM, passou a fazer parte da companhia.",
-    "description": "A Rockstar Games anunciou que a equipe Cfx.re, responsável pelas plataformas FiveM e RedM, passou a fazer parte da companhia. A aquisição não foi apresentada como um recurso específico de GTA VI e não confirma que FiveM, RedM ou suas tecnologias estarão integrados ao jogo. O movimento, porém, ampliou a atuação da Rockstar no ecossistema de roleplay e conteúdo criado pela comunidade em torno de Grand Theft Auto e Red Dead. O evento funciona como contexto estratégico da empresa, não como anúncio de uma funcionalidade de GTA VI.",
-    "category": "Corporate",
-    "subcategory": "Aquisição estratégica",
-    "priority": "Relevant",
-    "sourceType": "Official",
-    "sourceName": "Rockstar Games",
-    "sourceUrl": "https://www.rockstargames.com/newswire/article/8971o8789584a4/roleplay-community-update/",
-    "occurredAtUtc": "2023-08-11T00:00:00Z",
-    "occurredUntilUtc": null,
-    "publishedAtUtc": null,
-    "datePrecision": "DateOnly",
-    "status": "Occurred",
-    "isOfficial": true,
-    "isImpactAnalysisEligible": true
-  },
-  {
     "slug": "gta-vi-first-trailer-announced-for-december",
     "title": "Rockstar anuncia o primeiro trailer para dezembro",
     "summary": "A Rockstar anunciou que o primeiro trailer do próximo Grand Theft Auto seria publicado no início de dezembro de 2023.",
@@ -169,25 +150,6 @@
     "status": "Occurred",
     "isOfficial": true,
     "isImpactAnalysisEligible": true
-  },
-  {
-    "slug": "gta-vi-hacker-sentenced",
-    "title": "Hacker responsável pelo vazamento recebe sentença",
-    "summary": "Arion Kurtaj, integrante do grupo Lapsus$, recebeu uma ordem de internação hospitalar por tempo indeterminado no Reino Unido.",
-    "description": "Arion Kurtaj, integrante do grupo Lapsus$, recebeu no Reino Unido uma ordem de internação hospitalar por tempo indeterminado após o processo relacionado a ataques cibernéticos que incluíram a invasão da Rockstar Games. O caso ficou ligado ao grande vazamento de material de desenvolvimento de GTA VI ocorrido em 2022. O registro é contextual e jurídico: documenta uma consequência posterior do incidente de segurança, sem representar anúncio ou mudança no desenvolvimento do jogo.",
-    "category": "Security",
-    "subcategory": "Sentença judicial",
-    "priority": "Contextual",
-    "sourceType": "Judicial",
-    "sourceName": "The Guardian",
-    "sourceUrl": "https://www.theguardian.com/uk-news/2023/dec/21/british-teenager-behind-gta-6-hack-receives-indefinite-hospital-order",
-    "occurredAtUtc": "2023-12-21T00:00:00Z",
-    "occurredUntilUtc": null,
-    "publishedAtUtc": null,
-    "datePrecision": "DateOnly",
-    "status": "Occurred",
-    "isOfficial": false,
-    "isImpactAnalysisEligible": false
   },
   {
     "slug": "rockstar-five-day-office-return",
@@ -513,44 +475,6 @@
     "isImpactAnalysisEligible": true
   },
   {
-    "slug": "rockstar-workers-union-public-announcement",
-    "title": "Trabalhadores tornam pública uma organização sindical ligada à Rockstar",
-    "summary": "Trabalhadores ligados à Rockstar tornaram pública uma organização sindical em meio às tensões trabalhistas nos estúdios.",
-    "description": "Segundo a Rockstar Game Workers Union, trabalhadores ligados à Rockstar tornaram pública uma organização sindical em meio às tensões trabalhistas nos estúdios da empresa. O anúncio veio de representantes dos trabalhadores, não da Rockstar, e deve ser entendido como contexto sobre relações de trabalho durante a reta final de produção de GTA VI. O evento é relevante como contexto operacional e trabalhista, mas não representa anúncio sobre conteúdo, data ou comercialização do jogo.",
-    "category": "LaborAndLegal",
-    "subcategory": "Organização sindical",
-    "priority": "Contextual",
-    "sourceType": "Union",
-    "sourceName": "Rockstar Game Workers Union (IWGB)",
-    "sourceUrl": "https://www.youtube.com/watch?v=iLOq_6rOpoM",
-    "occurredAtUtc": "2026-05-28T00:00:00Z",
-    "occurredUntilUtc": null,
-    "publishedAtUtc": null,
-    "datePrecision": "DateOnly",
-    "status": "Occurred",
-    "isOfficial": false,
-    "isImpactAnalysisEligible": false
-  },
-  {
-    "slug": "rockstar-labor-dispute-full-trial",
-    "title": "Disputa trabalhista avança para julgamento completo",
-    "summary": "A disputa judicial relacionada às demissões em estúdios da Rockstar foi autorizada a avançar para julgamento.",
-    "description": "Segundo o IWGB, a disputa judicial relacionada às demissões em estúdios da Rockstar foi autorizada a avançar para julgamento, mantendo aberto um conflito trabalhista que vinha se desenvolvendo desde 2025. A informação trata de uma questão jurídica envolvendo a empresa, não de uma mudança anunciada no cronograma ou no conteúdo de GTA VI. O registro funciona como contexto de risco operacional no período que antecede o lançamento.",
-    "category": "LaborAndLegal",
-    "subcategory": "Risco jurídico",
-    "priority": "Contextual",
-    "sourceType": "Judicial",
-    "sourceName": "IWGB",
-    "sourceUrl": "https://iwgb.org.uk/es/post/rockstar-suffers-legal-setback-as-judge-rules-against-studio-in-union-busting-dispute-2/",
-    "occurredAtUtc": "2026-06-17T00:00:00Z",
-    "occurredUntilUtc": null,
-    "publishedAtUtc": null,
-    "datePrecision": "DateOnly",
-    "status": "Occurred",
-    "isOfficial": false,
-    "isImpactAnalysisEligible": false
-  },
-  {
     "slug": "gta-vi-preorders-announced",
     "title": "Rockstar anuncia pré-vendas para 25 de junho",
     "summary": "Em 18 de junho de 2026, a Rockstar Games anunciou que as pré-vendas de GTA VI começariam em 25 de junho.",
@@ -627,25 +551,6 @@
     "isImpactAnalysisEligible": true
   },
   {
-    "slug": "gta-vi-console-market-impact-analysis",
-    "title": "Analistas avaliam o efeito do GTA VI sobre o mercado de consoles",
-    "summary": "Uma análise apontou que GTA VI deve impulsionar vendas de software do PlayStation 5 mesmo em uma fase avançada do ciclo do console.",
-    "description": "Uma análise publicada pela Reuters examinou o possível efeito de GTA VI sobre o mercado de consoles e destacou a expectativa de impulso nas vendas de software do PlayStation 5, mesmo em uma fase avançada do ciclo do aparelho. O conteúdo é uma avaliação jornalística e de mercado, não uma projeção oficial da Rockstar ou da Take-Two. O registro serve como contexto sobre expectativas externas em torno do lançamento, e não como anúncio do produto.",
-    "category": "MarketAnalysis",
-    "subcategory": "Análise do mercado de consoles",
-    "priority": "Contextual",
-    "sourceType": "Journalism",
-    "sourceName": "Reuters",
-    "sourceUrl": "https://www.reuters.com/world/asia-pacific/sony-poised-gta-vi-boost-memory-prices-bite-2026-07-29/",
-    "occurredAtUtc": "2026-07-29T00:00:00Z",
-    "occurredUntilUtc": null,
-    "publishedAtUtc": null,
-    "datePrecision": "DateOnly",
-    "status": "Occurred",
-    "isOfficial": false,
-    "isImpactAnalysisEligible": false
-  },
-  {
     "slug": "gta-vi-extended-look-announced",
     "title": "Rockstar anuncia Grand Theft Auto VI: An Extended Look",
     "summary": "Em 6 de agosto de 2026, a Rockstar Games anunciou Grand Theft Auto VI: An Extended Look, uma nova apresentação oficial dedicada ao jogo.",
@@ -700,7 +605,7 @@
     "datePrecision": "DateOnly",
     "status": "Occurred",
     "isOfficial": false,
-    "isImpactAnalysisEligible": true
+    "isImpactAnalysisEligible": false
   },
   {
     "slug": "gta-vi-fourth-gameplay-leak-august-2026",
@@ -719,7 +624,7 @@
     "datePrecision": "DateOnly",
     "status": "Occurred",
     "isOfficial": false,
-    "isImpactAnalysisEligible": true
+    "isImpactAnalysisEligible": false
   },
   {
     "slug": "gta-vi-plane-radio-gameplay-leak-august-2026",
@@ -732,6 +637,25 @@
     "sourceType": "Journalism",
     "sourceName": "RockstarINTEL",
     "sourceUrl": "https://rockstarintel.com/new-gta-6-gameplay-leak-shows-radio-station-menu-and-flying-in-planes/",
+    "occurredAtUtc": "2026-08-20T00:00:00Z",
+    "occurredUntilUtc": null,
+    "publishedAtUtc": null,
+    "datePrecision": "DateOnly",
+    "status": "Occurred",
+    "isOfficial": false,
+    "isImpactAnalysisEligible": false
+  },
+  {
+    "slug": "gta-vi-take-two-subpoena-requests-leaks-august-2026",
+    "title": "Take-Two busca judicialmente dados para identificar responsáveis pelos vazamentos de GTA VI",
+    "summary": "Take-Two protocolou pedidos para obter dados de Microsoft e Discord e identificar supostos infratores ligados à distribuição dos vazamentos de GTA VI.",
+    "description": "Em 20 de agosto de 2026, a Take-Two Interactive protocolou pedidos judiciais para obter subpoenas direcionadas à Microsoft e ao Discord, buscando registros que ajudassem a identificar supostos infratores envolvidos na distribuição de material protegido de GTA VI. Os pedidos foram aprovados pelo tribunal em 21 de agosto; no mesmo dia, a companhia também apresentou pedidos separados relacionados a Google e X. Os documentos estão ligados à onda de vídeos marcados como CyberLeek, mas não estabelecem publicamente a identidade de quem está por trás do nome. Trata-se de uma medida jurídica de proteção de propriedade intelectual, não de um anúncio corporativo sobre o jogo.",
+    "category": "Security",
+    "subcategory": "Pedidos judiciais sobre vazamentos",
+    "priority": "Relevant",
+    "sourceType": "Journalism",
+    "sourceName": "The Verge",
+    "sourceUrl": "https://www.theverge.com/games/983323/grand-theft-auto-vi-gta-leaks-microsoft-discord-subpoenaed",
     "occurredAtUtc": "2026-08-20T00:00:00Z",
     "occurredUntilUtc": null,
     "publishedAtUtc": null,
@@ -757,7 +681,7 @@
     "datePrecision": "DateOnly",
     "status": "Occurred",
     "isOfficial": false,
-    "isImpactAnalysisEligible": true
+    "isImpactAnalysisEligible": false
   },
   {
     "slug": "gta-vi-hypercar-strip-club-gameplay-leak-august-2026",
@@ -776,7 +700,7 @@
     "datePrecision": "DateOnly",
     "status": "Occurred",
     "isOfficial": false,
-    "isImpactAnalysisEligible": true
+    "isImpactAnalysisEligible": false
   },
   {
     "slug": "gta-vi-strip-club-gameplay-leak-august-2026",
@@ -795,7 +719,7 @@
     "datePrecision": "DateOnly",
     "status": "Occurred",
     "isOfficial": false,
-    "isImpactAnalysisEligible": true
+    "isImpactAnalysisEligible": false
   },
   {
     "slug": "gta-vi-wasted-gas-station-gameplay-leak-august-2026",
@@ -814,7 +738,7 @@
     "datePrecision": "DateOnly",
     "status": "Occurred",
     "isOfficial": false,
-    "isImpactAnalysisEligible": true
+    "isImpactAnalysisEligible": false
   },
   {
     "slug": "gta-vi-night-flight-fishing-gameplay-leak-august-2026",
@@ -833,7 +757,7 @@
     "datePrecision": "DateOnly",
     "status": "Occurred",
     "isOfficial": false,
-    "isImpactAnalysisEligible": true
+    "isImpactAnalysisEligible": false
   },
   {
     "slug": "gta-vi-nudist-area-gameplay-leak-august-2026",
@@ -852,7 +776,7 @@
     "datePrecision": "DateOnly",
     "status": "Occurred",
     "isOfficial": false,
-    "isImpactAnalysisEligible": true
+    "isImpactAnalysisEligible": false
   },
   {
     "slug": "gta-vi-nine1nine-nightclub-gameplay-leak-august-2026",
@@ -871,7 +795,7 @@
     "datePrecision": "DateOnly",
     "status": "Occurred",
     "isOfficial": false,
-    "isImpactAnalysisEligible": true
+    "isImpactAnalysisEligible": false
   },
   {
     "slug": "gta-vi-vice-city-beach-gameplay-leak-august-2026",
@@ -890,7 +814,7 @@
     "datePrecision": "DateOnly",
     "status": "Occurred",
     "isOfficial": false,
-    "isImpactAnalysisEligible": true
+    "isImpactAnalysisEligible": false
   },
   {
     "slug": "gta-vi-game-store-gameplay-leak-august-2026",
@@ -909,26 +833,83 @@
     "datePrecision": "DateOnly",
     "status": "Occurred",
     "isOfficial": false,
-    "isImpactAnalysisEligible": true
+    "isImpactAnalysisEligible": false
   },
   {
-    "slug": "gta-vi-preload-begins",
-    "title": "Início do pré-carregamento",
-    "summary": "O pré-carregamento digital de GTA VI está previsto para começar em 12 de novembro de 2026, uma semana antes do lançamento.",
-    "description": "A Rockstar confirmou que jogadores que fizerem a pré-venda digital de GTA VI poderão iniciar o pré-carregamento em 12 de novembro de 2026. A medida permite baixar antecipadamente os arquivos necessários para que o jogo esteja pronto no lançamento de 19 de novembro. O pré-carregamento é um marco de distribuição e permanece como evento futuro até a data prevista.",
-    "category": "Distribution",
-    "subcategory": "Pré-carregamento",
-    "priority": "Relevant",
+    "slug": "gta-vi-rockstar-official-response-cyberleek-august-2026",
+    "title": "Rockstar responde oficialmente à onda de vazamentos de GTA VI",
+    "summary": "Rockstar fez seu primeiro posicionamento oficial sobre a sequência de vazamentos, lamentou a exposição antecipada e manteve o Extended Look previsto para 27 de agosto.",
+    "description": "Em 26 de agosto de 2026, a Rockstar Games publicou seu primeiro posicionamento oficial após dias de vazamentos recorrentes de GTA VI. O estúdio afirmou que a exposição antecipada dos vídeos foi dolorosa para a equipe, pediu desculpas pela demora em compartilhar mais informações e indicou que o desenvolvimento estava próximo da conclusão. A Rockstar também reconheceu que spoilers poderiam prejudicar a experiência pretendida, confirmou que o Extended Look seguiria programado para o dia seguinte e voltou a mencionar 19 de novembro como a data em que o público poderia experimentar o jogo. O comunicado não anunciou uma nova data de lançamento; ele reafirmou o cronograma já divulgado.",
+    "category": "Security",
+    "subcategory": "Comunicado oficial sobre vazamentos",
+    "priority": "Primary",
     "sourceType": "Official",
     "sourceName": "Rockstar Games",
-    "sourceUrl": "https://www.rockstargames.com/newswire/article/5171972o3ak5oa/pre-order-grand-theft-auto-vi-on-june-25",
-    "occurredAtUtc": "2026-11-12T00:00:00Z",
+    "sourceUrl": "https://x.com/RockstarGames/status/2092574304571433078",
+    "occurredAtUtc": "2026-08-26T00:00:00Z",
     "occurredUntilUtc": null,
     "publishedAtUtc": null,
     "datePrecision": "DateOnly",
-    "status": "Scheduled",
+    "status": "Occurred",
     "isOfficial": true,
+    "isImpactAnalysisEligible": true
+  },
+  {
+    "slug": "gta-vi-dazed-rockstar-interview-august-2026",
+    "title": "Rockstar detalha sistemas, personagens e o mundo de GTA VI em entrevista à Dazed",
+    "summary": "Entrevista da Dazed com a equipe criativa da Rockstar detalhou o mundo mais reativo de GTA VI, Jason e Lucia, NPCs, redes sociais, aparência dos protagonistas e pesquisa em Miami.",
+    "description": "Em 26 de agosto de 2026, a Dazed publicou uma grande reportagem baseada em conversas diretas com integrantes identificados da equipe criativa da Rockstar. A matéria descreveu GTA VI como um mundo mais reativo às ações do jogador, com NPCs mais variados e contextualizados; detalhou formas de jogar com Jason e Lucia juntos ou separadamente, feeds de redes sociais dentro do jogo e escolhas de relacionamento com consequências. Também apresentou sistemas em que alimentação, exercício e tempo sem descanso afetam a aparência dos protagonistas, anos de pesquisa de campo da Rockstar em Miami e arredores e uma equipe de desenvolvimento que mais que dobrou desde Red Dead Redemption 2. As informações são tratadas como uma única grande divulgação editorial, sem fragmentar cada sistema em eventos independentes.",
+    "category": "GameInformation",
+    "subcategory": "Entrevista e informações oficiais",
+    "priority": "Primary",
+    "sourceType": "Journalism",
+    "sourceName": "Dazed",
+    "sourceUrl": "https://www.dazeddigital.com/life-culture/article/70859/1/gta-6-grand-theft-auto-vi-rockstar-exclusive-deep-dive-game-unparalleled-world",
+    "occurredAtUtc": "2026-08-26T00:00:00Z",
+    "occurredUntilUtc": null,
+    "publishedAtUtc": null,
+    "datePrecision": "DateOnly",
+    "status": "Occurred",
+    "isOfficial": true,
+    "isImpactAnalysisEligible": true
+  },
+  {
+    "slug": "gta-vi-rideout-customs-police-chase-leak-august-2026",
+    "title": "Vazamento mostra Rideout Customs, perseguição policial e nova cena de Lucia",
+    "summary": "Novo vídeo atribuído a GTA VI mostra Jason em um veículo com a marca Rideout Customs durante uma perseguição policial e termina com uma breve aparição de Lucia.",
+    "description": "Em 26 de agosto de 2026, outro vídeo atribuído a GTA VI foi divulgado pelo perfil CyberLeek. No trecho, Jason toma um veículo com a marca Rideout Customs e tenta escapar da polícia em Vice City à noite; ao final, Lucia aparece brevemente em uma cena que parece ser uma cutscene. O material não permite confirmar como funcionarão na versão final a polícia, a customização de veículos ou outros sistemas sugeridos pelas imagens. A Rockstar Games não autenticou publicamente esse vídeo específico, e conteúdo capturado em uma build de desenvolvimento pode mudar até o lançamento.",
+    "category": "Leak",
+    "subcategory": "Vazamento de perseguição e cena com Lucia",
+    "priority": "Relevant",
+    "sourceType": "Journalism",
+    "sourceName": "The Verge",
+    "sourceUrl": "https://www.theverge.com/games/984984/gta-6-cyberleak-rideout-customs",
+    "occurredAtUtc": "2026-08-26T00:00:00Z",
+    "occurredUntilUtc": null,
+    "publishedAtUtc": null,
+    "datePrecision": "DateOnly",
+    "status": "Occurred",
+    "isOfficial": false,
     "isImpactAnalysisEligible": false
+  },
+  {
+    "slug": "gta-vi-lucia-prologue-story-leak-august-2026",
+    "title": "Vazamento revela parte do prólogo de Lucia",
+    "summary": "Material atribuído a GTA VI mostra quase cinco minutos de uma aparente seção de prólogo centrada em Lucia, ampliando a onda de vazamentos para conteúdo narrativo.",
+    "description": "Em 26 de agosto de 2026, o CyberLeek publicou um vídeo de quase cinco minutos que aparentemente mostra parte de uma seção de prólogo de GTA VI centrada em Lucia. Por expor possível conteúdo narrativo e spoilers da história, o material possui relevância editorial maior do que clipes dedicados a estabelecimentos ou sistemas isolados de gameplay. A Rockstar Games não confirmou oficialmente a autenticidade nem a interpretação narrativa desse conteúdo. Como o vídeo pode ter origem em uma build de desenvolvimento, cenas, estrutura e contexto podem não representar a versão final do jogo, e interpretações da história além do que é diretamente visível não devem ser tratadas como fatos.",
+    "category": "Leak",
+    "subcategory": "Vazamento do prólogo e história",
+    "priority": "Primary",
+    "sourceType": "Journalism",
+    "sourceName": "Dexerto",
+    "sourceUrl": "https://www.dexerto.com/gta/gta-6-story-spoilers-leaked-after-rockstar-responds-ahead-of-netflix-extended-look-3402536/",
+    "occurredAtUtc": "2026-08-26T00:00:00Z",
+    "occurredUntilUtc": null,
+    "publishedAtUtc": null,
+    "datePrecision": "DateOnly",
+    "status": "Occurred",
+    "isOfficial": false,
+    "isImpactAnalysisEligible": true
   },
   {
     "slug": "gta-vi-extended-look-premiere",
@@ -950,12 +931,12 @@
     "isImpactAnalysisEligible": true
   },
   {
-    "slug": "gta-vi-download-code-boxes-available",
-    "title": "Disponibilização das caixas com código de download",
-    "summary": "A versão física de GTA VI, com código para download dentro da caixa, está prevista para chegar às lojas em 12 de novembro de 2026.",
-    "description": "A Rockstar informou que a versão física de GTA VI conterá um código para download e estará disponível a partir de 12 de novembro de 2026, mesma data prevista para o início do pré-carregamento digital. A antecipação permite que compradores dessa versão também preparem o jogo antes do lançamento de 19 de novembro.",
+    "slug": "gta-vi-preload-begins",
+    "title": "Início do pré-carregamento",
+    "summary": "O pré-carregamento digital de GTA VI está previsto para começar em 12 de novembro de 2026, uma semana antes do lançamento.",
+    "description": "A Rockstar confirmou que jogadores que fizerem a pré-venda digital de GTA VI poderão iniciar o pré-carregamento em 12 de novembro de 2026. A medida permite baixar antecipadamente os arquivos necessários para que o jogo esteja pronto no lançamento de 19 de novembro. O pré-carregamento é um marco de distribuição e permanece como evento futuro até a data prevista.",
     "category": "Distribution",
-    "subcategory": "Formato físico com código",
+    "subcategory": "Pré-carregamento",
     "priority": "Relevant",
     "sourceType": "Official",
     "sourceName": "Rockstar Games",
