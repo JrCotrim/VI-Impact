@@ -3416,7 +3416,7 @@ a {
   border: 1px solid rgba(230, 0, 122, 0.28);
   color: #8f0d50;
   background: #ffe0f0;
-  font-size: 0.66rem;
+  font-size: var(--vi-font-size-caption);
   font-weight: 800;
 }
 
@@ -10821,7 +10821,7 @@ a {
   padding: 4px 7px;
   border: 1px solid rgba(127, 151, 201, 0.16);
   border-radius: 5px;
-  font-size: 0.6rem;
+  font-size: var(--vi-font-size-micro);
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
@@ -15127,7 +15127,7 @@ a {
     border: 0;
     border-radius: 0;
     background: transparent;
-    font-size: 0.67rem;
+    font-size: var(--vi-font-size-caption);
     font-weight: 650;
   }
   .timeline-mode-selector button:hover {
@@ -15157,7 +15157,7 @@ a {
     background: var(--vi-editorial-divider);
   }
   .event-date-heading time {
-    font-size: 0.64rem;
+    font-size: var(--vi-font-size-caption);
     letter-spacing: 0.075em;
   }
   .event-date-items {
@@ -15208,7 +15208,7 @@ a {
   }
   .event-badge {
     border-radius: 5px;
-    font-size: 0.6rem;
+    font-size: var(--vi-font-size-caption);
     font-weight: 650;
   }
   .dashboard-content.ranking-collapsed .impact-ranking-expand-button {
