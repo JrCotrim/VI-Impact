@@ -553,153 +553,6 @@ function formatRankingOrderDate(
   }).format(parseUtcDate(dateText))
 }
 
-interface TimeZoneDateParts {
-  year: number
-  month: number
-  day: number
-  hour: number
-  minute: number
-}
-
-function getTimeZoneDateParts(
-  date: Date,
-  timeZone: string,
-): TimeZoneDateParts {
-  const parts =
-    new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23',
-      timeZone,
-    }).formatToParts(date)
-
-  const values = new Map(
-    parts.map((part) => [
-      part.type,
-      part.value,
-    ]),
-  )
-
-  return {
-    year: Number(values.get('year')),
-    month: Number(values.get('month')),
-    day: Number(values.get('day')),
-    hour: Number(values.get('hour')),
-    minute: Number(values.get('minute')),
-  }
-}
-
-function createDateInTimeZone(
-  year: number,
-  month: number,
-  day: number,
-  hour: number,
-  minute: number,
-  timeZone: string,
-): Date {
-  const expectedTimestamp = Date.UTC(
-    year,
-    month - 1,
-    day,
-    hour,
-    minute,
-  )
-
-  let resolvedTimestamp =
-    expectedTimestamp
-
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const resolvedParts =
-      getTimeZoneDateParts(
-        new Date(resolvedTimestamp),
-        timeZone,
-      )
-
-    const resolvedWallTimestamp =
-      Date.UTC(
-        resolvedParts.year,
-        resolvedParts.month - 1,
-        resolvedParts.day,
-        resolvedParts.hour,
-        resolvedParts.minute,
-      )
-
-    resolvedTimestamp +=
-      expectedTimestamp -
-      resolvedWallTimestamp
-  }
-
-  return new Date(resolvedTimestamp)
-}
-
-function getNextRegularSessionLabel(
-  referenceTimestamp: number,
-  timeZone: string,
-): string {
-  const referenceParts =
-    getTimeZoneDateParts(
-      new Date(referenceTimestamp),
-      timeZone,
-    )
-
-  const minutesSinceMidnight =
-    referenceParts.hour * 60 +
-    referenceParts.minute
-
-  const candidateDate = new Date(
-    Date.UTC(
-      referenceParts.year,
-      referenceParts.month - 1,
-      referenceParts.day,
-    ),
-  )
-
-  const isWeekend =
-    candidateDate.getUTCDay() === 0 ||
-    candidateDate.getUTCDay() === 6
-
-  if (
-    isWeekend ||
-    minutesSinceMidnight >=
-      9 * 60 + 30
-  ) {
-    candidateDate.setUTCDate(
-      candidateDate.getUTCDate() + 1,
-    )
-  }
-
-  while (
-    candidateDate.getUTCDay() === 0 ||
-    candidateDate.getUTCDay() === 6
-  ) {
-    candidateDate.setUTCDate(
-      candidateDate.getUTCDate() + 1,
-    )
-  }
-
-  const nextSession =
-    createDateInTimeZone(
-      candidateDate.getUTCFullYear(),
-      candidateDate.getUTCMonth() + 1,
-      candidateDate.getUTCDate(),
-      9,
-      30,
-      timeZone,
-    )
-
-  return new Intl.DateTimeFormat(
-    'pt-BR',
-    {
-      weekday: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    },
-  ).format(nextSession)
-}
-
 function getImpactValueClassName(
   value: number | null,
 ): string {
@@ -1657,19 +1510,11 @@ function MarketStatusIndicator({
 
 function MarketUpdateSummaryCard({
   latestQuote,
-  exchangeTimezone,
 }: MarketTimingProps) {
   const currentTimestamp = useLiveTimestamp()
-  const marketStatus = getMarketStatus(
-    latestQuote,
-    currentTimestamp,
-    exchangeTimezone,
-  )
-  const nextRegularSessionLabel =
-    getNextRegularSessionLabel(
-      currentTimestamp,
-      exchangeTimezone,
-    )
+  const latestUpdateTimestamp =
+    latestQuote.marketTimestampUtc ??
+    latestQuote.recordedAtUtc
 
   return (
     <article className="summary-card update-card">
@@ -1689,63 +1534,17 @@ function MarketUpdateSummaryCard({
         </span>
       </div>
 
-      <div
-        className={[
-          'summary-card-main',
-          'summary-card-main-stacked',
-          marketStatus === 'Mercado fechado'
-            ? 'market-closed-summary'
-            : '',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-      >
-        {marketStatus === 'Mercado fechado' ? (
-          <>
-            <strong className="market-closed-value">
-              Mercado fechado
-            </strong>
+      <div className="summary-card-main summary-card-main-stacked update-card-main">
+        <strong className="time-value">
+          {formatTime(latestUpdateTimestamp)}
+        </strong>
 
-            <div className="summary-card-context update-session-details">
-              <div className="update-session-row">
-                <span className="update-session-label">
-                  Último dado:
-                </span>
-
-                <span className="update-session-inline-value">
-                  {formatTime(
-                    latestQuote.recordedAtUtc,
-                  )}
-                </span>
-              </div>
-
-              <div className="update-session-row">
-                <span className="update-session-label">
-                  Próxima sessão:
-                </span>
-
-                <span className="update-session-inline-value">
-                  {nextRegularSessionLabel}
-                </span>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <strong className="time-value">
-              {formatTime(
-                latestQuote.recordedAtUtc,
-              )}
-            </strong>
-
-            <span className="summary-card-context update-age">
-              {formatUpdatedAgo(
-                latestQuote.recordedAtUtc,
-                currentTimestamp,
-              )}
-            </span>
-          </>
-        )}
+        <span className="summary-card-context update-age">
+          {formatUpdatedAgo(
+            latestUpdateTimestamp,
+            currentTimestamp,
+          )}
+        </span>
       </div>
 
       <div className="summary-card-footer update-card-footer">
@@ -3347,8 +3146,8 @@ function App() {
           onClick={toggleTheme}
           aria-label={
             theme === 'night'
-              ? 'Noite Tema — ativar tema Dia'
-              : 'Dia Tema — ativar tema Noite'
+              ? 'Noite — ativar tema Claro'
+              : 'Claro — ativar tema Noite'
           }
           aria-pressed={
             theme === 'night'
@@ -3374,7 +3173,7 @@ function App() {
             <span className="theme-toggle-title">
               {theme === 'night'
                 ? 'Noite'
-                : 'Dia'}
+                : 'Claro'}
             </span>
             <span className="theme-toggle-subtitle">
               Tema
@@ -5544,14 +5343,10 @@ function App() {
                 onClick={() =>
                   setIsImpactRankingCollapsed(false)
                 }
-                aria-label="Abrir ranking completo de impacto"
-                title="Abrir ranking completo de impacto"
+                aria-label="Abrir análise de impacto"
+                title="Abrir análise de impacto"
               >
-                <InterfaceIcon
-                  name="expand"
-                  className="inline-action-icon"
-                />
-                <strong>Abrir ranking</strong>
+                <strong>Impacto</strong>
               </button>
             ) : (
               <>

@@ -8336,15 +8336,30 @@ a {
 
 .summary-icon,
 :root[data-theme='night'] .summary-icon {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border: 1px solid color-mix(in srgb, currentColor 28%, rgba(255, 255, 255, 0.62));
+  border-radius: 10px;
+  background: color-mix(in srgb, currentColor 11%, rgba(255, 255, 255, 0.72)) !important;
+  box-shadow:
+    0 4px 12px rgba(45, 28, 56, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+}
+
+:root[data-theme='night'] .summary-icon {
+  border-color: color-mix(in srgb, currentColor 38%, rgba(255, 255, 255, 0.12));
+  background: color-mix(in srgb, currentColor 18%, rgba(13, 8, 28, 0.64)) !important;
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, 0.24),
+    0 0 16px color-mix(in srgb, currentColor 16%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
 }
 
 .summary-icon svg {
-  width: 18px;
-  height: 18px;
-  stroke-width: 1.95;
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
 }
 
 .summary-card-title {
@@ -8477,15 +8492,16 @@ a {
   }
 
   .summary-icon,
-  :root[data-theme='night'] .summary-icon,
+  :root[data-theme='night'] .summary-icon {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    border-radius: 9px;
+  }
+
   .summary-icon svg {
     width: 17px;
     height: 17px;
-  }
-
-  .summary-icon,
-  :root[data-theme='night'] .summary-icon {
-    flex-basis: 17px;
   }
 
 
@@ -15613,14 +15629,14 @@ a {
   }
 }
 :root:not([data-theme="night"]) {
-  --page-background: #eee8ed;
+  --page-background: #f4e8ec;
   --surface-background: #ffffff;
   --card-background: #ffffff;
   --border-color: rgba(11, 19, 43, 0.16);
   --primary-text: #0b132b;
   --secondary-text: #46516a;
   --muted-text: #667187;
-  --vi-color-page: #eee8ed;
+  --vi-color-page: #f4e8ec;
   --vi-color-surface: #ffffff;
   --vi-color-card: #ffffff;
   --vi-color-border: rgba(11, 19, 43, 0.16);
@@ -16863,5 +16879,301 @@ a {
 
   .hero-art-image {
     object-position: center 62% !important;
+  }
+}
+
+/* =========================================================
+   Localized homepage polish — summary breathing room, update timestamp,
+   homepage theme control, light timeline state and impact launcher.
+   Hero/banner/fade geometry remains untouched.
+   ========================================================= */
+
+/* Keep the two visualizations optically inside the unified summary band.
+   The approved card height stays unchanged; only the chart footprints and
+   bottom clearance are adjusted. */
+.variation-card .summary-sparkline {
+  height: 34px;
+  margin-top: 6px;
+  margin-bottom: 14px;
+}
+
+.volume-card .volume-bars {
+  height: 36px;
+  margin-top: 8px;
+  margin-bottom: 14px;
+}
+
+/* Última atualização is now about freshness, not market status. The market
+   state remains exclusively in the price card. */
+.update-card-main {
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 8px;
+  text-align: left;
+}
+
+.update-card .time-value {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.update-card .update-age {
+  display: block;
+  line-height: 1.22;
+}
+
+.update-card-footer {
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.update-card-footer small {
+  display: block;
+  line-height: 1.2;
+}
+
+/* Homepage theme control: same icon + label + switch structure as the visual
+   reference, translated into the project's restrained liquid-glass language. */
+.topbar .theme-toggle {
+  display: grid;
+  width: auto;
+  min-width: 148px;
+  height: 46px;
+  grid-template-columns: 32px minmax(42px, auto) 46px;
+  align-items: center;
+  justify-content: initial;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: #27304c;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.54),
+      rgba(255, 255, 255, 0.28)
+    );
+  box-shadow:
+    0 10px 26px rgba(60, 41, 79, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(16px) saturate(135%);
+  backdrop-filter: blur(16px) saturate(135%);
+}
+
+.topbar .theme-toggle:hover {
+  border-color: rgba(255, 255, 255, 0.34);
+  box-shadow:
+    0 12px 30px rgba(60, 41, 79, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.topbar .theme-toggle-status-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 50%;
+  color: #b64b92;
+  background: rgba(255, 255, 255, 0.48);
+  box-shadow:
+    0 4px 12px rgba(93, 56, 100, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.74);
+}
+
+.topbar .theme-toggle-copy {
+  display: block;
+  min-width: 0;
+  text-align: left;
+}
+
+.topbar .theme-toggle-title {
+  font-size: 0.76rem;
+  font-weight: 760;
+  line-height: 1;
+  letter-spacing: -0.005em;
+}
+
+.topbar .theme-toggle-subtitle {
+  display: none;
+}
+
+.topbar .theme-toggle-track {
+  width: 46px;
+  height: 24px;
+  flex: 0 0 46px;
+}
+
+:root[data-theme='night'] .topbar .theme-toggle {
+  color: #ffffff;
+  border-color: rgba(119, 112, 194, 0.38);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(31, 28, 70, 0.70),
+      rgba(15, 17, 48, 0.58)
+    );
+  box-shadow:
+    0 10px 28px rgba(2, 4, 18, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+:root[data-theme='night'] .topbar .theme-toggle-status-icon {
+  color: #eadcff;
+  border-color: rgba(204, 174, 255, 0.24);
+  background: rgba(87, 53, 134, 0.42);
+  box-shadow:
+    0 0 16px rgba(155, 91, 226, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* Light timeline mirrors the dark hierarchy: clean count text and an active
+   state communicated primarily by the underline, not a pink fill. */
+:root:not([data-theme='night']) .events-count {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+:root:not([data-theme='night'])
+  .timeline-mode-selector
+  button.active {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: inset 0 -2px 0 var(--vi-color-brand-pink) !important;
+}
+
+/* Collapsed impact launcher: no decorative arrow. The vertical label is
+   rendered through writing-mode rather than a rotated glyph layer so it stays
+   crisp at Windows fractional scaling. */
+.dashboard-content.ranking-collapsed
+  .impact-ranking-expand-button {
+  gap: 0;
+  border-color: rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.10),
+      transparent 42%
+    ),
+    rgba(13, 17, 48, 0.54);
+  box-shadow:
+    -10px 10px 28px rgba(3, 6, 22, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(16px) saturate(138%);
+  backdrop-filter: blur(16px) saturate(138%);
+}
+
+.dashboard-content.ranking-collapsed
+  .impact-ranking-expand-button strong {
+  font-size: 0.72rem;
+  font-weight: 760;
+  line-height: 1;
+  letter-spacing: 0.075em;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root:not([data-theme='night'])
+  .dashboard-content.ranking-collapsed
+  .impact-ranking-expand-button {
+  color: #b30d65;
+  border-color: rgba(153, 90, 132, 0.20);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.58),
+      rgba(255, 255, 255, 0.16) 48%,
+      transparent 100%
+    ),
+    rgba(255, 247, 251, 0.46);
+  box-shadow:
+    -8px 10px 28px rgba(96, 55, 83, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.74);
+}
+
+@media (min-width: 1451px) {
+  .dashboard-content.ranking-collapsed
+    .impact-ranking-expand-button {
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+  }
+
+  .dashboard-content.ranking-collapsed
+    .impact-ranking-expand-button strong {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .variation-card .summary-sparkline {
+    height: 34px;
+    margin-top: 6px;
+    margin-bottom: 12px;
+  }
+
+  .volume-card .volume-bars {
+    height: 35px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+  }
+
+  .topbar .theme-toggle {
+    display: grid;
+    width: auto;
+    min-width: 116px;
+    height: 40px;
+    grid-template-columns: 26px minmax(34px, auto) 34px;
+    gap: 6px;
+    padding: 4px 6px;
+  }
+
+  .topbar .theme-toggle-status-icon {
+    display: grid;
+    width: 26px;
+    height: 26px;
+  }
+
+  .topbar .theme-toggle-status-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .topbar .theme-toggle-copy {
+    display: block;
+  }
+
+  .topbar .theme-toggle-title {
+    font-size: 0.68rem;
+  }
+
+  .topbar .theme-toggle-track {
+    width: 34px;
+    height: 22px;
+  }
+
+  .topbar .theme-toggle-thumb {
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+  }
+
+  :root[data-theme='night']
+    .topbar .theme-toggle-thumb {
+    transform: translateX(12px);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .topbar .theme-toggle,
+  .dashboard-content.ranking-collapsed
+    .impact-ranking-expand-button {
+    background: var(--vi-color-surface) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
 }
