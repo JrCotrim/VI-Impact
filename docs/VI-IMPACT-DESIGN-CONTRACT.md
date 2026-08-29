@@ -137,7 +137,7 @@ Uses deep navy/purple surfaces, light typography and more luminous brand accents
 
 ### Hero
 
-The hero intentionally remains visually dark in both themes.
+The hero follows the active theme: the approved pastel Vice City daylight banner in Day and the approved neon nighttime banner in Night. Both may use a controlled dark readability veil behind text and controls, while the lower banner palette should continue into the page atmosphere.
 
 Hero controls use a dedicated token family and should not automatically inherit ordinary light-theme control styling.
 

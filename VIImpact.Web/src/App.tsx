@@ -2407,6 +2407,7 @@ function App() {
       theme,
     )
   }, [theme])
+
   useEffect(() => {
     const heroBannerUrl =
       theme === 'night'
@@ -3415,7 +3416,7 @@ function App() {
         >
           <img
             className="brand-logo"
-            src="/vi-impact-logo.webp"
+            src="/vi-impact-logo-hero.webp"
             alt="VI Impact"
           />
         </a>
@@ -4786,53 +4787,44 @@ function App() {
         className="dashboard"
         id="dashboard"
       >
-        <section className="hero-banner">
-          <div className="hero-copy">
-            <p className="hero-eyebrow">
-              VI Impact · GTA VI × mercado
-            </p>
+        <div className="top-stage">
+          <section className="hero-banner">
+            <div className="hero-copy">
+              <p className="hero-eyebrow">
+                VI Impact · GTA VI × mercado
+              </p>
 
-            <h1>
-              Take-Two Interactive ({dashboard.symbol})
-            </h1>
+              <h1>
+                Take-Two Interactive ({dashboard.symbol})
+              </h1>
 
-            <p>
-              Eventos de GTA VI e o desempenho da TTWO
-            </p>
-          </div>
+              <p>
+                Eventos de GTA VI e o desempenho da TTWO
+              </p>
+            </div>
 
-          <div
-            className="hero-art"
-            aria-hidden="true"
-          >
-            <svg
-              viewBox="0 0 760 220"
-              preserveAspectRatio="xMidYMax meet"
+            <div
+              className="hero-art"
+              aria-hidden="true"
             >
-              <g className="hero-sun">
-                <circle
-                  cx="562"
-                  cy="96"
-                  r="54"
-                />
-              </g>
+              <img
+                className="hero-art-image"
+                src={
+                  theme === 'night'
+                    ? nightHeroBannerUrl
+                    : dayHeroBannerUrl
+                }
+                alt=""
+                decoding="async"
+                fetchPriority="high"
+              />
+            </div>
+          </section>
 
-              <g className="hero-buildings">
-                <path d="M5 220V176h34v-29h24v73h18v-93h31v93h18v-58h28v58h22v-112h34v112h22v-74h30v74h17v-126h38v126h18v-92h28v92h23v-147h41v147h23v-83h25v83h24v-113h34v113h21v-64h27v64h24v-135h39v135h22v-101h30v101h20v-72h28v72h30v-119h36v119h27v-83h31v83Z" />
-              </g>
-
-              <g className="hero-palms">
-                <path d="M568 220c-2-51-2-87 4-128l8 1c-4 43-3 83 1 127Zm7-132c-23-17-39-18-55-7 18-2 31 4 43 17-19-4-34 1-44 14 18-8 34-6 48 4-7-20-4-35 8-49-3 10-2 20 4 29 4-19 15-31 33-38-11 11-17 23-18 36 13-13 29-17 48-11-16 3-29 11-39 25 17-7 32-4 45 8-21-5-38-2-52 10-7-16-14-29-21-38Z" />
-                <path d="M690 220c1-39 0-70-4-103l7-1c6 34 8 69 8 104Zm-2-107c-18-13-31-14-44-6 15-1 25 4 34 14-15-3-27 1-35 11 15-6 27-5 39 3-5-16-3-28 7-39-2 8-1 16 3 23 4-15 13-25 27-30-9 9-14 18-15 29 11-10 24-13 39-8-13 2-23 9-31 19 14-5 26-3 36 7-17-4-30-2-41 8-5-13-11-23-17-31Z" />
-              </g>
-            </svg>
-          </div>
-        </section>
-
-        <section
-          className="summary-grid"
-          aria-label="Resumo da cotação"
-        >
+          <section
+            className="summary-grid"
+            aria-label="Resumo da cotação"
+          >
           <article className="summary-card price-card">
             <div className="summary-card-heading">
               <span className="summary-icon price-icon">
@@ -5003,7 +4995,8 @@ function App() {
               exchangeTimezone
             }
           />
-        </section>
+          </section>
+        </div>
 
         <section
           className={[

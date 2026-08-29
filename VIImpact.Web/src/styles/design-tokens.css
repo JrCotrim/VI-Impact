@@ -56,7 +56,7 @@
   --vi-ease-control: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   /* Day theme — semantic foundation */
-  --vi-color-page: #f8f9fa;
+  --vi-color-page: #eee8ed;
   --vi-color-surface: #ffffff;
   --vi-color-card: #ffffff;
   --vi-color-border: rgba(11, 19, 43, 0.14);
@@ -159,4 +159,70 @@
   --vi-editorial-divider: rgba(157, 78, 221, 0.22);
   --vi-editorial-divider-strong: rgba(157, 78, 221, 0.34);
   --vi-editorial-insight-accent: #31d7ee;
+}
+
+/* Liquid Glass refinement — atmospheric materials derived from the
+   approved Vice City day/night banners. Keep these semantic so the
+   material can be tuned per theme without changing component structure. */
+:root {
+  --vi-radius-surface-primary: 18px;
+  --vi-radius-surface-secondary: 14px;
+  --vi-radius-event: 11px;
+
+  /* Light atmosphere is sampled from the approved day banner: warm pink/salmon
+     haze first, then a restrained lilac/cool mist toward the page surface. */
+  --vi-atmosphere-top: #f0dbe5;
+  --vi-atmosphere-mid: #e9e4ec;
+  --vi-atmosphere-soft-pink: rgba(238, 165, 190, 0.26);
+  --vi-atmosphere-soft-lilac: rgba(168, 145, 196, 0.14);
+  --vi-atmosphere-soft-blue: rgba(135, 172, 210, 0.10);
+
+  /* Primary glass stays translucent enough to reveal the shared page
+     atmosphere. Analytics surfaces are slightly clearer so the shared
+     blue/lilac field remains perceptible behind chart and timeline. */
+  --vi-material-primary-background: rgba(247, 251, 255, 0.48);
+  --vi-material-analytics-background: rgba(247, 251, 255, 0.46);
+  --vi-material-secondary-background: rgba(255, 255, 255, 0.31);
+  --vi-material-chart-background: rgba(248, 251, 255, 0.56);
+  --vi-material-border: rgba(255, 255, 255, 0.74);
+  --vi-material-border-strong: rgba(82, 103, 137, 0.2);
+  --vi-material-highlight: rgba(255, 255, 255, 0.86);
+  --vi-material-sheen: rgba(255, 255, 255, 0.34);
+  --vi-material-shadow: 0 20px 46px rgba(61, 82, 110, 0.13);
+  --vi-material-shadow-subtle: 0 11px 30px rgba(61, 82, 110, 0.09);
+  --vi-material-blur-primary: 20px;
+  --vi-material-blur-secondary: 11px;
+
+  --vi-timeline-axis: rgba(164, 79, 142, 0.3);
+  --vi-timeline-marker: #ad578f;
+  --vi-timeline-marker-ring: rgba(255, 255, 255, 0.84);
+  --vi-event-surface: rgba(255, 255, 255, 0.29);
+  --vi-event-surface-hover: rgba(255, 255, 255, 0.43);
+}
+
+:root[data-theme='night'] {
+  /* The former #2d0b52 produced a visible magenta strip below the banner.
+     These values continue the lower navy/violet range instead. */
+  --vi-atmosphere-top: #0f1433;
+  --vi-atmosphere-mid: #0b0e25;
+  --vi-atmosphere-soft-pink: rgba(174, 27, 126, 0.11);
+  --vi-atmosphere-soft-lilac: rgba(98, 42, 157, 0.18);
+  --vi-atmosphere-soft-blue: rgba(34, 76, 176, 0.24);
+
+  --vi-material-primary-background: rgba(16, 15, 39, 0.48);
+  --vi-material-analytics-background: rgba(15, 15, 41, 0.46);
+  --vi-material-secondary-background: rgba(20, 18, 48, 0.36);
+  --vi-material-chart-background: rgba(8, 10, 29, 0.56);
+  --vi-material-border: rgba(218, 195, 255, 0.2);
+  --vi-material-border-strong: rgba(193, 160, 235, 0.27);
+  --vi-material-highlight: rgba(255, 255, 255, 0.17);
+  --vi-material-sheen: rgba(255, 255, 255, 0.085);
+  --vi-material-shadow: 0 20px 50px rgba(1, 2, 15, 0.28);
+  --vi-material-shadow-subtle: 0 12px 30px rgba(1, 2, 15, 0.21);
+
+  --vi-timeline-axis: rgba(158, 83, 201, 0.34);
+  --vi-timeline-marker: #bd70df;
+  --vi-timeline-marker-ring: rgba(17, 13, 39, 0.94);
+  --vi-event-surface: rgba(255, 255, 255, 0.035);
+  --vi-event-surface-hover: rgba(255, 255, 255, 0.06);
 }

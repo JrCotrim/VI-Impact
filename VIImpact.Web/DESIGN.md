@@ -153,7 +153,7 @@ The interface is intentionally information-dense but must remain readable. Finan
 
 The main experience is composed of:
 
-- a dark branded hero;
+- a theme-responsive branded hero (pastel daylight in Day, neon night in Night);
 - market-summary information;
 - the primary TTWO × QQQ chart;
 - the GTA VI event timeline;
@@ -162,7 +162,7 @@ The main experience is composed of:
 
 The relationship between events and the chart is a core product interaction and must be preserved.
 
-Day and Night are two expressions of the same design system. The hero intentionally remains dark in both themes.
+Day and Night are two expressions of the same design system. The hero follows the theme: a pastel Vice City daylight scene in Day and a deep neon night scene in Night. Both retain a controlled dark readability veil behind hero copy rather than flattening the image into a dark header.
 
 The original VI Impact loading splash is an approved product surface. It must not be replaced with a generic spinner or plain loading state unless explicitly requested.
 
@@ -344,7 +344,7 @@ Side accents and borders may be legitimate when they communicate editorial hiera
 
 The hero is a primary identity surface, not a generic dashboard header.
 
-It remains visually dark in Day and Night themes and may use branded imagery, pink/purple/cyan atmosphere and dedicated hero controls.
+Day uses the approved pastel Vice City skyline and Night uses the approved neon nighttime skyline. Their lower palette should transition into the page atmosphere so the hero does not read as a detached banner. A directional readability veil is allowed behind hero copy, but it must not erase the character of either image.
 
 Text contrast over hero imagery must remain accessible.
 
@@ -459,7 +459,7 @@ Existing component-specific breakpoints are deliberate implementation evidence a
 - Use pink, purple and cyan deliberately.
 - Preserve semantic event-category colors.
 - Preserve distinct Day and Night treatments.
-- Keep the hero dark in both themes.
+- Keep the hero theme-responsive: approved daylight imagery in Day and approved night imagery in Night.
 - Preserve the original loading splash.
 - Preserve chart ↔ event synchronization.
 - Preserve event chronology.
@@ -479,7 +479,7 @@ Existing component-specific breakpoints are deliberate implementation evidence a
 
 - Do not normalize VI Impact into a generic SaaS dashboard.
 - Do not remove pink, purple, cyan or gradients merely because an AI-slop heuristic flags them.
-- Do not add gratuitous glassmorphism.
+- Do not add gratuitous glassmorphism; Liquid Glass is reserved for primary/secondary material hierarchy where the atmospheric background can meaningfully show through.
 - Do not add excessive glow.
 - Do not add decorative gradients without purpose.
 - Do not create unnecessary nested cards.
