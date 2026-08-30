@@ -6723,8 +6723,8 @@ a {
 
 .impact-ranking-direction button:hover,
 .impact-ranking-direction button.active {
-  color: #ff82c2;
-  border-color: rgba(255, 82, 170, 0.42);
+  color: var(--vi-control-active-text);
+  border-color: var(--vi-control-border-hover);
   background: rgba(242, 49, 147, 0.12);
 }
 
@@ -6771,7 +6771,7 @@ a {
 .impact-ranking-select > span {
   color: var(--dark-panel-secondary);
   font-size: 0.56rem;
-  font-weight: 800;
+  font-weight: var(--vi-font-weight-label);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -6783,8 +6783,9 @@ a {
   padding: 0 28px 0 9px;
   border: 1px solid rgba(132, 153, 199, 0.2);
   border-radius: 8px;
-  color: var(--dark-panel-primary);
+  color: var(--vi-control-text-strong);
   background: #0b172e;
+  font-family: inherit;
   font-size: 0.63rem;
   font-weight: 700;
   cursor: pointer;
@@ -6799,7 +6800,7 @@ a {
   margin-bottom: 10px;
   padding: 0 9px;
   border: 1px solid rgba(132, 153, 199, 0.2);
-  border-radius: 9px;
+  border-radius: var(--vi-radius-control);
   color: var(--dark-panel-secondary);
   background: rgba(7, 16, 34, 0.58);
 }
@@ -6812,7 +6813,7 @@ a {
   min-width: 0;
   border: 0;
   outline: 0;
-  color: var(--dark-panel-primary);
+  color: var(--vi-control-text-strong);
   background: transparent;
   font-size: 0.67rem;
 }
@@ -6909,7 +6910,7 @@ a {
   .impact-ranking-select select,
 :root:not([data-theme='night'])
   .impact-ranking-search input {
-  color: #0b132b;
+  color: var(--vi-control-text-strong);
 }
 
 :root:not([data-theme='night'])
