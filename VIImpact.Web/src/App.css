@@ -15526,23 +15526,6 @@ a {
   --primary-text: #0b132b;
   --secondary-text: #46516a;
   --muted-text: #667187;
-  --vi-color-page: #f4e8ec;
-  --vi-color-surface: #ffffff;
-  --vi-color-card: #ffffff;
-  --vi-color-border: rgba(11, 19, 43, 0.16);
-  --vi-color-text-primary: #0b132b;
-  --vi-color-text-secondary: #46516a;
-  --vi-color-text-muted: #667187;
-  --vi-editorial-divider: rgba(11, 19, 43, 0.16);
-  --vi-editorial-divider-strong: rgba(11, 19, 43, 0.24);
-  --vi-control-text: #46516a;
-  --vi-control-text-strong: #0b132b;
-  --vi-control-border: rgba(11, 19, 43, 0.18);
-  --vi-control-background: transparent;
-  --vi-control-background-hover: rgba(11, 19, 43, 0.035);
-  --vi-control-active-text: #ad0b61;
-  --vi-control-active-border: rgba(230, 0, 122, 0.38);
-  --vi-control-active-background: rgba(230, 0, 122, 0.065);
 }
 :root:not([data-theme="night"]) body {
   background: var(--vi-color-page);

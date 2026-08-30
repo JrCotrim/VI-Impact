@@ -56,13 +56,13 @@
   --vi-ease-control: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   /* Day theme — semantic foundation */
-  --vi-color-page: #eee8ed;
+  --vi-color-page: #f4e8ec;
   --vi-color-surface: #ffffff;
   --vi-color-card: #ffffff;
-  --vi-color-border: rgba(11, 19, 43, 0.14);
+  --vi-color-border: rgba(11, 19, 43, 0.16);
   --vi-color-text-primary: #0b132b;
-  --vi-color-text-secondary: #48516b;
-  --vi-color-text-muted: #687187;
+  --vi-color-text-secondary: #46516a;
+  --vi-color-text-muted: #667187;
 
   --vi-color-brand-pink: #e6007a;
   --vi-color-brand-purple: #9d4edd;
@@ -81,15 +81,15 @@
   --vi-date-text: #526078;
 
   /* Shared controls — neutral by default, branded when selected */
-  --vi-control-text: #48516b;
-  --vi-control-text-strong: #11182b;
-  --vi-control-border: rgba(63, 72, 101, 0.18);
+  --vi-control-text: #46516a;
+  --vi-control-text-strong: #0b132b;
+  --vi-control-border: rgba(11, 19, 43, 0.18);
   --vi-control-border-hover: rgba(230, 0, 122, 0.34);
-  --vi-control-background: rgba(255, 255, 255, 0.82);
-  --vi-control-background-hover: #ffffff;
-  --vi-control-active-text: #b30d65;
+  --vi-control-background: transparent;
+  --vi-control-background-hover: rgba(11, 19, 43, 0.035);
+  --vi-control-active-text: #ad0b61;
   --vi-control-active-border: rgba(230, 0, 122, 0.38);
-  --vi-control-active-background: rgba(230, 0, 122, 0.075);
+  --vi-control-active-background: rgba(230, 0, 122, 0.065);
   --vi-control-focus-ring: rgba(230, 0, 122, 0.56);
   --vi-control-accent-text: #b30d65;
   --vi-control-accent-border: rgba(230, 0, 122, 0.28);
@@ -150,8 +150,8 @@
 
 /* Editorial surfaces — use hierarchy and dividers before adding another card. */
 :root {
-  --vi-editorial-divider: rgba(11, 19, 43, 0.14);
-  --vi-editorial-divider-strong: rgba(11, 19, 43, 0.22);
+  --vi-editorial-divider: rgba(11, 19, 43, 0.16);
+  --vi-editorial-divider-strong: rgba(11, 19, 43, 0.24);
   --vi-editorial-insight-accent: #009ec1;
 }
 
