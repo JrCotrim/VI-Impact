@@ -6,63 +6,24 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 
-  --page-background: #f5f3fa;
-  --surface-background: rgba(255, 255, 255, 0.88);
-  --card-background: rgba(255, 255, 255, 0.82);
-  --border-color: rgba(68, 48, 108, 0.16);
 
-  --primary-text: #11182f;
-  --secondary-text: #5f6078;
-  --muted-text: #8b8ca1;
 
-  --accent-pink: #f23896;
-  --accent-purple: #8f42dd;
-  --accent-blue: #278df1;
-  --accent-cyan: #16b9c8;
 
-  --positive: #0aa564;
-  --negative: #db315d;
 
   --topbar-background: #050812;
-  --dark-panel-background: #071226;
-  --dark-panel-surface: #0d1930;
-  --dark-panel-border: rgba(141, 165, 210, 0.2);
-  --dark-panel-primary: #f8f9ff;
-  --dark-panel-secondary: #9ba7c1;
 
-  --shadow:
-    0 24px 70px rgba(65, 38, 103, 0.16);
 
-  --card-shadow:
-    0 14px 34px rgba(63, 40, 98, 0.12);
 
   color: var(--primary-text);
   background: var(--page-background);
 }
 
 :root[data-theme='night'] {
-  --page-background: #080c18;
-  --surface-background: rgba(15, 20, 38, 0.92);
-  --card-background: rgba(23, 28, 52, 0.86);
-  --border-color: rgba(139, 112, 198, 0.24);
 
-  --primary-text: #f8f5ff;
-  --secondary-text: #c7c2d8;
-  --muted-text: #908ba5;
 
-  --accent-pink: #ff4aa6;
-  --accent-purple: #ad61ff;
-  --accent-blue: #4ca4ff;
-  --accent-cyan: #2cd5da;
 
-  --positive: #45d99c;
-  --negative: #ff708f;
 
-  --shadow:
-    0 28px 80px rgba(0, 0, 0, 0.38);
 
-  --card-shadow:
-    0 16px 42px rgba(0, 0, 0, 0.28);
 }
 
 * {
