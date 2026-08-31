@@ -1,7 +1,4 @@
 :root {
-  font-family:
-    Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    sans-serif;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -3188,11 +3185,9 @@ a {
 /* Financial losses use a semantic red in both themes. Pink remains
    reserved for the VI Impact identity and selected controls. */
 :root {
-  --negative: var(--vi-color-negative);
 }
 
 :root[data-theme='night'] {
-  --negative: var(--vi-color-negative);
 }
 
 .negative-value,
