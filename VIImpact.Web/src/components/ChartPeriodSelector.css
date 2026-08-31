@@ -139,8 +139,6 @@
   padding: 16px;
   border: 1px solid var(--border-color);
   border-radius: 14px;
-  background: var(--panel-background);
-  box-shadow: var(--card-shadow);
 }
 
 .custom-date-field {
