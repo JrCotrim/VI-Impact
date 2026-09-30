@@ -1045,6 +1045,25 @@
     "isImpactAnalysisEligible": false
   },
   {
+    "slug": "gta-vi-game-informer-cover-story-september-2026",
+    "title": "Game Informer publica matéria de capa sobre GTA VI com novos detalhes de Leonida",
+    "summary": "Em 29 de setembro de 2026, a Game Informer publicou matéria de capa de 14 páginas sobre GTA VI, baseada em entrevistas com a Rockstar, com novos detalhes sobre mapa, clima, fauna e sistemas do jogo.",
+    "description": "Em 29 de setembro de 2026, a Game Informer publicou a matéria de capa \"Grand Theft Auto VI – Welcome to Leonida\", da edição 382, escrita a partir de conversas com vários designers-chefe da Rockstar Games e acompanhada de 12 capturas de tela inéditas. A Rockstar anunciou uma parceria com a revista para liberar a matéria gratuitamente no aplicativo da Game Informer; no site da revista, o texto completo exige assinatura. Segundo a reportagem, Leonida tem cerca do dobro do tamanho do mapa de GTA V, com mais interiores, e se divide em seis regiões. A matéria também detalhou o relacionamento opcional entre Jason e Lucia, que pode permanecer platônico ou se tornar romântico e afeta partes da história; um sistema de Heat em que a polícia usa aparência e localização para identificar os protagonistas; clima localizado e persistente, com tempestades tropicais e furacões; e mais de 170 espécies de animais. As informações são tratadas como uma única divulgação editorial, sem fragmentar cada sistema em eventos independentes.",
+    "category": "GameInformation",
+    "subcategory": "Matéria de capa com entrevistas",
+    "priority": "Relevant",
+    "sourceType": "Journalism",
+    "sourceName": "Game Informer",
+    "sourceUrl": "https://gameinformer.com/feature/2026/09/29/grand-theft-auto-vi-welcome-to-leonida",
+    "occurredAtUtc": "2026-09-29T00:00:00Z",
+    "occurredUntilUtc": null,
+    "publishedAtUtc": null,
+    "datePrecision": "DateOnly",
+    "status": "Occurred",
+    "isOfficial": false,
+    "isImpactAnalysisEligible": true
+  },
+  {
     "slug": "gta-vi-preload-begins",
     "title": "Início do pré-carregamento",
     "summary": "O pré-carregamento digital de GTA VI está previsto para começar em 12 de novembro de 2026, uma semana antes do lançamento.",
