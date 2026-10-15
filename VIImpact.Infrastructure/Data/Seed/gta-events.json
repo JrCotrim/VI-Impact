@@ -1121,6 +1121,25 @@
     "isImpactAnalysisEligible": false
   },
   {
+    "slug": "gta-vi-launch-trailer-released",
+    "title": "Rockstar publica o trailer de lançamento de GTA VI",
+    "summary": "Em 15 de outubro de 2026, a Rockstar publicou o trailer de lançamento de GTA VI, com novas cenas de Jason e Lucia e a estreia da música Flower in a Hurricane.",
+    "description": "Em 15 de outubro de 2026, a Rockstar Games publicou o trailer de lançamento de Grand Theft Auto VI, cerca de cinco semanas antes da data prevista de 19 de novembro. Com aproximadamente 90 segundos, o vídeo reúne novas cenas de Jason e Lucia em Leonida e privilegia a ambientação e o tom da história, sem detalhar mecânicas específicas de jogabilidade. O trailer marca a estreia de Flower in a Hurricane, faixa inédita de Justice com Tame Impala, SZA e King Gizzard & The Lizard Wizard; a Rockstar também identificou o Justice como compositor da trilha original do jogo. A publicação manteve o lançamento em 19 de novembro de 2026 para PlayStation 5 e Xbox Series X|S. Na cronologia, é o último grande vídeo oficial de divulgação antes do lançamento, depois do Trailer 1, do Trailer 2 e do Extended Look.",
+    "category": "Trailer",
+    "subcategory": "Trailer de lançamento",
+    "priority": "Primary",
+    "sourceType": "Official",
+    "sourceName": "Rockstar Games",
+    "sourceUrl": "https://www.rockstargames.com/newswire/article/517572321a549a",
+    "occurredAtUtc": "2026-10-15T00:00:00Z",
+    "occurredUntilUtc": null,
+    "publishedAtUtc": null,
+    "datePrecision": "DateOnly",
+    "status": "Occurred",
+    "isOfficial": true,
+    "isImpactAnalysisEligible": true
+  },
+  {
     "slug": "gta-vi-preload-begins",
     "title": "Início do pré-carregamento",
     "summary": "O pré-carregamento digital de GTA VI está previsto para começar em 12 de novembro de 2026, uma semana antes do lançamento.",
